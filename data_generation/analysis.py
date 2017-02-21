@@ -1,4 +1,8 @@
 import numpy as np
+from sklearn.decomposition import PCA
+from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 
 
 def summarize(X, y, decimals=4):
@@ -34,5 +38,28 @@ def summarize(X, y, decimals=4):
     print()
     print("\tStdev : " + numstr.format(*np.sqrt(np.var(Xs[0], axis=0))))
     print("\tVar   : " + numstr.format( *np.var(Xs[0], axis=0)))
+
+    #2 dimensional
+    # pca = PCA(n_components=2)
+    # pca.fit(X)
+    # pca_trans = pca.transform(X)
+    
+
+    # plt.scatter(pca_trans[:,0], pca_trans[:,1], c=y)
+    # plt.title("PCA")
+    # plt.show()
+
+
+    #three dimensional
+    pca = PCA(n_components=3)
+    pca.fit(X)
+    pca_trans = pca.transform(X)
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.scatter(pca_trans[:,0], pca_trans[:,1], pca_trans[:,2], c=y)
+    plt.title("PCA")
+    plt.show()
 
 
