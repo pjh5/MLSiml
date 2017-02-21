@@ -27,9 +27,12 @@ k       The number of sources. The z layer is used to control the relative
 
 """
 import numpy as np
-import scipy.stats
 
-from activation_function import SimpleLinearModel
+from node_functions import ExponentialModel
+from stats_functions import make_normal
+from stats_functions import normal
+from stats_functions import bernoulli
+
 
 class Node:
 
@@ -95,7 +98,7 @@ class BayesNetwork:
         for i in range(n_samples):
             y[i], X[i,:] = self.sample()
 
-        return y, X
+        return X, y
 
     def __str__(self):
         """Bulky multi-line string representation, layer by layer"""
@@ -105,21 +108,8 @@ class BayesNetwork:
         return s
 
 
-def make_normal(mean, var):
-    return (lambda f: lambda: f.rvs())(scipy.stats.norm(loc=mean, scale=var))
 
-
-def normal(mean, var):
-    return scipy.stats.norm.rvs(loc=mean, scale=var)
-
-def make_bernoulli(prob):
-    return (lambda p: lambda: float(scipy.stats.uniform.rvs() > p))(prob)
-
-def bernoulli(p):
-    return float(scipy.stats.uniform.rvs() > p)
-
-
-def example_network():
+def example():
     no_noise = lambda: 0
 
     # y will be 65% 0 and 35% 1
@@ -129,45 +119,24 @@ def example_network():
     # Two normal sources, first with 80% of variance
     # First will be  N(y*10 + (1-y)*18, 8)
     # Second will be N(y*0  + (1-y)*2, 2)
-    z_dists = (( lambda f: lambda y: f(y*10 + (1-y)*18, 8))(normal),
-                (lambda f: lambda y: f((1-y)*2        , 2))(normal))
+    z_dists = (
+            (lambda f: lambda y: f(y*10 + (1-y)*18, 8))(normal),
+            (lambda f: lambda y: f((1-y)*2        , 2))(normal))
     z_layer = NodeLayer((Node(f, make_normal(0, 1)) for f in z_dists))
 
-    return GaussianBayesNetwork((y_layer, z_layer))
+    # x, outputs
+    # 4 total outputs, two for each source
+    # Modeling x in the exponential family
+    # still unsure of how to do this well and randomly
+    # right now, coefficients are ignored
+    x_dists = (
+            ExponentialModel([ 1, 0]),
+            ExponentialModel([-1, 1], transform=lambda x: [x[0], x[0]**2]),
+            ExponentialModel([0, 1], transform=lambda x: [x[1], x[1]**2]),
+            ExponentialModel([ 0, -1])
+            )
+    x_layer = NodeLayer((Node(f.sample, make_normal(0, 1)) for f in x_dists))
 
-
-def summarize(X, y, decimals=4):
-
-    # Assumes y is either 1 or 0
-    pos_idxs = np.where(y == 1)[0]
-    neg_idxs = np.where(y == 0)[0]
-
-    # Divide dataset into positive and negatives
-    Xs = (X[neg_idxs, :], X[pos_idxs, :])
-    Ys = (y[neg_idxs], y[pos_idxs])
-
-    # Make format string
-    numstr = ", ".join(["{" + str(i) + ":10." + str(decimals) + "f}" for i
-                                                        in range(X.shape[1])])
-
-    # Output results
-    print("Total number of samples: " + str(len(y)))
-    print()
-    print(str(len(Ys[1])) + " Positive Samples:")
-    print("\tMin   : " + numstr.format( *np.min(Xs[1], axis=0)))
-    print("\tMean  : " + numstr.format(*np.mean(Xs[1], axis=0)))
-    print("\tMax   : " + numstr.format( *np.max(Xs[1], axis=0)))
-    print()
-    print("\tStdev : " + numstr.format(*np.sqrt(np.var(Xs[1], axis=0))))
-    print("\tVar   : " + numstr.format( *np.var(Xs[1], axis=0)))
-    print()
-
-    print(str(len(Ys[0])) + " Negative Samples:")
-    print("\tMin   : " + numstr.format( *np.min(Xs[0], axis=0)))
-    print("\tMean  : " + numstr.format(*np.mean(Xs[0], axis=0)))
-    print("\tMax   : " + numstr.format( *np.max(Xs[0], axis=0)))
-    print()
-    print("\tStdev : " + numstr.format(*np.sqrt(np.var(Xs[0], axis=0))))
-    print("\tVar   : " + numstr.format( *np.var(Xs[0], axis=0)))
+    return BayesNetwork((y_layer, z_layer, x_layer))
 
 
