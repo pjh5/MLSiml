@@ -28,10 +28,10 @@ k       The number of sources. The z layer is used to control the relative
 """
 import numpy as np
 
-from node_functions import ExponentialModel
-from stats_functions import make_normal
-from stats_functions import normal
-from stats_functions import bernoulli
+from .node_functions import ExponentialModel
+from .stats_functions import make_normal
+from .stats_functions import normal
+from .stats_functions import bernoulli
 
 
 class Node:

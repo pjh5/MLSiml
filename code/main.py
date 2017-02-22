@@ -1,10 +1,9 @@
-
-import bayes_networks
-import analysis
+from data_generation.bayes_networks import example
+from analysis import analysis
 
 
 def main():
-    net = bayes_networks.example()
+    net = example()
     X, y = net.bulk_sample(1000)
     analysis.summarize(X, y)
 
