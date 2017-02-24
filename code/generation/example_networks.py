@@ -3,7 +3,7 @@ from .bayes_networks import NodeLayer
 from .bayes_networks import BayesNetwork
  
 from .node_functions import ExponentialModel
-from .stats_functions import make_normal
+from .stats_functions import normal_generator
 from .stats_functions import normal
 from .stats_functions import bernoulli
 from .structured_generators import make_xor_class_generator
@@ -24,7 +24,7 @@ def example():
     z_dists = (
             (lambda f: lambda y: f(y*10 + (1-y)*18, 8))(normal),
             (lambda f: lambda y: f((1-y)*2        , 2))(normal))
-    z_layer = NodeLayer((Node(f, make_normal(0, 1)) for f in z_dists))
+    z_layer = NodeLayer((Node(f, normal_generator(0, 1)) for f in z_dists))
 
     # x, outputs
     # 4 total outputs, two for each source
@@ -37,7 +37,7 @@ def example():
             ExponentialModel([0, 1], transform=lambda x: [x[1], x[1]**2]),
             ExponentialModel([ 0, -1])
             )
-    x_layer = NodeLayer((Node(f.sample, make_normal(0, 1)) for f in x_dists))
+    x_layer = NodeLayer((Node(f.sample, normal_generator(0, 1)) for f in x_dists))
 
     return BayesNetwork((y_layer, z_layer, x_layer))
 

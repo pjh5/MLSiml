@@ -1,11 +1,11 @@
-from data_generation.example_networks import xor_example
+from generation.example_networks import xor_example
 from analysis import analysis
 
 
-def main(**kwargs):
+def main(sample_size=2500, pca=True, **kwargs):
     net = xor_example(**kwargs)
-    X, y = net.bulk_sample(5000)
-    analysis.summarize(X, y)
+    X, y = net.bulk_sample(sample_size)
+    analysis.summarize(X, y, pca)
 
     return X, y
     
