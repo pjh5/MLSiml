@@ -28,13 +28,6 @@ k       The number of sources. The z layer is used to control the relative
 """
 import numpy as np
 
-from .node_functions import ExponentialModel
-from .stats_functions import make_normal
-from .stats_functions import normal
-from .stats_functions import bernoulli
-from .structured_generators import make_xor_class_generator
-
-
 class Node:
 
     def __init__(self, f_sample, f_noise):
@@ -111,71 +104,3 @@ class BayesNetwork:
         return s
 
 
-
-def example():
-    no_noise = lambda: 0
-
-    # y will be 65% 0 and 35% 1
-    y_layer = NodeLayer([Node(lambda x: bernoulli(0.65), no_noise)])
-
-    # z, sources
-    # Two normal sources, first with 80% of variance
-    # First will be  N(y*10 + (1-y)*18, 8)
-    # Second will be N(y*0  + (1-y)*2, 2)
-    z_dists = (
-            (lambda f: lambda y: f(y*10 + (1-y)*18, 8))(normal),
-            (lambda f: lambda y: f((1-y)*2        , 2))(normal))
-    z_layer = NodeLayer((Node(f, make_normal(0, 1)) for f in z_dists))
-
-    # x, outputs
-    # 4 total outputs, two for each source
-    # Modeling x in the exponential family
-    # still unsure of how to do this well and randomly
-    # right now, coefficients are ignored
-    x_dists = (
-            ExponentialModel([ 1, 0]),
-            ExponentialModel([-1, 1], transform=lambda x: [x[0], x[0]**2]),
-            ExponentialModel([0, 1], transform=lambda x: [x[1], x[1]**2]),
-            ExponentialModel([ 0, -1])
-            )
-    x_layer = NodeLayer((Node(f.sample, make_normal(0, 1)) for f in x_dists))
-
-    return BayesNetwork((y_layer, z_layer, x_layer))
-
-def xor_example():
-    percent_positive = 0.65
-    num_z = 10
-    num_x_per_z = 1
-    base_var = 0.02
-    max_beta = 1
-
-    # Calculate total number of X
-    num_x = num_z * num_x_per_z
-
-    # adjust the variance for more x? TODO: ?
-    var = np.sqrt(num_x) * base_var
-
-    
-
-    # y will be 65% positive (1) and 35% negative (0)
-    y_layer = lambda: bernoulli(percent_positive)
-
-    # z is a k-dimensional XOR
-    z_layer = [make_xor_class_generator(num_z)]
-
-    # x are normals on the z
-    x_layer = []
-    for source in range(num_z):
-        zeros = np.ones(num_z) / num_z
-        zeros[source] = 1
-        x_layer += [(lambda _zeros: lambda z: normal(z.dot(_zeros), var))(zeros)
-                                                for x in range(num_x_per_z)]
-    xx_layer = [
-            lambda z: normal((z).dot([.8, .2])**3, var),
-            lambda z: normal((z).dot([.6, .4])**3, var),
-            lambda z: normal((z).dot([.4, .6])**3, var),
-            lambda z: normal((z).dot([.2, .8])**3, var)
-            ]
-
-    net = BayesNetwork([y_layer, z_layer, x_layer])
-    return net

@@ -1,9 +1,9 @@
-from data_generation.bayes_networks import xor_example
+from data_generation.example_networks import xor_example
 from analysis import analysis
 
 
-def main():
-    net = xor_example()
+def main(**kwargs):
+    net = xor_example(**kwargs)
     X, y = net.bulk_sample(5000)
     analysis.summarize(X, y)
 

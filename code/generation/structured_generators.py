@@ -12,23 +12,24 @@ import numpy as np
 import scipy
 
 
-def make_xor(N, even):
+def make_xor(N, make_even, scale=2, base=-1):
 
     # Choose how many zeros
-    if even:
+    if make_even:
         n_ones = 2*np.random.randint(0, high=N // 2 + 1)
     else:
         n_ones = 2*np.random.randint(0, high=(N + 1) // 2) + 1
 
-    return 2 * np.random.permutation(
+    return scale * np.random.permutation(
             np.concatenate(
                 (np.ones(n_ones), np.zeros(N - n_ones))
                 )
-            ) + 1
-
-def make_xor_class_generator(N):
-    return (lambda f: lambda positive: f(N, positive > 0.5))(make_xor)
+            ) + base
 
 
-def make_xor_random_generator(N, p=0.5):
-    return (lambda f: lambda: f(N, np.random.uniform() < p))(make_xor)
+def make_xor_class_generator(N, **kwargs):
+    return (lambda f: lambda positive: f(N, positive > 0.5, **kwargs))(make_xor)
+
+
+def make_xor_random_generator(N, p=0.5, **kwargs):
+    return (lambda f: lambda: f(N, np.random.uniform() < p, **kwargs))(make_xor)
