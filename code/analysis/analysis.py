@@ -49,6 +49,9 @@ def summarize(X, y, decimals=4):
     # plt.title("PCA")
     # plt.show()
 
+    #plt.scatter(X[:,0], X[:,1], c=y)
+    #plt.show()
+    #return
 
     #three dimensional
     pca = PCA(n_components=3)

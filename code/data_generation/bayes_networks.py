@@ -32,6 +32,7 @@ from .node_functions import ExponentialModel
 from .stats_functions import make_normal
 from .stats_functions import normal
 from .stats_functions import bernoulli
+from .structured_generators import make_xor_class_generator
 
 
 class Node:
@@ -80,11 +81,13 @@ class BayesNetwork:
     def sample(self):
 
         # First layer has no inputs and is assumed to be the desired output
-        y = result = self.layers[0].sample(None)
+        y = self.layers[0]()
+        result = np.array(y)
 
         # Sample rest of the inputs
-        for i in range(1, len(self.layers)):
-            result = self.layers[i].sample(result)
+        for layer in range(1, len(self.layers)):
+            result = np.array([self.layers[layer][node](result)
+                                for node in range(len(self.layers[layer]))])
 
         return (y, result)
 
@@ -139,4 +142,40 @@ def example():
 
     return BayesNetwork((y_layer, z_layer, x_layer))
 
+def xor_example():
+    percent_positive = 0.65
+    num_z = 10
+    num_x_per_z = 1
+    base_var = 0.02
+    max_beta = 1
 
+    # Calculate total number of X
+    num_x = num_z * num_x_per_z
+
+    # adjust the variance for more x? TODO: ?
+    var = np.sqrt(num_x) * base_var
+
+    
+
+    # y will be 65% positive (1) and 35% negative (0)
+    y_layer = lambda: bernoulli(percent_positive)
+
+    # z is a k-dimensional XOR
+    z_layer = [make_xor_class_generator(num_z)]
+
+    # x are normals on the z
+    x_layer = []
+    for source in range(num_z):
+        zeros = np.ones(num_z) / num_z
+        zeros[source] = 1
+        x_layer += [(lambda _zeros: lambda z: normal(z.dot(_zeros), var))(zeros)
+                                                for x in range(num_x_per_z)]
+    xx_layer = [
+            lambda z: normal((z).dot([.8, .2])**3, var),
+            lambda z: normal((z).dot([.6, .4])**3, var),
+            lambda z: normal((z).dot([.4, .6])**3, var),
+            lambda z: normal((z).dot([.2, .8])**3, var)
+            ]
+
+    net = BayesNetwork([y_layer, z_layer, x_layer])
+    return net
