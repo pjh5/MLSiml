@@ -9,21 +9,23 @@ This module makes relatively clean data. Default parameters will make regions
 of data that have non-trivial margins between them.
 """
 import numpy as np
+import scipy
 
-def xor_generator(N, p=0.5):
-    """Returns a function that returns N-dimensional XOR vectors
 
-    Parmameters
-    -----------
-    N   : number of dimensions
-    p   : proportion of positive (even) classes
+def make_xor(N, even):
 
-    Returns
-    -------
-    TODO write this
-    """
-    # Sample a N-dimensional binary vector, with an even number of 1s with
-    # probability p
-    # TODO how do you actually do this?
-    return None
+    # Choose how many zeros
+    if even:
+        n_ones = 2*np.random.randint(0, high=N // 2 + 1)
+    else:
+        n_ones = 2*np.random.randint(0, high=(N + 1) // 2) + 1
 
+    return np.random.permutation(
+            np.concatenate(
+                (np.ones(n_ones), np.zeros(N - n_ones))
+                )
+            )
+
+
+def make_xor_generator(N, p=0.5):
+    return (lambda f: lambda: f(N, np.random.uniform() < p))(make_xor)
