@@ -29,30 +29,59 @@ k       The number of sources. The z layer is used to control the relative
 import numpy as np
 
 class Node:
+    """A Node in a Bayesian Network.
 
-    def __init__(self, f_sample, f_noise):
+    The most important method is sample_with(prev_layer), which takes in the
+    previous layer (a vector as a numpy array) and outputs a single value OR a
+    vector. Note that this may output a vector.
+    """
+
+    def __init__(self, f_sample):
         self.f_sample = f_sample
-        self.f_noise = f_noise
 
-        # Last sample will be stored as a tuple(sample, noise)
+        # Save the most recent sample generated
         self.last_sample = None 
 
-    def sample(self, prev_layer):
-        self.last_sample = (self.f_sample(prev_layer), self.f_noise())
-        return sum(self.last_sample)
+    def sample_with(self, prev_layer):
+        self.last_sample = self.f_sample(prev_layer)
+        return self.last_sample
 
     def __str__(self):
-        return "<Node(" + str(self.f_sample) + ", " + str(self.f_noise) + ")>"
+        return "<Node " + str(self.f_sample) + ">"
+
+
+class VectorNode(Node):
+    """A Node that outputs a vector instead of a scalar.
+
+    Only changes __str__. This does not validate that the output is actually a
+    vector nor does it change any functionality.
+    """
+
+    def __str__(self):
+        return ("<VectorNode " + str(self.f_sample) + ">")
 
 
 class NodeLayer:
     """Basically just an array of Node objects"""
 
     def __init__(self, nodes):
-        self.nodes = list(nodes)
+        self.nodes = nodes
 
-    def sample(self, prev_layer):
-        return np.array([node.sample(prev_layer) for node in self.nodes])
+    @classmethod
+    def from_function_array(cls, functions):
+        return cls([Node(function) for function in functions])
+
+    @classmethod
+    def from_vector_function(cls, vector_function):
+        return cls([VectorNode(vector_function)])
+
+    @classmethod
+    def for_y(cls, y_function):
+        return y_function
+
+    def sample_with(self, prev_layer):
+        return np.array([node.sample_with(prev_layer)
+                                            for node in self.nodes]).flatten()
  
     def __getitem__(self, index):
         return self.nodes[index]
@@ -64,12 +93,18 @@ class NodeLayer:
         return str(self.nodes)
 
 
-class BayesNetwork:
+class Network:
 
     def __init__(self, layers):
         self.layers = layers
-        self.n_layers = len(layers)
-        self.out_dimension = len(layers[-1])
+        self.dims = []
+
+        # Validate dimensions
+        result = layers[0]()
+        self.dims = [1]
+        for layer in layers[1:]:
+            result = layer.sample_with(result)
+            self.dims.append(len(result))
 
     def sample(self):
 
@@ -78,9 +113,8 @@ class BayesNetwork:
         result = np.array(y)
 
         # Sample rest of the inputs
-        for layer in range(1, len(self.layers)):
-            result = np.array([self.layers[layer][node](result)
-                                for node in range(len(self.layers[layer]))])
+        for layer in self.layers[1:]:
+            result = layer.sample_with(result)
 
         return (y, result)
 
@@ -88,7 +122,7 @@ class BayesNetwork:
         
         # Allocate memory
         y = np.zeros(shape=(n_samples, 1))
-        X = np.zeros(shape=(n_samples, self.out_dimension))
+        X = np.zeros(shape=(n_samples, self.dims[-1]))
 
         # Sample
         for i in range(n_samples):
@@ -96,11 +130,22 @@ class BayesNetwork:
 
         return X, y
 
+    def __len__(self):
+        return len(self.layers)
+
     def __str__(self):
         """Bulky multi-line string representation, layer by layer"""
-        s = ""
+
+        # Header for the network
+        s = "<Network " + "-".join([str(d) for d in self.dims]) + "\n"
+
+        # Each layer on another line
         for i, layer in enumerate(self.layers):
-            s += "Layer " + str(i) + ": " + str(layer) + "\n"
+            s += "\tLayer " + str(i) + ": " + str(layer) + "\n"
+
+        # Extra newline at the end
+        s += "\t>\n"
+
         return s
 
 

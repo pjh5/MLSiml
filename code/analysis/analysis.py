@@ -83,11 +83,13 @@ def plot_data(X, y):
     # Ignore 1 dimensional data
     if x_dim == 1:
         print("plot_data not gonna bother with 1 dimensional data")
+        return
 
     # For 2 dimensional data, just plot it
     if x_dim == 2:
         plt.scatter(X[:,0], X[:,1], c=y)
         plt.show()
+        return
 
     # For at least 3 dimensions, do PCA
     pca = PCA(n_components=3)
@@ -98,10 +100,10 @@ def plot_data(X, y):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(plot_x[:,0], plot_x[:,1], plot_x[:,2], c=y)
-    plt.title("PCA of Generated Data")
-    plt.xlabel("1st Principal Component")
-    plt.ylabel("2nd Principal Component")
-    #plt.zlabel("3rd Principal Component")
+    ax.set_title("PCA of Generated Data")
+    ax.set_xlabel("1st Principal Component")
+    ax.set_ylabel("2nd Principal Component")
+    ax.set_zlabel("3rd Principal Component")
     plt.show()
 
 

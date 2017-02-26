@@ -12,7 +12,7 @@ import numpy as np
 import scipy
 
 
-def make_xor(N, make_even, scale=2, base=-1):
+def make_xor(N, make_even, scale=1, base=0):
 
     # Choose how many zeros
     if make_even:
