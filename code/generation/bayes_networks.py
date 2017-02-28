@@ -121,7 +121,7 @@ class Network:
     def bulk_sample(self, n_samples):
         
         # Allocate memory
-        y = np.zeros(shape=(n_samples, 1))
+        y = np.zeros(shape=(n_samples))
         X = np.zeros(shape=(n_samples, self.dims[-1]))
 
         # Sample

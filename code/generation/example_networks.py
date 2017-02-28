@@ -43,9 +43,9 @@ def example():
             Exponential.sampler_for(
                             loc=lambda z: z[0], scale=lambda z: (z**2 - z)[0]),
             Exponential.sampler_for(
-                            loc=lambda z: z[0], scale=lambda z: (z**2)[1]),
+                            loc=lambda z: z[1], scale=lambda z: (z**2)[1]),
             Exponential.sampler_for(
-                            loc=lambda z: z[0], scale=lambda z: (3*z**3)[1])
+                            loc=lambda z: z[1], scale=lambda z: (3*z**3)[1])
             ]
     x_layer = NodeLayer.from_function_array(x_dists)
 
