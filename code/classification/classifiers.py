@@ -1,6 +1,9 @@
 import numpy as np
 from sklearn import linear_model
 from sklearn import svm
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 
 
@@ -98,6 +101,43 @@ class Classifier:
             The maximum number of iterations to be run.
         """
         return cls(svm.LinearSVC, **kwargs)
+
+    @classmethod
+    def for_gaussian_nb(cls, priors=None, **kwargs):
+        """Gaussian Naive Bayes.
+
+        Parameters
+        ----------
+        priors : Prior probabilities of the classes. If specified the priors are not 
+            adjusted according to the data.
+        """
+        return cls(naive_bayes.GaussianNB, **kwargs)
+
+    @classmethod
+    def for_knn(cls, n_neighbors=5, **kwargs):
+        """KNN Classifier.
+
+        Parameters
+        ----------
+        n_neighbors : Number of neighbors to use
+        weights : default = uniform. Can also use 
+            ‘distance’ : weight points by the inverse of their distance.
+        algorithm : {‘auto’, ‘ball_tree’, ‘kd_tree’, ‘brute’}
+        """
+        return cls(neighbors.KNeighborsClassifier, **kwargs)
+
+    @classmethod
+    def for_random_forest(cls, n_estimators=10, **kwargs):
+        """Random Forest Classifier.
+
+        Parameters
+        ----------
+        n_estimators : Number of trees in forest
+        criterion : Function to measure quality of tree. Default is the gini index.
+        max_features : The number of features to consider when looking for the best split.
+            default is sqrt(n_features)
+        """
+        return cls(ensemble.RandomForestClassifier, **kwargs)
 
 
 def classification_accuracy(y_true, y_hat):
