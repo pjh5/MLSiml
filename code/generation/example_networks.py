@@ -55,7 +55,7 @@ def xor_example(
         p=0.5,
         num_z=3,
         num_x_per_z=1,
-        base_var=0.1,
+        base_var=0.02,
         max_beta=1,
         xor_scale=1,
         xor_base=0):

@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 
-def summarize(X, y, plot=True, decimals=4):
+def summarize(X, y, decimals=4):
     """Prints summary statistics for every column of X, split into 2 classes
 
     X is the data, y is the class labels, assumed to be 0 or 1. This will also
@@ -57,10 +57,6 @@ def summarize(X, y, plot=True, decimals=4):
     print()
     print("\tStdev : " + numstr.format(*np.sqrt(np.var(Xs[0], axis=0))))
     print("\tVar   : " + numstr.format( *np.var(Xs[0], axis=0)))
-
-    # Plot if requested
-    if plot:
-        plot_data(X, y)
 
 
 def plot_data(X, y):

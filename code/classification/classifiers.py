@@ -99,6 +99,43 @@ class Classifier:
         """
         return cls(svm.LinearSVC, **kwargs)
 
+    @classmethod
+    def for_svm(cls, kernel="rbf", **kwargs):
+        """C-Support Vector Classification.
+        The implementation is based on libsvm. The fit time complexity
+        is more than quadratic with the number of samples which makes it hard
+        to scale to dataset with more than a couple of 10000 samples.
+
+        Parameters
+        ----------
+        C : float, optional (default=1.0)
+            Penalty parameter C of the error term.
+        kernel : string, optional (default='rbf')
+             Specifies the kernel type to be used in the algorithm.
+             It must be one of 'linear', 'poly', 'rbf', 'sigmoid', 'precomputed' or
+             a callable.
+             If none is given, 'rbf' will be used. If a callable is given it is
+             used to pre-compute the kernel matrix from data matrices; that matrix
+             should be an array of shape ``(n_samples, n_samples)``.
+        degree : int, optional (default=3)
+            Degree of the polynomial kernel function ('poly').
+            Ignored by all other kernels.
+        gamma : float, optional (default='auto')
+            Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.
+            If gamma is 'auto' then 1/n_features will be used instead.
+        coef0 : float, optional (default=0.0)
+            Independent term in kernel function.
+            It is only significant in 'poly' and 'sigmoid'.
+        probability : boolean, optional (default=False)
+            Whether to enable probability estimates. This must be enabled prior
+            to calling `fit`, and will slow down that method.
+        shrinking : boolean, optional (default=True)
+            Whether to use the shrinking heuristic.
+        tol : float, optional (default=1e-3)
+            Tolerance for stopping criterion.
+        """
+        return cls(svm.SVC, **kwargs)
+
 
 def classification_accuracy(y_true, y_hat):
     return 1 - np.sum(np.abs(y_true - y_hat)) / float(y_true.shape[0])

@@ -10,7 +10,7 @@ from classification.classifiers import Classifier
 from utils import parse_to_args_and_kwargs
 
 
-def main(sample_size=2500, xor=0, show_plot=True, **kwargs):
+def main(sample_size=2500, xor=0, show_plot=True, show_summary=False, **kwargs):
 
     # Build a network
     net = xor_example(num_z=xor, **kwargs) if xor > 0 else example(**kwargs)
@@ -19,13 +19,28 @@ def main(sample_size=2500, xor=0, show_plot=True, **kwargs):
     X, y = net.bulk_sample(sample_size)
 
     # Show some summary of the data
-    analysis.summarize(X, y, show_plot)
+    if show_summary:
+        analysis.summarize(X, y)
+
+    if show_plot:
+        analysis.plot_data(X, y)
 
     # Split to training and testing data
     datasets = split_data(X, y, proportion_train=0.7)
 
     # Classify with logistic regression, with all default parameters
+    print('\nTesting logistic regression')
     classifier = Classifier.for_logistic_regression()
+    classifier.evaluate_on(datasets)
+
+    # Classify with linear SVM, with all default parameters
+    print('\nTesting a linear SVM')
+    classifier = Classifier.for_linear_svm()
+    classifier.evaluate_on(datasets)
+
+    # Classify with a rbf SVM, with all default parameters
+    print('\nTesting a SVM with a RBF kernel')
+    classifier = Classifier.for_svm()
     classifier.evaluate_on(datasets)
 
 
