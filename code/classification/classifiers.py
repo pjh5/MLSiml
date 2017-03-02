@@ -180,10 +180,6 @@ class Classifier:
         kwargs["kernel"] = kernel
         return cls(svm.SVC, "SVM with " + kernel + " Kernel", **kwargs)
 
-
-    def __str__(self):
-        return "<" + self.description + " " + str(self.params) + ">"
-
     @classmethod
     def for_gaussian_nb(cls, priors=None, **kwargs):
         """Gaussian Naive Bayes.
@@ -193,20 +189,7 @@ class Classifier:
         priors : Prior probabilities of the classes. If specified the priors are not 
             adjusted according to the data.
         """
-        return cls(naive_bayes.GaussianNB, **kwargs)
-
-    @classmethod
-    def for_knn(cls, n_neighbors=5, **kwargs):
-        """KNN Classifier.
-
-        Parameters
-        ----------
-        n_neighbors : Number of neighbors to use
-        weights : default = uniform. Can also use 
-            ‘distance’ : weight points by the inverse of their distance.
-        algorithm : {‘auto’, ‘ball_tree’, ‘kd_tree’, ‘brute’}
-        """
-        return cls(neighbors.KNeighborsClassifier, **kwargs)
+        return cls(naive_bayes.GaussianNB, "Gaussian Naive Bayes", **kwargs)
 
     @classmethod
     def for_random_forest(cls, n_estimators=10, **kwargs):
@@ -219,7 +202,11 @@ class Classifier:
         max_features : The number of features to consider when looking for the best split.
             default is sqrt(n_features)
         """
-        return cls(ensemble.RandomForestClassifier, **kwargs)
+        return cls(ensemble.RandomForestClassifier, "Random Forest", **kwargs)
+
+
+    def __str__(self):
+        return "<" + self.description + " " + str(self.params) + ">"
 
 
 def classification_accuracy(y_true, y_hat):
