@@ -1,4 +1,4 @@
-import argparse
+import sys
 
 from generation.example_networks import example
 from generation.example_networks import xor_example
@@ -7,6 +7,7 @@ from analysis import analysis
 from classification.classifiers import split_data
 from classification.classifiers import Classifier
 
+from utils import parse_to_args_and_kwargs
 
 
 def main(sample_size=2500, xor=0, show_plot=True, **kwargs):
@@ -32,24 +33,5 @@ def main(sample_size=2500, xor=0, show_plot=True, **kwargs):
 # Allow running like "$> python main.py"
 if __name__ == "__main__":
 
-    """
-    # Arguments
-    parser = argparse.ArgumentParser(
-            description="Creates either an XOR-network or a " +
-            "Normal-Exponential network, then samples from that network a " +
-            "lot and shows summary statistics.")
-
-    parser.add_argument("--xor", type=int, default=0,
-            help="Uses a network with an XOR z-layer of the given dimension")
-
-    parser.add_argument("-n", "--sample_size", type=int, default=2500,
-            help="THe number of samples to take")
-
-    parser.add_argument("-q", "--no-graph", action="store_true", default=False,
-            help="Supresses the plot.")
-
-    # Parse the arguments
-    args = parser.parse_args()
-    """
-
+    args, kwargs = parse_to_args_and_kwargs(sys.argv[1:])
     main(**kwargs)
