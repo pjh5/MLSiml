@@ -1,5 +1,7 @@
 import numpy as np
+
 from sklearn import linear_model
+from sklearn import neighbors
 from sklearn import svm
 
 
@@ -29,19 +31,18 @@ class Classifier:
     sklearn docs and then edited to only be relevant to binary classification.
     """
 
-    def __init__(self, base_classifier, **kwargs):
+    def __init__(self, base_classifier, description, **kwargs):
         """This probably shouldn't be called directly."""
         self.base_classifier = base_classifier(**kwargs)
+        self.description = description
+        self.params = kwargs
 
 
-    def evaluate_on(self, datasplit, verbose=False):
+    def evaluate_on(self, datasplit):
         self.base_classifier.fit(datasplit.X_train, datasplit.Y_train)
         y_hat = self.base_classifier.predict(datasplit.X_test)
         
-        # Print. Should we do this here?
-        print("Error is "
-                        + str(classification_accuracy(datasplit.Y_test, y_hat)))
-        return y_hat
+        return classification_accuracy(datasplit.Y_test, y_hat) 
 
 
     @classmethod
@@ -66,16 +67,54 @@ class Classifier:
             Maximum number of iterations taken for the solvers to converge.
         solver : {'newton-cg', 'lbfgs', 'liblinear', 'sag'}, default: 'liblinear'
             Algorithm to use in the optimization problem.
-            - For small datasets, 'liblinear' is a good choice, whereas 'sag' is
-                faster for large ones.
+            - For small datasets, 'liblinear' is a good choice, whereas 'sag'
+                is faster for large ones.
             - 'newton-cg', 'lbfgs' and 'sag' only handle L2 penalty.
-            Note that 'sag' fast convergence is only guaranteed on features with
-            approximately the same scale. You can preprocess the data with a
-            scaler from sklearn.preprocessing.
+            Note that 'sag' fast convergence is only guaranteed on features
+            with approximately the same scale. You can preprocess the data with
+            a scaler from sklearn.preprocessing.
             .. versionadded:: 0.17
                Stochastic Average Gradient descent solver.
         """
-        return cls(linear_model.LogisticRegression, **kwargs)
+        kwargs["penalty"] = penalty
+        kwargs["solver"] = solver
+        return cls(linear_model.LogisticRegression,
+                                            "Logistic Regression", **kwargs)
+
+    @classmethod
+    def for_knn(cls, n_neighbors=5, **kwargs):
+        """Classifier implementing the k-nearest neighbors vote.
+
+        Parameters
+        ----------
+        n_neighbors : int, optional (default = 5)
+            Number of neighbors to use by default for :meth:`k_neighbors`
+            queries.
+        weights : str or callable, optional (default = 'uniform')
+            weight function used in prediction.  Possible values:
+            - 'uniform' : uniform weights.  All points in each neighborhood
+              are weighted equally.
+            - 'distance' : weight points by the inverse of their distance.
+              in this case, closer neighbors of a query point will have a
+              greater influence than neighbors which are further away.
+        algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, optional
+            Algorithm used to compute the nearest neighbors:
+        metric : string or DistanceMetric object (default = 'minkowski')
+            the distance metric to use for the tree.  The default metric is
+            minkowski, and with p=2 is equivalent to the standard Euclidean
+            metric. See the documentation of the DistanceMetric class for a
+            list of available metrics.
+        p : integer, optional (default = 2)
+            Power parameter for the Minkowski metric. When p = 1, this is
+            equivalent to using manhattan_distance (l1), and
+            euclidean_distance (l2) for p = 2. For arbitrary p,
+            minkowski_distance (l_p) is used.
+        metric_params : dict, optional (default = None)
+            Additional keyword arguments for the metric function.
+        """
+        kwargs["n_neighbors"] = n_neighbors
+        return cls(neighbors.KNeighborsClassifier,
+                            str(n_neighbors) + " Nearest Neighbors", **kwargs)
 
     @classmethod
     def for_linear_svm(cls, dual=False, **kwargs):
@@ -93,11 +132,12 @@ class Classifier:
             vectors that are sparse.
         dual : bool, (default=False)
             Select the algorithm to either solve the dual or primal
-            optimization problem. Prefer dual=False when n_samples > n_features.
+            optimization problem. Prefer dual=False when n_samples > n_features
         max_iter : int, (default=1000)
             The maximum number of iterations to be run.
         """
-        return cls(svm.LinearSVC, **kwargs)
+        kwargs["dual"] = dual
+        return cls(svm.LinearSVC, "Linear SVM", **kwargs)
 
     @classmethod
     def for_svm(cls, kernel="rbf", **kwargs):
@@ -134,7 +174,12 @@ class Classifier:
         tol : float, optional (default=1e-3)
             Tolerance for stopping criterion.
         """
-        return cls(svm.SVC, **kwargs)
+        kwargs["kernel"] = kernel
+        return cls(svm.SVC, "SVM with " + kernel + " Kernel", **kwargs)
+
+
+    def __str__(self):
+        return "<" + self.description + " " + str(self.params) + ">"
 
 
 def classification_accuracy(y_true, y_hat):

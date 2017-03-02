@@ -74,7 +74,6 @@ def xor_example(
     # z is a k-dimensional XOR
     z_layer = NodeLayer.from_vector_function(
             make_xor_class_generator(num_z, scale=xor_scale, base=xor_base))
-    print("z_layer is " + str(z_layer))
 
     # x are normals on the z
     x_layer = []
@@ -91,6 +90,5 @@ def xor_example(
                     for x in range(num_x_per_z)]
 
     x_layer = NodeLayer.from_function_array(x_layer)
-    print("x_layer is " + str(x_layer))
 
     return Network([y_layer, z_layer, x_layer])

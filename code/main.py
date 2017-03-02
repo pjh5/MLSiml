@@ -8,6 +8,7 @@ from classification.classifiers import split_data
 from classification.classifiers import Classifier
 
 from utils import parse_to_args_and_kwargs
+from utils import flatten
 
 
 def main(sample_size=2500, xor=0, show_plot=True, show_summary=False, **kwargs):
@@ -28,25 +29,25 @@ def main(sample_size=2500, xor=0, show_plot=True, show_summary=False, **kwargs):
     # Split to training and testing data
     datasets = split_data(X, y, proportion_train=0.7)
 
-    # Classify with logistic regression, with all default parameters
-    print('\nTesting logistic regression')
-    classifier = Classifier.for_logistic_regression()
-    classifier.evaluate_on(datasets)
 
-    # Classify with linear SVM, with all default parameters
-    print('\nTesting a linear SVM')
-    classifier = Classifier.for_linear_svm()
-    classifier.evaluate_on(datasets)
+    # Test on classifier suites
+    for classifier in flatten([
+            Classifier.for_logistic_regression(),
+            [Classifier.for_knn(n_neighbors=n) for n in [1, 2, 3, 5, 10]],
+            Classifier.for_linear_svm(),
+            [Classifier.for_svm(kernel=k) for k in ['poly', 'rbf', 'sigmoid']],
+            ]):
 
-    # Classify with a rbf SVM, with all default parameters
-    print('\nTesting a SVM with a RBF kernel')
-    classifier = Classifier.for_svm()
-    classifier.evaluate_on(datasets)
+        print("Testing " + str(classifier) + "\t:\t" +
+                                        str(classifier.evaluate_on(datasets)))
+    print()
 
 
     
-# Allow running like "$> python main.py"
+# Allow running like "$> python main.py --xor=5"
 if __name__ == "__main__":
 
     args, kwargs = parse_to_args_and_kwargs(sys.argv[1:])
+    print(args)
+    print(kwargs)
     main(**kwargs)

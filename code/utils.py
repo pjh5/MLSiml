@@ -2,8 +2,8 @@ import re
 
 
 # Flags and options must be alphanumeric, starting with a letter
-flag_re = re.compile("-(?P<flag>[a-zA-Z]+[a-zA-Z0-9]*$)")
-options = re.compile("--(?P<kw>[a-zA-Z]+[a-zA-Z0-9]*)([=:](?P<val>\w+))?$")
+flag_re = re.compile("-(?P<flag>[a-zA-Z]+[a-zA-Z0-9_]*$)")
+options = re.compile("--(?P<kw>[a-zA-Z]+[a-zA-Z0-9_]*)([=:](?P<val>\w+))?")
 ints    = re.compile("(?P<int>[1-9]+[0-9]*|0)$")
 floats  = re.compile("(?P<float>([1-9]+[0-9]*|0)\.[0-9]*$)")
 
@@ -28,6 +28,8 @@ def parse_to_args_and_kwargs(arglist):
 
         # Parse keyword arguments
         parsed, extra_argument_consumed = _parse_keyword(kwargs, arglist, i)
+        if extra_argument_consumed:
+            i += 1
         if parsed:
             continue
 
@@ -111,3 +113,16 @@ def _try_to_cast(arg):
         return float(arg)
 
     return arg
+
+
+def flatten(array, recursive=False):
+    flattened = []
+    for elem in array:
+        if type(elem) is list:
+            if recursive:
+                flattened += flatten(elem)
+            else:
+                flattened += elem
+        else:
+            flattened.append(elem)
+    return flattened
