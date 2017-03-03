@@ -58,6 +58,6 @@ class Distribution:
 def bernoulli(prob):
     return (lambda p: lambda: float(stats.uniform.rvs() > p))(prob)
 
-def sample_bernoulli(p):
+def bernoulli_sampler_for(p):
     return float(stats.uniform.rvs() > p)
 

@@ -3,6 +3,7 @@ from .bayes_networks import Network
  
 from .stats_functions import Distribution
 from .stats_functions import bernoulli
+from .structured_generators import make_xor
 from .structured_generators import make_xor_class_generator
 
 import numpy as np
@@ -36,7 +37,6 @@ def example():
     # 4 total outputs, two for each source
     # Modeling x in the exponential family
     # 'scale' is the mean of the distribution, 'loc' is an additional shift
-    exp_args = ['scale', 'loc']
     x_dists = [
             Exponential.sampler_for(
                             loc=lambda z: z[0], scale=lambda z: z[0]),
@@ -51,12 +51,13 @@ def example():
 
     return Network([y_layer, z_layer, abs_layer, x_layer])
 
+
 def xor_example(
         p=0.5,
         num_z=3,
         num_x_per_z=1,
-        base_var=0.02,
-        max_beta=1,
+        var=0.02,
+        max_beta=1.0,
         xor_scale=1,
         xor_base=0):
 
@@ -64,9 +65,7 @@ def xor_example(
     num_x = num_z * num_x_per_z
 
     # adjust the variance for more x? TODO: ?
-    var = np.sqrt(num_x) * base_var
-
-    
+    var = np.sqrt(num_x) * var
 
     # y will be 65% positive (1) and 35% negative (0)
     y_layer = bernoulli(p)
@@ -80,8 +79,59 @@ def xor_example(
     for source in range(num_z):
 
         # Each x is connected only to its z
-        beta = np.zeros(num_z)
-        beta[source] = 1
+        beta = np.ones(num_z) * (1 - max_beta) / float(num_x)
+        beta[source] = max_beta
+
+        x_layer += [Normal.sampler_for(
+                                    loc=(lambda _b: lambda z: z.dot(_b))(beta),
+                                    scale=var
+                                    )
+                    for x in range(num_x_per_z)]
+
+    x_layer = NodeLayer.from_function_array(x_layer)
+ 
+    return Network([y_layer, z_layer, x_layer])
+
+def xor_corrupted_example(
+        p=0.5,
+        num_z_per_source=3,
+        num_x_per_z=1,
+        var=0.02,
+        corruption_level=1.0,
+        max_beta=1.0,
+        xor_scale=1,
+        xor_base=0):
+
+    # Calculate total number of X
+    num_z = num_z_per_source * 2
+    num_x = num_z * num_x_per_z
+
+    # adjust the variance for more x? TODO: ?
+    var = np.sqrt(num_x) * var
+
+    # y will be 65% positive (1) and 35% negative (0)
+    y_layer = bernoulli(p)
+
+    corruption_layer = [
+            lambda y: y,
+            (lambda f: lambda y: y * f())(bernoulli(corruption_level))
+            ]
+    corruption_layer = NodeLayer.from_function_array(corruption_layer)
+
+    # z is a k-dimensional XOR
+    z_layer = [
+            (lambda f: lambda y: f(num_z_per_source, y[0] > 0.5))(make_xor),
+            (lambda f: lambda y: f(num_z_per_source, y[1] > 0.5))(make_xor)
+            ]
+    z_layer = NodeLayer.from_function_array(z_layer)
+
+    # x are normals on the z
+    x_layer = []
+    for source in range(num_z):
+
+        # Each x is connected only to its z
+        beta = np.ones(num_z) * (1 - max_beta) / float(num_x)
+        beta[source] = max_beta
 
         x_layer += [Normal.sampler_for(
                                     loc=(lambda _b: lambda z: z.dot(_b))(beta),
@@ -91,4 +141,5 @@ def xor_example(
 
     x_layer = NodeLayer.from_function_array(x_layer)
 
-    return Network([y_layer, z_layer, x_layer])
+    return Network([y_layer, corruption_layer, z_layer, x_layer])
+
