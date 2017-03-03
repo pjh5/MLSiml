@@ -189,7 +189,8 @@ class Classifier:
         priors : Prior probabilities of the classes. If specified the priors are not 
             adjusted according to the data.
         """
-        return cls(naive_bayes.GaussianNB, "Gaussian Naive Bayes", **kwargs)
+        kwargs['priors'] = priors
+        return cls(GaussianNB, "Gaussian Naive Bayes", **kwargs)
 
     @classmethod
     def for_random_forest(cls, n_estimators=10, **kwargs):
@@ -202,7 +203,8 @@ class Classifier:
         max_features : The number of features to consider when looking for the best split.
             default is sqrt(n_features)
         """
-        return cls(ensemble.RandomForestClassifier, "Random Forest", **kwargs)
+        kwargs['n_estimators'] = n_estimators
+        return cls(RandomForestClassifier, "Random Forest", **kwargs)
 
 
     def __str__(self):

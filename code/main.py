@@ -36,18 +36,19 @@ def main(sample_size=2500, xor=0, show_plot=True, show_summary=False, **kwargs):
             [Classifier.for_knn(n_neighbors=n) for n in [1, 2, 3, 5, 10]],
             Classifier.for_linear_svm(),
             [Classifier.for_svm(kernel=k) for k in ['poly', 'rbf', 'sigmoid']],
+            [Classifier.for_random_forest(n_estimators = k) for k in [10, 20, 30]],
+            Classifier.for_gaussian_nb()
             ]):
 
-        print("Testing " + str(classifier) + "\t:\t" +
-                                        str(classifier.evaluate_on(datasets)))
+        print(str(classifier.evaluate_on(datasets)) + " with " + str(classifier))
     print()
 
 
-    
+
 # Allow running like "$> python main.py --xor=5"
 if __name__ == "__main__":
 
     args, kwargs = parse_to_args_and_kwargs(sys.argv[1:])
-    print(args)
-    print(kwargs)
+    if args:
+        print("Discarding arguments: " + str(args))
     main(**kwargs)
