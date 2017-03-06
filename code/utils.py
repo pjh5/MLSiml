@@ -2,16 +2,21 @@ import re
 
 
 # Flags and options must be alphanumeric, starting with a letter
-flag_re = re.compile("-(?P<flag>[a-zA-Z]+[a-zA-Z0-9_]*$)")
-options = re.compile("--(?P<kw>[a-zA-Z]+[a-zA-Z0-9_]*)([=:](?P<val>\w+))?")
+flag_re = re.compile("-(?P<flag>[a-zA-Z]+[a-zA-Z0-9_\-]*$)")
+options = re.compile("--(?P<kw>[a-zA-Z]+[a-zA-Z0-9_\-]*)([=:](?P<val>\S+))?")
 ints    = re.compile("(?P<int>[1-9]+[0-9]*|0)$")
 floats  = re.compile("(?P<float>([1-9]+[0-9]*|0)\.[0-9]*$)")
 
-def parse_to_args_and_kwargs(arglist):
+def parse_to_args_and_kwargs(arglist, aliases=None):
 
-    # Manually parse argments into keyword arguments
+    # This code will loop through all the arguments and add each one to either
+    # args or kwargs
     args = []
     kwargs = {}
+
+    # Allow aliases. Default only has 'v' -> 'verbose'
+    if not aliases:
+        aliases = {'v':"verbose"}
 
     # Loop through arguments
     extra_argument_consumed = False
@@ -23,11 +28,12 @@ def parse_to_args_and_kwargs(arglist):
             continue
 
         # Parse flag arguments
-        if _parse_flag(kwargs, arglist, i):
+        if _parse_flag(kwargs, arglist, i, aliases):
             continue
 
         # Parse keyword arguments
-        parsed, extra_argument_consumed = _parse_keyword(kwargs, arglist, i)
+        parsed, extra_argument_consumed = _parse_keyword(kwargs, arglist, i,
+                                                                    aliases)
         if extra_argument_consumed:
             i += 1
         if parsed:
@@ -40,12 +46,12 @@ def parse_to_args_and_kwargs(arglist):
     return args, kwargs
 
 
-def _parse_flag(kwargs, arglist, i):
+def _parse_flag(kwargs, arglist, i, aliases):
         
     # Parse flags
     match = flag_re.match(arglist[i])
     if match:
-        flag = match.group('flag')
+        flag = _clean_and_unalias(aliases, match.group('flag'))
 
         # Don't reduplicate
         if flag in kwargs:
@@ -61,12 +67,12 @@ def _parse_flag(kwargs, arglist, i):
     return False
 
 
-def _parse_keyword(kwargs, arglist, i):
+def _parse_keyword(kwargs, arglist, i, aliases):
     next_argument_consumed = False
 
     match = options.match(arglist[i])
     if match:
-        kw = match.group('kw')
+        kw = _clean_and_unalias(aliases, match.group('kw'))
 
         # If not set with kw=val or kw:val syntax, read the next argument
         if match.group('val'):
@@ -101,6 +107,16 @@ def _parse_keyword(kwargs, arglist, i):
         return True, next_argument_consumed
 
     return False, False
+
+
+def _clean_and_unalias(aliases, arg):
+
+    # Replace aliases with their fuller form
+    if arg in aliases:
+        return aliases[arg]
+
+    # Else clean the argument to be allowable variable names
+    return arg.replace('-', '_')
 
 
 def _try_to_cast(arg):

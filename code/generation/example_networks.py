@@ -13,7 +13,7 @@ Normal = Distribution.Normal()
 Exponential = Distribution.Exponential()
 
 
-def example():
+def exponential():
     no_noise = lambda: 0
 
     # y will be 65% 0 and 35% 1
@@ -27,11 +27,12 @@ def example():
             Normal.sampler_for(loc=lambda y: y*50 + (1-y)*30, scale=3),
             Normal.sampler_for(loc=lambda y: y*5  + (1-y)*7 , scale=1)
             ]
-    z_layer = NodeLayer.from_function_array(z_dists)
+    z_layer = NodeLayer.from_function_array(z_dists, description="Normal")
 
     # Extra layer to make sure parameters are > 0 for the next layer
     # Note that this has to be np.maximum and not np.max
-    abs_layer = NodeLayer.from_vector_function(lambda z: np.maximum(z, 1.1))
+    abs_layer = NodeLayer.from_vector_function(lambda z: np.maximum(z, 1.1),
+                                                description="Absolute Value")
 
     # x, outputs
     # 4 total outputs, two for each source
@@ -47,12 +48,13 @@ def example():
             Exponential.sampler_for(
                             loc=lambda z: z[1], scale=lambda z: (3*z**3)[1])
             ]
-    x_layer = NodeLayer.from_function_array(x_dists)
+    x_layer = NodeLayer.from_function_array(x_dists, description="Exponential")
 
-    return Network([y_layer, z_layer, abs_layer, x_layer])
+    return Network(y_layer, [z_layer, abs_layer, x_layer],
+                                                    description="Exponential")
 
 
-def xor_example(
+def xor(
         p=0.5,
         num_z=3,
         num_x_per_z=1,
@@ -64,15 +66,13 @@ def xor_example(
     # Calculate total number of X
     num_x = num_z * num_x_per_z
 
-    # adjust the variance for more x? TODO: ?
-    var = np.sqrt(num_x) * var
-
     # y will be 65% positive (1) and 35% negative (0)
     y_layer = bernoulli(p)
 
     # z is a k-dimensional XOR
     z_layer = NodeLayer.from_vector_function(
-            make_xor_class_generator(num_z, scale=xor_scale, base=xor_base))
+            make_xor_class_generator(num_z, scale=xor_scale, base=xor_base),
+            description="XOR")
 
     # x are normals on the z
     x_layer = []
@@ -88,11 +88,11 @@ def xor_example(
                                     )
                     for x in range(num_x_per_z)]
 
-    x_layer = NodeLayer.from_function_array(x_layer)
+    x_layer = NodeLayer.from_function_array(x_layer, description="Normal")
  
-    return Network([y_layer, z_layer, x_layer])
+    return Network(y_layer, [z_layer, x_layer], description="XOR")
 
-def xor_corrupted_example(
+def corrupted_xor(
         p=0.5,
         num_z_per_source=3,
         num_x_per_z=1,
@@ -116,14 +116,15 @@ def xor_corrupted_example(
             lambda y: y,
             (lambda f: lambda y: y * f())(bernoulli(corruption_level))
             ]
-    corruption_layer = NodeLayer.from_function_array(corruption_layer)
+    corruption_layer = NodeLayer.from_function_array(corruption_layer,
+                                                    description="Corruption")
 
     # z is a k-dimensional XOR
     z_layer = [
             (lambda f: lambda y: f(num_z_per_source, y[0] > 0.5))(make_xor),
             (lambda f: lambda y: f(num_z_per_source, y[1] > 0.5))(make_xor)
             ]
-    z_layer = NodeLayer.from_function_array(z_layer)
+    z_layer = NodeLayer.from_function_array(z_layer, description="Double XOR")
 
     # x are normals on the z
     x_layer = []
@@ -139,7 +140,8 @@ def xor_corrupted_example(
                                     )
                     for x in range(num_x_per_z)]
 
-    x_layer = NodeLayer.from_function_array(x_layer)
+    x_layer = NodeLayer.from_function_array(x_layer, description="Normal")
 
-    return Network([y_layer, corruption_layer, z_layer, x_layer])
+    return Network(y_layer, [corruption_layer, z_layer, x_layer],
+                                                description="Corrupted XOR")
 

@@ -21,20 +21,6 @@ class Distribution:
     def sample(self, **kwargs):
         return self.base.rvs(**kwargs)
 
-    """
-    def sampler_for(self, param_function, **kwargs):
-
-        # If given a function to use to generate the distribution parameters
-        if param_function:
-            def make_sampler_with_lambda_arg(sampler, generator):
-                return lambda args: sampler(**generator(args))
-
-            return make_sampler_with_lambda_arg(self.sample, param_function)
-
-        # Else just parametize the distribution with the keyword arguments
-        return (lambda f: lambda: f.rvs())(self.base(**kwargs))
-    """
-
     def sampler_for(self, **kwargs):
 
         # Build dictionary of all callable keyword arguments

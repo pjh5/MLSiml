@@ -36,7 +36,8 @@ class Node:
     vector. Note that this may output a vector.
     """
 
-    def __init__(self, f_sample):
+    def __init__(self, f_sample, description=None):
+        self.description = description
         self.f_sample = f_sample
 
         # Save the most recent sample generated
@@ -46,8 +47,12 @@ class Node:
         self.last_sample = self.f_sample(prev_layer)
         return self.last_sample
 
+    def short_string(self):
+        return self.description if self.description else self.f_sample.__name__
+
     def __str__(self):
-        return "<Node " + str(self.f_sample) + ">"
+        return ("<" + (self.description if self.description else "") +
+                                    " Node [" + self.f_sample.__name__ + "]>")
 
 
 class VectorNode(Node):
@@ -64,16 +69,19 @@ class VectorNode(Node):
 class NodeLayer:
     """Basically just an array of Node objects"""
 
-    def __init__(self, nodes):
+    def __init__(self, nodes, description=None):
+        self.description = description if description else ""
         self.nodes = nodes
 
     @classmethod
-    def from_function_array(cls, functions):
-        return cls([Node(function) for function in functions])
+    def from_function_array(cls, functions, description=None):
+        return cls([Node(function) for function in functions],
+                                                    description=description)
 
     @classmethod
-    def from_vector_function(cls, vector_function):
-        return cls([VectorNode(vector_function)])
+    def from_vector_function(cls, vector_function, description=None):
+        return cls([VectorNode(vector_function)],
+                        description=description if description else "Vector")
 
     @classmethod
     def for_y(cls, y_function):
@@ -89,36 +97,58 @@ class NodeLayer:
     def __len__(self):
         return len(self.nodes)
 
+    def short_string(self):
+        return "<" + self.description + " Layer>"
+
     def __str__(self):
-        return str(self.nodes)
+        return ("<" + self.description + " Layer: [" +
+                    '-'.join([n.short_string() for n in self.nodes]) + "]>")
 
 
 class Network:
 
-    def __init__(self, layers):
+    def __init__(self, class_generator, layers, description=None):
+        self.description = description if description else ""
+        self.class_generator = class_generator
         self.layers = layers
         self.dims = []
 
         # Validate dimensions
-        result = layers[0]()
+        result = self.class_generator()
         self.dims = [1]
-        for layer in layers[1:]:
+        for layer in layers:
             result = layer.sample_with(result)
             self.dims.append(len(result))
+
 
     def sample(self):
 
         # First layer has no inputs and is assumed to be the desired output
-        y = self.layers[0]()
+        y = self.class_generator()
         result = np.array(y)
 
         # Sample rest of the inputs
-        for layer in self.layers[1:]:
+        for layer in self.layers:
             result = layer.sample_with(result)
 
         return (y, result)
 
+
     def bulk_sample(self, n_samples):
+        """Samples the network n_samples times.
+
+        Returns
+        -------
+        X   :   A n_samples x K numpy matrix of n_samples samples arranged into
+                rows, where K is the output dimension of the last layer of the
+                network (Note that the last output of the network will always
+                be flattened into a 1 dimensional numpy array). These are the
+                outputs of the last layer of the network.
+
+        y   :   A 1 dimensional numpy vector of length n_samples. These are the
+                corresponding outputs of the first layer of the network (which
+                is assumed to be the class label).
+        """
         
         # Allocate memory
         y = np.zeros(shape=(n_samples))
@@ -130,22 +160,29 @@ class Network:
 
         return X, y
 
+
     def __len__(self):
         return len(self.layers)
 
-    def __str__(self):
+
+    def pretty_string(self):
         """Bulky multi-line string representation, layer by layer"""
 
         # Header for the network
         s = "<Network " + "-".join([str(d) for d in self.dims]) + "\n"
 
         # Each layer on another line
+        s += "\tLayer " + str(0) + ": " + str(self.class_generator) + "\n"
         for i, layer in enumerate(self.layers):
-            s += "\tLayer " + str(i) + ": " + str(layer) + "\n"
+            s += "\tLayer " + str(i + 1) + ": " + str(layer) + "\n"
 
         # Extra newline at the end
         s += "\t>\n"
 
         return s
 
+
+    def __str__(self):
+        return ("<" + self.description + " Network [" +
+                "-".join([str(d) for d in self.dims]) + "]>")
 
