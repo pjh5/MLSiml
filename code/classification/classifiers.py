@@ -6,7 +6,7 @@ from sklearn import svm
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
-
+from sklearn.model_selection import GridSearchCV
 
 
 # Simple container object
@@ -34,9 +34,9 @@ class Classifier:
     sklearn docs and then edited to only be relevant to binary classification.
     """
 
-    def __init__(self, base_classifier, description, **kwargs):
+    def __init__(self, base_classifier, cv_param, description, **kwargs):
         """This probably shouldn't be called directly."""
-        self.base_classifier = base_classifier(**kwargs)
+        self.base_classifier = GridSearchCV(base_classifier, cv_param, n_jobs=1, cv=5)
         self.description = description
         self.params = kwargs
 
@@ -81,7 +81,7 @@ class Classifier:
         """
         kwargs["penalty"] = penalty
         kwargs["solver"] = solver
-        return cls(linear_model.LogisticRegression,
+        return cls(linear_model.LogisticRegression(),{},
                                             "Logistic Regression", **kwargs)
 
     @classmethod
@@ -116,7 +116,7 @@ class Classifier:
             Additional keyword arguments for the metric function.
         """
         kwargs["n_neighbors"] = n_neighbors
-        return cls(neighbors.KNeighborsClassifier,
+        return cls(neighbors.KNeighborsClassifier(),{},
                             str(n_neighbors) + " Nearest Neighbors", **kwargs)
 
     @classmethod
@@ -140,7 +140,7 @@ class Classifier:
             The maximum number of iterations to be run.
         """
         kwargs["dual"] = dual
-        return cls(svm.LinearSVC, "Linear SVM", **kwargs)
+        return cls(svm.LinearSVC(), {},"Linear SVM", **kwargs)
 
     @classmethod
     def for_svm(cls, kernel="rbf", **kwargs):
@@ -178,7 +178,8 @@ class Classifier:
             Tolerance for stopping criterion.
         """
         kwargs["kernel"] = kernel
-        return cls(svm.SVC, "SVM with " + kernel + " Kernel", **kwargs)
+        cv_param = {'gamma': [10**i for i in range(-3, 3)], 'C': [10**i for i in range(-3, 3)], 'kernel': [kernel]}
+        return cls(svm.SVC(), cv_param, "SVM with " + kernel + " Kernel", **kwargs)
 
     @classmethod
     def for_gaussian_nb(cls, priors=None, **kwargs):
@@ -190,7 +191,7 @@ class Classifier:
             adjusted according to the data.
         """
         kwargs['priors'] = priors
-        return cls(GaussianNB, "Gaussian Naive Bayes", **kwargs)
+        return cls(GaussianNB(),{}, "Gaussian Naive Bayes", **kwargs)
 
     @classmethod
     def for_random_forest(cls, n_estimators=10, **kwargs):
@@ -204,7 +205,7 @@ class Classifier:
             default is sqrt(n_features)
         """
         kwargs['n_estimators'] = n_estimators
-        return cls(RandomForestClassifier, "Random Forest", **kwargs)
+        return cls(RandomForestClassifier(),{}, "Random Forest", **kwargs)
 
 
     def __str__(self):
