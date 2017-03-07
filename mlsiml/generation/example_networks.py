@@ -86,47 +86,34 @@ def xor(
 
 def corrupted_xor(
         p=0.5,
-        num_z_per_source=3,
-        num_x_per_z=1,
-        var=0.02,
-        corruption_level=0.0,
-        max_beta=1.0,
-        xor_scale=1,
-        xor_base=0):
+        source_corruptions=[0.8, 0.8],
+        xor_dim=5,
+        var=0.5
+        ):
 
     # Calculate total number of X
-    num_z = num_z_per_source * 2
-    num_x = num_z * num_x_per_z
+    num_z = len(source_corruptions)
+    num_x = num_z * xor_dim
 
     # Corrupt y with a certain percentage corruption
     corruption_layer = NodeLayer.from_function_array([
-            lambda y: y,
-            (lambda f: lambda y: y * f())(bernoulli(corruption_level))
-            ], description="Corruption")
+                (lambda f: lambda y: y * f())(bernoulli(1 - corruption_level))
+                        for corruption_level in source_corruptions
+                                                ], description="Corruption")
 
     # z is a k-dimensional XOR
     z_layer = NodeLayer.from_function_array([
-            (lambda f: lambda y: f(num_z_per_source, y[0] > 0.5))(make_xor),
-            (lambda f: lambda y: f(num_z_per_source, y[1] > 0.5))(make_xor)
-            ], description="Double XOR")
+                        (lambda f: lambda y: f(xor_dim, y[0] > 0.5))(make_xor)
+                            for _ in range(num_z)
+                                            ], description="XOR")
 
     # x are normals on linear combinations of the z
-    x_layer = []
-    for source in range(num_z):
-
-        # Each x is connected only to its z
-        beta = np.ones(num_z) * (1 - max_beta) / float(num_x)
-        beta[source] = max_beta
-
-        x_layer += [Normal.sampler_for(
-                                    loc=(lambda _b: lambda z: z.dot(_b))(beta),
-                                    scale=var
-                                    )
-                    for x in range(num_x_per_z)]
-
-    x_layer = NodeLayer.from_function_array(x_layer, description="Normal")
+    x_layer = NodeLayer.from_function_array([
+                                Normal.sampler_for(loc=lambda y: y, scale=var)
+                                    for _ in range(num_x)
+                                            ], description="Normal Noise")
 
 
     return Network(bernoulli(p), [corruption_layer, z_layer, x_layer],
-                                                description="Corrupted XOR")
+                                                description="Jimmy's")
 

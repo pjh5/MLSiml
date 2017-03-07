@@ -53,13 +53,11 @@ def test(verbose=True):
 
     # Make experiment
     exp = experiment.Experiment(
-            example_networks.xor,
+            example_networks.corrupted_xor,
             {
-                "num_z":[3, 10],
-                "max_beta":[1.0, 0.6],
-                "xor_scale":[1, 3]
+                "p":0.5
             },
-            sample_sizes=[1000, 15000]
+            sample_sizes=[500, 1000, 20000]
             )
 
     # Run experiment
