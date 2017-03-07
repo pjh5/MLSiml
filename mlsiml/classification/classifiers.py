@@ -186,8 +186,8 @@ class Classifier:
 
         Parameters
         ----------
-        priors : Prior probabilities of the classes. If specified the priors are not 
-            adjusted according to the data.
+        priors : Prior probabilities of the classes. If specified the priors
+            are not adjusted according to the data.
         """
         kwargs['priors'] = priors
         return cls(GaussianNB, "Gaussian Naive Bayes", **kwargs)
@@ -199,9 +199,10 @@ class Classifier:
         Parameters
         ----------
         n_estimators : Number of trees in forest
-        criterion : Function to measure quality of tree. Default is the gini index.
-        max_features : The number of features to consider when looking for the best split.
-            default is sqrt(n_features)
+        criterion : Function to measure quality of tree. Default is the gini
+            index.
+        max_features : The number of features to consider when looking for the
+            best split.  default is sqrt(n_features)
         """
         kwargs['n_estimators'] = n_estimators
         return cls(RandomForestClassifier, "Random Forest", **kwargs)
@@ -209,6 +210,9 @@ class Classifier:
 
     def __str__(self):
         return "<" + self.description + " " + str(self.params) + ">"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 def classification_accuracy(y_true, y_hat):

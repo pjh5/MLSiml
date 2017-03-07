@@ -1,3 +1,4 @@
+from collections import Iterable
 import re
 
 
@@ -142,3 +143,7 @@ def flatten(array, recursive=False):
         else:
             flattened.append(elem)
     return flattened
+
+
+def iterable(obj):
+    return obj if isinstance(obj, Iterable) else [obj]

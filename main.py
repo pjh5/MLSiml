@@ -1,13 +1,12 @@
 import sys
 
-from generation import example_networks
-from analysis import analysis
-
-from classification.classifiers import split_data
-from classification.classifiers import Classifier
-
-from utils import parse_to_args_and_kwargs
-from utils import flatten
+from mlsiml.generation import example_networks
+from mlsiml.analysis import analysis
+from mlsiml.analysis import experiment
+from mlsiml.classification.classifiers import split_data
+from mlsiml.classification.classifiers import Classifier
+from mlsiml.utils import parse_to_args_and_kwargs
+from mlsiml.utils import flatten
 
 
 def main(which_example, sample_size=2500, plot=False,
@@ -19,24 +18,17 @@ def main(which_example, sample_size=2500, plot=False,
             + ", ".join(["{!s}={!s}".format(k,v) for k,v in kwargs.items()])
             + ")")
 
-    # Build the network
+    # Build the network, sample from it, and split the data
     net = getattr(example_networks, which_example)(**kwargs)
-
-    # Sample from the network
     X, y = net.bulk_sample(sample_size)
-
-    # Show some summary of the data
-    if summary:
-        analysis.summarize(X, y)
-
-    # Split to training and testing data
     datasets = split_data(X, y, proportion_train=0.7)
 
-    # Display network info
+    # Display network info or data summary
     if verbose:
         print(net.pretty_string())
         print()
-
+    if summary:
+        analysis.summarize(X, y)
 
     # Test on classifier suites
     print("Classifier performance:")
@@ -49,13 +41,31 @@ def main(which_example, sample_size=2500, plot=False,
             Classifier.for_gaussian_nb()
             ]):
 
-        print("{:8.3f}\t{!s}".format(classifier.evaluate_on(datasets), classifier))
+        print("{:8.3f}\t{!s}".format(classifier.evaluate_on(datasets),
+                                                                    classifier))
     print()
 
     # Plotting at the end
     if plot:
         analysis.plot_data(X, y)
 
+def test(verbose=True):
+
+    # Make experiment
+    exp = experiment.Experiment(
+            example_networks.xor,
+            {
+                "num_z":[3, 10],
+                "max_beta":[1.0, 0.6],
+                "xor_scale":[1, 3]
+            },
+            sample_sizes=[1000, 15000]
+            )
+
+    # Run experiment
+    all_results = exp.run(verbose=verbose)
+
+    return all_results
 
 
 # Allow running like "$> python main.py --xor=5"
