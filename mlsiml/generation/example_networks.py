@@ -44,6 +44,25 @@ def exponential(
     return Network(bernoulli(p), [z_layer, abs_layer, x_layer],
                                                     description="Exponential")
 
+def exp_norm(
+        p=0.5,
+        num_z=2,
+        scale=5,
+        var=0.3):
+
+    # z, sources
+    z_layer = NodeLayer.from_function_array([
+            Exp.sampler_for(scale=lambda y: scale*y + 1)
+                for _ in range(num_z)], description="Exponential")
+
+    # x, normal noise
+    x_layer = NodeLayer.from_function_array([
+        Normal.sampler_for(loc=(lambda i: lambda z: z[i])(x), scale=var)
+                                    for x in range(num_z)
+                                            ], description="Normal Noise")
+
+    return Network(bernoulli(p), [z_layer, x_layer], description="Exp-Norm")
+
 
 def xor(
         p=0.5,
@@ -86,9 +105,9 @@ def xor(
 
 def corrupted_xor(
         p=0.5,
-        source_corruptions=[0.8, 0.8],
+        source_corruptions=[0.8],
         xor_dim=5,
-        var=0.5
+        var=0.1
         ):
 
     # Calculate total number of X
@@ -109,8 +128,8 @@ def corrupted_xor(
 
     # x are normals on linear combinations of the z
     x_layer = NodeLayer.from_function_array([
-                                Normal.sampler_for(loc=lambda y: y, scale=var)
-                                    for _ in range(num_x)
+        Normal.sampler_for(loc=(lambda i: lambda z: z[i])(x), scale=var)
+                                    for x in range(num_x)
                                             ], description="Normal Noise")
 
 
