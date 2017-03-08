@@ -1,11 +1,12 @@
 import numpy as np
 
-from sklearn import linear_model
-from sklearn import neighbors
 from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.model_selection import GridSearchCV
 
 
 
@@ -34,9 +35,29 @@ class Classifier:
     sklearn docs and then edited to only be relevant to binary classification.
     """
 
-    def __init__(self, base_classifier, description, **kwargs):
+    def __init__(self, base_classifier, description, search_params=None,
+            **kwargs):
         """This probably shouldn't be called directly."""
-        self.base_classifier = base_classifier(**kwargs)
+
+        # Cross-Validate grid search of params if given
+        if search_params:
+            
+            # Extract cv parameters
+            self.cv_kwargs = {}
+            for kw in ['scoring', 'fit_params', 'n_jobs', 'pre_dispatch', 'cv']:
+                if kw in kwargs:
+                    self.cv_kwargs[kw] = kwargs[kw]
+                    kwargs.pop(kw)
+
+            # Base classifier is now a grid search over the params
+            self.base_classifier = GridSearchCV(
+                    base_classifier(**kwargs), search_params, **self.cv_kwargs)
+
+        # No search_params
+        else:
+            self.cv_kwargs = None
+            self.base_classifier = base_classifier(**kwargs)
+
         self.description = description
         self.params = kwargs
 
@@ -44,12 +65,13 @@ class Classifier:
     def evaluate_on(self, datasplit):
         self.base_classifier.fit(datasplit.X_train, datasplit.Y_train)
         y_hat = self.base_classifier.predict(datasplit.X_test)
-        
+
         return classification_accuracy(datasplit.Y_test, y_hat) 
 
 
     @classmethod
-    def for_logistic_regression(cls, penalty='l2', solver='liblinear', **kwargs):
+    def for_logistic_regression(cls, penalty='l2', solver='liblinear',
+                                                                    **kwargs):
         """ Logistic Regression (aka logit, MaxEnt) classifier.
 
         This class implements regularized logistic regression using the
@@ -81,8 +103,7 @@ class Classifier:
         """
         kwargs["penalty"] = penalty
         kwargs["solver"] = solver
-        return cls(linear_model.LogisticRegression,
-                                            "Logistic Regression", **kwargs)
+        return cls(LogisticRegression, "Logistic Regression", **kwargs)
 
     @classmethod
     def for_knn(cls, n_neighbors=5, **kwargs):
@@ -116,7 +137,7 @@ class Classifier:
             Additional keyword arguments for the metric function.
         """
         kwargs["n_neighbors"] = n_neighbors
-        return cls(neighbors.KNeighborsClassifier,
+        return cls(KNeighborsClassifier,
                             str(n_neighbors) + " Nearest Neighbors", **kwargs)
 
     @classmethod
@@ -143,7 +164,7 @@ class Classifier:
         return cls(svm.LinearSVC, "Linear SVM", **kwargs)
 
     @classmethod
-    def for_svm(cls, kernel="rbf", **kwargs):
+    def for_svm(cls, kernel="rbf", params=None, **kwargs):
         """C-Support Vector Classification.
         The implementation is based on libsvm. The fit time complexity
         is more than quadratic with the number of samples which makes it hard
@@ -155,11 +176,11 @@ class Classifier:
             Penalty parameter C of the error term.
         kernel : string, optional (default='rbf')
              Specifies the kernel type to be used in the algorithm.
-             It must be one of 'linear', 'poly', 'rbf', 'sigmoid', 'precomputed' or
-             a callable.
+             It must be one of 'linear', 'poly', 'rbf', 'sigmoid',
+             'precomputed' or a callable.
              If none is given, 'rbf' will be used. If a callable is given it is
-             used to pre-compute the kernel matrix from data matrices; that matrix
-             should be an array of shape ``(n_samples, n_samples)``.
+             used to pre-compute the kernel matrix from data matrices; that
+             matrix should be an array of shape ``(n_samples, n_samples)``.
         degree : int, optional (default=3)
             Degree of the polynomial kernel function ('poly').
             Ignored by all other kernels.
@@ -209,7 +230,8 @@ class Classifier:
 
 
     def __str__(self):
-        return "<" + self.description + " " + str(self.params) + ">"
+        return ("<" + self.description + " " + str(self.params)
+                + (str(self.cv_kwargs) if self.cv_kwargs else "") + ">")
 
     def __repr__(self):
         return self.__str__()
@@ -235,3 +257,4 @@ def split_data(X, y, proportion_train=0.7):
     X_test, Y_test = X[test_idxs, :], y[test_idxs]
 
     return DataSets(X_train, X_test, Y_train, Y_test)
+

@@ -68,7 +68,7 @@ def xor(
         p=0.5,
         num_z=3,
         num_x_per_z=1,
-        var=0.02,
+        var=0.2,
         max_beta=1.0,
         xor_scale=1,
         xor_base=0):

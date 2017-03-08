@@ -10,8 +10,8 @@ DEFAULT_CLASSIFIERS = flatten([
             Classifier.for_logistic_regression(),
             [Classifier.for_knn(n_neighbors=n) for n in [1, 2, 10]],
             Classifier.for_linear_svm(),
-            [Classifier.for_svm(kernel=k) for k in ['rbf', 'sigmoid']],
-            [Classifier.for_random_forest(n_estimators = k) for k in [10, 30]],
+            [Classifier.for_svm(kernel=k) for k in ['rbf', 'poly']],
+            [Classifier.for_random_forest(n_estimators = k) for k in [10, 30, 50]],
             Classifier.for_gaussian_nb()
             ])
 
@@ -42,6 +42,11 @@ class Experiment:
         if not classifiers:
             classifiers = DEFAULT_CLASSIFIERS
         self.classifiers = classifiers
+
+        # Default output file
+        if not output_file:
+            output_file = "experiment_output"
+        self.output_file = output_file
 
 
     def run(self, verbose=False):
