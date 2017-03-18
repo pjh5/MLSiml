@@ -38,14 +38,12 @@ class Experiment:
             network_params_dict,
             sample_sizes=5000,
             train_proportions=0.7,
-            classifiers=None,
-            output_file=None):
+            classifiers=None):
 
         self.network_class = network_class
         self.network_params_dict = network_params_dict
         self.sample_sizes = iterable(sample_sizes)
         self.train_proportions = iterable(train_proportions)
-        self.output_file = output_file  # Default handled when logfile is made
 
         # Default classifiers
         if not classifiers:
@@ -53,10 +51,11 @@ class Experiment:
         self.classifiers = classifiers
 
         # Collect all possible keywords for logging purposes
-        self.all_possible_keywords = (
-                ['sample_size', 'training_proportion'] +
+        self.all_possible_keywords = sorted(list(set(
+                ['classifier', 'accuracy', 'CV_mean_accuracy'] +
+                ['sample_size', 'training_proportion', 'accuracy'] +
                 list(self.network_params_dict.keys()) +
-                flatten([list(c.params().keys()) for c in self.classifiers]))
+                flatten([list(c.params().keys()) for c in self.classifiers]))))
 
 
     def run(self, logfile=None, verbosity=0):
@@ -64,7 +63,7 @@ class Experiment:
         # Save all results in a massive list of dictionaries
         # Keys are network parameter dictionaries e.g. {num_z:4}
         # Values are result dictionaries {classifier:evalution_result}
-        all_results = ExperimentResuls(self.all_possible_keywords,
+        all_results = ExperimentResults(self.all_possible_keywords,
                                         logfile=logfile, verbosity=verbosity)
 
         # For every network parameter
@@ -84,7 +83,7 @@ class Experiment:
                     setting["training_proportion"] = p_train
 
                     # Verbose output
-                    if not quiet:
+                    if verbosity >= 0:
                         print("\n" + "="*79)
                         print("BUILDING NETWORK WITH PARAMETERS:")
                         for kw,val in setting.items():
@@ -94,7 +93,7 @@ class Experiment:
                     # For every classifiers
                     for classifier in self.classifiers:
                         accuracy = classifier.evaluate_on(datasplit)
-                        all_results.add_record_for(setting, classifier, quiet)
+                        all_results.add_record_for(setting, classifier)
 
         return all_results
 
@@ -134,12 +133,12 @@ class ExperimentResults:
     def add_record_for(self, settings_dict, classifier):
 
         # Always append the classifier's last evaluation record
-        record = _make_record(settings_dict, classifier.last_evaluation_record))
+        record = _make_record(settings_dict, classifier.last_evaluation_record)
         self.records.append(record)
         self.log(record)
 
         # Verbose output
-        if self.verbosity >= 0
+        if self.verbosity >= 0:
             print("\t{:8.3f}\t{!s}".format(
                     classifier.last_evaluation_record['accuracy'], classifier))
 
@@ -158,7 +157,7 @@ class ExperimentResults:
     def log(self, record):
 
         # Build up row, using "" when a parameter is not found
-        row = [record[kw] for kw in self.column_names if kw in record else ""]
+        row = [record[kw] if kw in record else "" for kw in self.column_names]
 
         # Assume that settings will be the same every time
         with open(self.logfile, 'a') as csvfile:
@@ -174,7 +173,7 @@ def _make_record(network_dict, classifier_dict):
     record = network_dict.copy()
 
     # Merge dictionaries
-    for k,v in classifier_dict:
+    for k,v in classifier_dict.items():
 
         # Make sure that we don't overwrite a setting
         # TODO better error checking? Maybe just prepend 'network' to all

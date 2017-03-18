@@ -192,9 +192,10 @@ class Classifier:
 
     def __init__(self, base_classifier, description, **kwargs):
         """This probably shouldn't be called directly."""
-        self.base_classifier = base_classifier(**kwargs)
+        self.base_classifier = base_classifier
         self.description = description
         self._params = kwargs
+        self._params['classifier'] = self.description
         self.last_evaluation_record = None
 
     def evaluate_on(self, datasplit):
@@ -242,11 +243,11 @@ class CVGridSearchClassifier(Classifier):
                 base_classifier(**kwargs), search_params, **self.cv_kwargs)
 
         # Now init like normal with the GridSearchCV classifier
-        super().__init__(self, grid_classifier, description, **kwargs)
+        super().__init__(grid_classifier, description, **kwargs)
 
 
     def evaluate_on(self, datasplit):
-        accuracy = super().evaluate_on(self, datasplit)
+        accuracy = super().evaluate_on(datasplit)
 
         # Update the last record
         # Save the final parameters here since they were only determined after
@@ -332,5 +333,5 @@ def _make_classifier(base_classifier, description, search_params=None,
         return CVGridSearchClassifier(
                         base_classifier, search_params, description, **kwargs)
     # No search params
-    return Classifier(base_classifier, description, **kwargs)
+    return Classifier(base_classifier(**kwargs), description)
 
