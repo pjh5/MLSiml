@@ -1,5 +1,5 @@
 from mlsiml.analysis import experiment
-from mlsiml.classification.classifiers import Classifier
+from mlsiml.classification import classifiers as Classifier
 from mlsiml.generation.example_networks import xor as xor_network
 from mlsiml.utils import flatten
 

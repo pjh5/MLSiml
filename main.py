@@ -4,7 +4,7 @@ from mlsiml.generation import example_networks
 from mlsiml.analysis import analysis
 from mlsiml.analysis import experiment
 from mlsiml.classification.classifiers import split_data
-from mlsiml.classification.classifiers import Classifier
+from mlsiml.classification import classifiers as Classifier
 from mlsiml.utils import parse_to_args_and_kwargs
 from mlsiml.utils import flatten
 

@@ -5,7 +5,7 @@ from itertools import product as iter_product
 import os
 from pandas import DataFrame
 
-from mlsiml.classification.classifiers import Classifier
+from mlsiml.classification import classifiers as Classifier
 from mlsiml.classification.classifiers import split_data
 from mlsiml.utils import flatten
 from mlsiml.utils import iterable
