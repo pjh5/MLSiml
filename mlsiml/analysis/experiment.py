@@ -1,5 +1,9 @@
 
+import csv
+from datetime import datetime
 from itertools import product as iter_product
+import os
+from pandas import DataFrame
 
 from mlsiml.classification.classifiers import Classifier
 from mlsiml.classification.classifiers import split_data
@@ -22,6 +26,10 @@ DEFAULT_EXPERIMENT_PARAMS = {
         }
 
 
+##############################################################################
+# Experiment Class Definition                                                #
+##############################################################################
+
 class Experiment:
 
 
@@ -37,34 +45,37 @@ class Experiment:
         self.network_params_dict = network_params_dict
         self.sample_sizes = iterable(sample_sizes)
         self.train_proportions = iterable(train_proportions)
+        self.output_file = output_file  # Default handled when logfile is made
 
         # Default classifiers
         if not classifiers:
             classifiers = DEFAULT_CLASSIFIERS
         self.classifiers = classifiers
 
-        # Default output file
-        if not output_file:
-            output_file = "experiment_output"
-        self.output_file = output_file
+        # Collect all possible keywords for logging purposes
+        self.all_possible_keywords = (
+                ['sample_size', 'training_proportion'] +
+                list(self.network_params_dict.keys()) +
+                flatten([list(c.params().keys()) for c in self.classifiers]))
 
 
-    def run(self, verbose=False):
+    def run(self, logfile=None, verbosity=0):
 
-        # Save all results in a massive dictionary
+        # Save all results in a massive list of dictionaries
         # Keys are network parameter dictionaries e.g. {num_z:4}
         # Values are result dictionaries {classifier:evalution_result}
-        all_results = {}
-        
-        # Network parameters
+        all_results = ExperimentResuls(self.all_possible_keywords,
+                                        logfile=logfile, verbosity=verbosity)
+
+        # For every network parameter
         for setting in _all_possible_settings(self.network_params_dict):
             network = self.network_class(**setting)
 
-            # Sample sizes
+            # For every sample size
             for sample_size in self.sample_sizes:
                 X, y = network.bulk_sample(sample_size)
 
-                # Proportion to split to training and testing data
+                # For every proportion to split to training and testing data
                 for p_train in self.train_proportions:
                     datasplit = split_data(X, y, proportion_train=p_train)
 
@@ -73,29 +84,116 @@ class Experiment:
                     setting["training_proportion"] = p_train
 
                     # Verbose output
-                    if verbose:
+                    if not quiet:
                         print("\n" + "="*79)
                         print("BUILDING NETWORK WITH PARAMETERS:")
                         for kw,val in setting.items():
                             print("\t{:>20} : {!s}".format(kw, val))
                         print()
 
-                    # Classifiers
-                    results = {}
+                    # For every classifiers
                     for classifier in self.classifiers:
-                        result = classifier.evaluate_on(datasplit)
-                        results[classifier] = result
-
-                        # Verbose output
-                        if verbose:
-                            print("\t{:8.3f}\t{!s}".format(result, classifier))
-
-                    all_results[frozenset(setting.items())] = results
+                        accuracy = classifier.evaluate_on(datasplit)
+                        all_results.add_record_for(setting, classifier, quiet)
 
         return all_results
 
 
+##############################################################################
+# Experiment Results Object Class Definition                                 #
+##############################################################################
+
+
+class ExperimentResults:
+
+    def __init__(self, column_names, logfile=None, verbosity=0):
+        self.records = []
+        self.verbosity = verbosity
+        self.logfile = logfile
+
+        # Default logfile is just experiment_date
+        if not logfile:
+            self.logfile = "experiment_" + datetime.now().__str__()[:10]
+
+        # Find a place to put the log, making sure never to overwrite a
+        # previous log by adding [1] or [2] etc to the file name
+        if os.path.isfile(self.logfile):
+            run = 1
+            while os.path.isfile("{}({!s})".format(self.logfile, run)):
+                run += 1
+            self.logfile = "{}({!s})".format(self.logfile, run)
+
+        # Collect keywords in alphabetical order (so their order is defined)
+        self.column_names = sorted(column_names)
+
+        # Write the header row
+        with open(self.logfile, 'w') as csvfile:
+            logfile = csv.writer(csvfile)
+            logfile.writerow(self.column_names)
+
+    def add_record_for(self, settings_dict, classifier):
+
+        # Always append the classifier's last evaluation record
+        record = _make_record(settings_dict, classifier.last_evaluation_record))
+        self.records.append(record)
+        self.log(record)
+
+        # Verbose output
+        if self.verbosity >= 0
+            print("\t{:8.3f}\t{!s}".format(
+                    classifier.last_evaluation_record['accuracy'], classifier))
+
+        # CV Grid Search full record
+        # If the classifier went through a CV grid search, add those results
+        # too
+        if hasattr(classifier, 'full_record'):
+            for cvr in classifier.full_record:
+                record = _make_record(settings_dict, cvr)
+                self.records.append(record)
+                self.log(record)
+
+    def as_dataframe(self):
+        return DataFrame.from_records(self.records)
+
+    def log(self, record):
+
+        # Build up row, using "" when a parameter is not found
+        row = [record[kw] for kw in self.column_names if kw in record else ""]
+
+        # Assume that settings will be the same every time
+        with open(self.logfile, 'a') as csvfile:
+            logfile = csv.writer(csvfile)
+            logfile.writerow(row)
+
+##############################################################################
+# Private Helper Functions                                                   #
+##############################################################################
+
+
+def _make_record(network_dict, classifier_dict):
+    record = network_dict.copy()
+
+    # Merge dictionaries
+    for k,v in classifier_dict:
+
+        # Make sure that we don't overwrite a setting
+        # TODO better error checking? Maybe just prepend 'network' to all
+        # network settings?
+        if k in record:
+            raise Error(
+                'Classifier setting {} already in network settings {}'.format(
+                                                                    k, record))
+        record[k] = v
+
+    return record
+
+
 def _all_possible_settings(a_dict):
+    """Iterator over dictionaries of single key:value pairs
+
+    Given a dictionary of key:<array of values> pairs, this function iterates
+    over all possible combinations of single key:value pairs.
+    """
 
     # First map the dictionary into a list of lists of parameters
     listlist = [
@@ -103,8 +201,8 @@ def _all_possible_settings(a_dict):
             for k, val in a_dict.items()]
 
     # Iterate over all possible combinations of the above
-    for setting in iter_product(*listlist): 
-        
+    for setting in iter_product(*listlist):
+
         # Create a new dictionary and return it
         yield dict(setting)
 
