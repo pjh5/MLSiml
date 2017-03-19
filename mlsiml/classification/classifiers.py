@@ -8,6 +8,8 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from sklearn.model_selection import GridSearchCV
 
+from mlsiml.utils import flatten
+
 
 ##############################################################################
 # Classifier Constructors                                                    #
@@ -177,14 +179,12 @@ def for_random_forest(n_estimators=10, **kwargs):
 
 
 class Classifier:
-    """Wrapper class for sklearn classifiers to expose evaluate_on(datasplit)
+    """Wrapper class for sklearn classifiers to expose evaluate_on()
 
-    Written just so that a single evaluate_on(datasplit) method can be applied
-    to all classification algorithms. This class unifies the interface for
-    sklearn, although classifier specific parameters still need to be passed
-    into the constructors for each algorithms.
-
-    Supports constructor methods for several sklearn classification algorithms.
+    Written just so that a single evaluate_on(X, X_test, Y, Y_test) method can
+    be applied to all classification algorithms. This class unifies the
+    interface for sklearn, although classifier specific parameters still need
+    to be passed into the constructors for each algorithms.
 
     Docstrings of all classifier constructs are copied from the corresponding
     sklearn docs and then edited to only be relevant to binary classification.
@@ -195,18 +195,27 @@ class Classifier:
         self.base_classifier = base_classifier
         self.description = description
         self._params = kwargs
-        self._params['classifier'] = self.description
         self.last_evaluation_record = None
+        self.preprocessors = []
 
-    def evaluate_on(self, datasplit):
+    def with_preprocessing(self, transform):
+        self.preprocessors.append(transform)
+        return self # return self for pipelining
+
+    def evaluate_on(self, X, X_test, Y, Y_test):
+
+        # Preprocess the data
+        for preprocess in self.preprocessors:
+            preprocess.fit(X, Y)
+            X, X_test, Y, Y_test = preprocess.process(X, X_test, Y, Y_test)
 
         # Fit and test the classifier on the datasplit
-        self.base_classifier.fit(datasplit.X_train, datasplit.Y_train)
-        y_hat = self.base_classifier.predict(datasplit.X_test)
-        accuracy = classification_accuracy(datasplit.Y_test, y_hat)
+        self.base_classifier.fit(X, Y)
+        y_hat = self.base_classifier.predict(X_test)
+        accuracy = classification_accuracy(Y_test, y_hat)
 
         # Save record of this evaluation
-        self.last_evaluation_record = self._params.copy()
+        self.last_evaluation_record = self.get_params(deep=True).copy()
         self.last_evaluation_record['accuracy'] = accuracy
 
         # Return just the accuracy
@@ -215,11 +224,20 @@ class Classifier:
     def record_for_last_fit(self):
         self.last_evaluation_record
 
-    def params(self):
-        return self._params
+    def get_params(self, deep=False):
+        params = self._params.copy()
+        params['classifier_description'] = self.description
+
+        # Include preprocesssing params if needed
+        if deep:
+            for preprocessor in self.preprocessors:
+                params.update(preprocessor.get_params(mangled=True))
+
+        return params
 
     def __str__(self):
-        return ("<" + self.description + " " + str(self._params) + ">")
+        return "{} {!s} {!s}".format(self.description, self._params,
+                                                            self.preprocessors)
 
     def __repr__(self):
         return self.__str__()
@@ -246,14 +264,13 @@ class CVGridSearchClassifier(Classifier):
         super().__init__(grid_classifier, description, **kwargs)
 
 
-    def evaluate_on(self, datasplit):
-        accuracy = super().evaluate_on(datasplit)
+    def evaluate_on(self, X, X_test, Y, Y_test):
+        accuracy = super().evaluate_on(X, X_test, Y, Y_test)
 
         # Update the last record
         # Save the final parameters here since they were only determined after
         # "fit" has been called on this classifier
         for kw, val in self.base_classifier.best_params_.items():
-            self._params[kw] = val
             self.last_evaluation_record[kw] = val
 
         # Update the full record
@@ -266,7 +283,7 @@ class CVGridSearchClassifier(Classifier):
 
         # Loop over all cross validation runs
         for cv_run in range(len(cv_results['mean_test_score'])):
-            record = self._params.copy()
+            record = self.get_params(deep=True)
 
             # Add the cross validated parameters to the record
             for cv_param in cv_params:
@@ -278,13 +295,24 @@ class CVGridSearchClassifier(Classifier):
 
         return accuracy
 
-    def params(self):
-        return dict(list(self._params.items())
-                                        + list(self._search_params.items()))
+    def get_params(self, deep=False):
+        params = super().get_params(deep=deep)
+
+        # Add CV search params, which aren't included in the base get_params()
+        for kw, val in self._search_params.items():
+
+            # If this classifier has been fit, then parameters have been chosen
+            if self.full_record:
+                params[kw] = val
+
+            # Otherwise, the values are still unspecified
+            else:
+                params[kw] = "UNSPECIFIED"
+
+        return params
 
     def __str__(self):
-        return ("<" + self.description + " " + str(self._params)
-                                                + str(self.cv_kwargs) + ">")
+        return super().__str__() + " " + str(self.cv_kwargs)
 
 
 ##############################################################################
@@ -293,34 +321,6 @@ class CVGridSearchClassifier(Classifier):
 
 def classification_accuracy(y_true, y_hat):
     return 1 - np.sum(np.abs(y_true - y_hat)) / float(y_true.shape[0])
-
-
-def split_data(X, y, proportion_train=0.7):
-
-    N = X.shape[0]
-    n_train = np.floor(proportion_train * N).astype(int)
-
-    # Training indices
-    train_bin_idxs = np.random.permutation(np.concatenate(
-                    [np.ones(n_train), np.zeros(N - n_train)]))
-    train_idxs = train_bin_idxs.astype(bool)
-    test_idxs = (-train_bin_idxs + 1).astype(bool)
-
-    # Split
-    X_train, Y_train = X[train_idxs, :], y[train_idxs]
-    X_test, Y_test = X[test_idxs, :], y[test_idxs]
-
-    return DataSets(X_train, X_test, Y_train, Y_test)
-
-# Simple container object
-class DataSets:
-    """Wrapper class for train/test splits of labelled X,Y data"""
-
-    def __init__(self, X_train, X_test, Y_train, Y_test):
-        self.X_train = X_train
-        self.X_test = X_test
-        self.Y_train = Y_train
-        self.Y_test = Y_test
 
 
 ##############################################################################

@@ -4,9 +4,9 @@ from datetime import datetime
 from itertools import product as iter_product
 import os
 from pandas import DataFrame
+from sklearn.model_selection import train_test_split
 
 from mlsiml.classification import classifiers as Classifier
-from mlsiml.classification.classifiers import split_data
 from mlsiml.utils import flatten
 from mlsiml.utils import iterable
 
@@ -52,10 +52,11 @@ class Experiment:
 
         # Collect all possible keywords for logging purposes
         self.all_possible_keywords = sorted(list(set(
-                ['classifier', 'accuracy', 'CV_mean_accuracy'] +
-                ['sample_size', 'training_proportion', 'accuracy'] +
-                list(self.network_params_dict.keys()) +
-                flatten([list(c.params().keys()) for c in self.classifiers]))))
+                ['accuracy', 'CV_mean_accuracy'] +
+                ['sample_size', 'training_proportions'] +
+                list(self.network_params_dict) +
+                flatten([list(c.get_params(deep=True)) for c in self.classifiers])
+                )))
 
 
     def run(self, logfile=None, verbosity=0):
@@ -76,7 +77,7 @@ class Experiment:
 
                 # For every proportion to split to training and testing data
                 for p_train in self.train_proportions:
-                    datasplit = split_data(X, y, proportion_train=p_train)
+                    datasplit = train_test_split(X, y, test_size=1 - p_train)
 
                     # Add experiment params to settings for saving
                     setting["sample_size"] = sample_size
@@ -92,7 +93,7 @@ class Experiment:
 
                     # For every classifiers
                     for classifier in self.classifiers:
-                        accuracy = classifier.evaluate_on(datasplit)
+                        accuracy = classifier.evaluate_on(*datasplit)
                         all_results.add_record_for(setting, classifier)
 
         return all_results
@@ -112,15 +113,22 @@ class ExperimentResults:
 
         # Default logfile is just experiment_date
         if not logfile:
-            self.logfile = "experiment_" + datetime.now().__str__()[:10]
+            self.logfile = "experiment_" + str(datetime.now())[:10] + ".csv"
 
+        # Validate logfile name
+        ######################################################################
         # Find a place to put the log, making sure never to overwrite a
         # previous log by adding [1] or [2] etc to the file name
-        if os.path.isfile(self.logfile):
+        if os.path.isfile(self.logfile + ".csv"):
             run = 1
-            while os.path.isfile("{}({!s})".format(self.logfile, run)):
+            while os.path.isfile("{}({!s}).csv".format(self.logfile, run)):
                 run += 1
-            self.logfile = "{}({!s})".format(self.logfile, run)
+            self.logfile = "{}({!s}).csv".format(self.logfile, run)
+        else:
+            self.logfile = self.logfile + ".csv"
+
+        # Write a header to the csv
+        #####################################################################
 
         # Collect keywords in alphabetical order (so their order is defined)
         self.column_names = sorted(column_names)

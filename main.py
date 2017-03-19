@@ -1,9 +1,10 @@
 import sys
 
+from sklearn.model_selection import train_test_split
+
 from mlsiml.generation import example_networks
 from mlsiml.analysis import analysis
 from mlsiml.analysis import experiment
-from mlsiml.classification.classifiers import split_data
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.utils import parse_to_args_and_kwargs
 from mlsiml.utils import flatten
@@ -21,7 +22,7 @@ def main(which_example, sample_size=2500, plot=False,
     # Build the network, sample from it, and split the data
     net = getattr(example_networks, which_example)(**kwargs)
     X, y = net.bulk_sample(sample_size)
-    datasets = split_data(X, y, proportion_train=0.7)
+    datasplit = train_test_split(X, y, test_size=0.3)
 
     # Display network info or data summary
     if verbose:
@@ -41,7 +42,7 @@ def main(which_example, sample_size=2500, plot=False,
             Classifier.for_gaussian_nb()
             ]):
 
-        print("{:8.3f}\t{!s}".format(classifier.evaluate_on(datasets),
+        print("{:8.3f}\t{!s}".format(classifier.evaluate_on(*datasplit),
                                                                     classifier))
     print()
 

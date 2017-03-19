@@ -1,6 +1,7 @@
 numpy
 scipy
 sklearn
+metric_learn
 pandas
 matplotlib
 bpython

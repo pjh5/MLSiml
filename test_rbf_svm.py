@@ -1,30 +1,28 @@
+
 from mlsiml.analysis import experiment
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.generation.example_networks import xor as xor_network
-from mlsiml.utils import flatten
+from mlsiml.classification.preprocessing import MetricLearnTransform
 
 
 # Classifiers
-classifiers = flatten([
-            Classifier.for_logistic_regression(),
-            Classifier.for_knn(search_params={
-                'n_neighbors':[1]
-                }),
-            Classifier.for_random_forest(search_params={
-                'n_estimators':[100]
-                }),
-            Classifier.for_svm(kernel='rbf', search_params={
-                'C':[0.1, 1],
-                'gamma':[0.003, 0.01],
-                })
-            ])
+# ITML needs constraints
+# SDML needs a connectivity graph
+# RCA needs a chunks array
+# NCA takes forever?
+# LFDA needs some other parameter too
+classifiers = [Classifier.for_svm(kernel='rbf', search_params={
+                'C':[0.1, 10],
+                'gamma':[0.01],
+                }).with_preprocessing(MetricLearnTransform(metric))
+                for metric in ["Covariance", "LMNN"]]
 
 
 # Network Parameters
 network = xor_network
 network_params = {
         'p':0.5,
-        'num_z':[3, 7],
+        'num_z':[5],
         'num_x_per_z':1,
         'var':[0.2, 0.3]
         }
@@ -36,7 +34,7 @@ train_proportions = 0.7
 
 
 # Log file
-logfile = "simple_xor"
+logfile = "rbf_svm"
 
 
 # Make experiment
