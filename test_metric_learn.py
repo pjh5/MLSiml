@@ -1,39 +1,40 @@
 
 from mlsiml.analysis import experiment
 from mlsiml.classification import classifiers as Classifier
-from mlsiml.generation.example_networks import corrupted_xor
+from mlsiml.generation.example_networks import xor as xor_network
 from mlsiml.classification.preprocessing import MetricLearnTransform
 
 
 # Classifiers
+# ITML needs constraints
+# SDML needs a connectivity graph
+# RCA needs a chunks array
+# NCA takes forever?
+# LFDA needs some other parameter too
 classifiers = [Classifier.for_svm(kernel='rbf', search_params={
-                'C':[0.1, 1, 10, 100],
-                'gamma':[0.001, 0.01, 0.1, 1],
-                })]
+                'C':[0.1, 10],
+                'gamma':[0.01],
+                }).with_preprocessing(MetricLearnTransform(metric))
+                for metric in ["Covariance", "LMNN"]]
 
 
 # Network Parameters
-network = corrupted_xor
+network = xor_network
 network_params = {
         'p':0.5,
-        'source_corruptions':[[.0, .0],
-                              [.0, .2],
-                              [.0, .4],
-                              [.2, .2],
-                              [.2, .4],
-                              [.4, .4]],
-        'xor_dim':2,
-        'var':0.15
+        'num_z':[5],
+        'num_x_per_z':1,
+        'var':[0.2, 0.3]
         }
 
 
 # Experiment Parameters
-sample_sizes = [7500]
+sample_sizes = [10000]
 train_proportions = 0.7
 
 
 # Log file
-logfile = "rbf_svm"
+logfile = "metric_learn"
 
 
 # Make experiment
