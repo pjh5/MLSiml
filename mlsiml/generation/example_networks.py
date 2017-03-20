@@ -6,6 +6,7 @@ from mlsiml.generation.stats_functions import Exponential as Exp
 from mlsiml.generation.stats_functions import Bernoulli
 from mlsiml.generation.stats_functions import BinaryCorruption
 from mlsiml.generation.structured_generators import XOR
+from mlsiml.generation.structured_generators import Hypersphere
 
 import numpy as np
 
@@ -118,3 +119,9 @@ def corrupted_xor(
     return Network(Bernoulli(p), [corruption_layer, z_layer, x_layer],
                                                 description="Jimmy's")
 
+def spherical(p=0.5, dim=3, var=0.2):
+
+    spheres = NodeLayer("Sphere", [Hypersphere(dim=dim, scale=lambda z: z+1)])
+    noise = NodeLayer.from_repeated("Normal Noise", Normal(loc=lambda z: z, scale=var))
+
+    return Network(Bernoulli(p), [spheres, noise])

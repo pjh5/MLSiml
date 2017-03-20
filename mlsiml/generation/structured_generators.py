@@ -51,3 +51,28 @@ class XOR(Node):
         return self.scale(z) * np.random.permutation(
                 np.concatenate((np.ones(n_ones), np.zeros(self.dim - n_ones)))
                 ) + self.base(z)
+
+
+class Hypersphere(Node):
+
+    def __init__(self, dim=None, scale=None):
+        self.description = str(dim) + "D Sphere"
+
+        # Dimension must be specified
+        if not dim:
+            raise Error("Dimension of XOR must be specified")
+
+        # Default scale is 'z'
+        if not scale:
+            scale = lambda z: z
+
+        self.dim = dim
+        self.scale = make_callable(scale)
+
+    def sample(self):
+        x = np.random.normal(size=self.dim)
+        return x / np.sqrt(np.square(x).sum())
+
+    def sample_with(self, z):
+        return self.sample() * self.scale(z)
+
