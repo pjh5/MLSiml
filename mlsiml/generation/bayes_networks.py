@@ -36,61 +36,42 @@ class Node:
     vector. Note that this may output a vector.
     """
 
-    def __init__(self, f_sample, description=None):
+    def __init__(self, f_sample, description):
         self.description = description
         self.f_sample = f_sample
 
         # Save the most recent sample generated
-        self.last_sample = None 
+        self.last_sample = None
 
     def sample_with(self, prev_layer):
         self.last_sample = self.f_sample(prev_layer)
         return self.last_sample
 
     def short_string(self):
-        return self.description if self.description else self.f_sample.__name__
+        return self.description
 
     def __str__(self):
-        return ("<" + (self.description if self.description else "") +
-                                    " Node [" + self.f_sample.__name__ + "]>")
-
-
-class VectorNode(Node):
-    """A Node that outputs a vector instead of a scalar.
-
-    Only changes __str__. This does not validate that the output is actually a
-    vector nor does it change any functionality.
-    """
-
-    def __str__(self):
-        return ("<VectorNode " + str(self.f_sample) + ">")
-
+        return "<" + self.description + " Node>"
 
 class NodeLayer:
     """Basically just an array of Node objects"""
 
-    def __init__(self, nodes, description=None):
-        self.description = description if description else ""
+    def __init__(self, description, nodes):
+        self.description = description
         self.nodes = nodes
 
     @classmethod
-    def from_function_array(cls, functions, description=None):
-        return cls([Node(function) for function in functions],
-                                                    description=description)
+    def from_function_array(cls, description, functions):
+        return cls(description, [Node(func, "Lambda") for func in functions])
 
     @classmethod
-    def from_vector_function(cls, vector_function, description=None):
-        return cls([VectorNode(vector_function)],
-                        description=description if description else "Vector")
-
-    @classmethod
-    def for_y(cls, y_function):
-        return y_function
+    def from_repeated(cls, description, node):
+        return RepeatedNodeLayer(description, node)
 
     def sample_with(self, prev_layer):
         return np.array([node.sample_with(prev_layer)
                                             for node in self.nodes]).flatten()
- 
+
     def __getitem__(self, index):
         return self.nodes[index]
 
@@ -103,6 +84,16 @@ class NodeLayer:
     def __str__(self):
         return ("<" + self.description + " Layer: [" +
                     '-'.join([n.short_string() for n in self.nodes]) + "]>")
+
+class RepeatedNodeLayer(NodeLayer):
+
+    def __init__(self, description, node):
+        self.description = description
+        self.nodes = [node]
+        self.node = node
+
+    def sample_with(self, prev_layer):
+        return np.array([self.node.sample_with(z) for z in prev_layer]).flatten()
 
 
 class Network:
@@ -124,7 +115,7 @@ class Network:
     def sample(self):
 
         # First layer has no inputs and is assumed to be the desired output
-        y = self.class_generator()
+        y = self.class_generator.sample()
         result = np.array(y)
 
         # Sample rest of the inputs
@@ -149,7 +140,7 @@ class Network:
                 corresponding outputs of the first layer of the network (which
                 is assumed to be the class label).
         """
-        
+
         # Allocate memory
         y = np.zeros(shape=(n_samples))
         X = np.zeros(shape=(n_samples, self.dims[-1]))
@@ -172,7 +163,7 @@ class Network:
         s = "<Network " + "-".join([str(d) for d in self.dims]) + "\n"
 
         # Each layer on another line
-        s += "\tLayer " + str(0) + ": " + str(self.class_generator) + "\n"
+        s += "\tLayer 0: " + str(self.class_generator) + "\n"
         for i, layer in enumerate(self.layers):
             s += "\tLayer " + str(i + 1) + ": " + str(layer) + "\n"
 

@@ -48,7 +48,7 @@ def parse_to_args_and_kwargs(arglist, aliases=None):
 
 
 def _parse_flag(kwargs, arglist, i, aliases):
-        
+
     # Parse flags
     match = flag_re.match(arglist[i])
     if match:
@@ -103,7 +103,7 @@ def _parse_keyword(kwargs, arglist, i, aliases):
 
         # Finally set kw = arg
         kwargs[kw] = _try_to_cast(val)
-    
+
         # Parse succesful
         return True, next_argument_consumed
 
@@ -121,7 +121,7 @@ def _clean_and_unalias(aliases, arg):
 
 
 def _try_to_cast(arg):
-   
+
     # Try to cast to integer or float
     if ints.match(arg):
         return int(arg)
@@ -147,3 +147,6 @@ def flatten(array, recursive=False):
 
 def iterable(obj):
     return obj if isinstance(obj, Iterable) else [obj]
+
+def make_callable(obj):
+    return obj if callable(obj) else (lambda o: lambda z: o)(obj)

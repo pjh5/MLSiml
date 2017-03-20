@@ -9,27 +9,45 @@ This module makes relatively clean data. Default parameters will make regions
 of data that have non-trivial margins between them.
 """
 import numpy as np
-import scipy
 
+from mlsiml.generation.bayes_networks import Node
+from mlsiml.utils import make_callable
 
-def make_xor(N, make_even, scale=1, base=0):
+class XOR(Node):
 
-    # Choose how many zeros
-    if make_even:
-        n_ones = 2*np.random.randint(0, high=N // 2 + 1)
-    else:
-        n_ones = 2*np.random.randint(0, high=(N + 1) // 2) + 1
+    def __init__(self, dim=None, make_even=None, base=None, scale=None):
+        self.description = str(dim) + "D XOR"
 
-    return scale * np.random.permutation(
-            np.concatenate(
-                (np.ones(n_ones), np.zeros(N - n_ones))
-                )
-            ) + base
+        # Dimension and make_even must be specified
+        if not dim:
+            raise Error("Dimension of XOR must be specified")
+        if not make_even:
+            raise Error("Make_even of XOR must be specified")
 
+        # Base and scale have default values
+        if not base:
+            base = lambda z: 0
+        if not scale:
+            scale = lambda z: 1
 
-def make_xor_class_generator(N, **kwargs):
-    return (lambda f: lambda positive: f(N, positive > 0.5, **kwargs))(make_xor)
+        # Save parameters
+        self.dim        = dim
+        self.make_even  = make_callable(make_even)
+        self.base       = make_callable(base)
+        self.scale      = make_callable(scale)
 
+        # Save as _params to be consistent with stats_functions
+        self._params = {"make_even":self.make_even, "base":self.base,
+                        "scale":self.scale, "dim":self.dim}
 
-def make_xor_random_generator(N, p=0.5, **kwargs):
-    return (lambda f: lambda: f(N, np.random.uniform() < p, **kwargs))(make_xor)
+    def sample_with(self, z):
+
+        # Choose how many zeros
+        if self.make_even(z):
+            n_ones = 2 * np.random.randint(0, high=self.dim // 2 + 1)
+        else:
+            n_ones = 2 * np.random.randint(0, high=(self.dim + 1) // 2) + 1
+
+        return self.scale(z) * np.random.permutation(
+                np.concatenate((np.ones(n_ones), np.zeros(self.dim - n_ones)))
+                ) + self.base(z)

@@ -4,46 +4,60 @@ frozen distributions.
 """
 from scipy import stats
 
+from mlsiml.generation.bayes_networks import Node
+from mlsiml.utils import make_callable
 
-class Distribution:
 
-    def __init__(self, base):
+class Distribution(Node):
+
+    def __init__(self, base, description, **kwargs):
         self.base = base
+        self.description = description
+        self._params = kwargs
 
-    @classmethod
-    def Normal(cls):
-        return cls(stats.norm)
-
-    @classmethod
-    def Exponential(cls):
-        return cls(stats.expon)
-
-    def sample(self, **kwargs):
-        return self.base.rvs(**kwargs)
-
-    def sampler_for(self, **kwargs):
-
-        # Build dictionary of all callable keyword arguments
-        callable_kwargs = {
-                kw:(arg if callable(arg) else (lambda a: lambda z: a)(arg))
+        self.callable_kwargs = {
+                kw:make_callable(arg)
                 for kw, arg in kwargs.items()
                 }
 
-        # Make lambda to pass argument to every keyword function in dictionary
-        kwargs_generator = (lambda _kwargs: lambda z: 
-                {kw:arg(z) for kw,arg in _kwargs.items()})(callable_kwargs)
+    def sample(self):
+        return self.base.rvs(**self._params)
 
-        # Return a sampler with the lambda function
-        return (lambda sampler, param_generator: 
-                (lambda z: sampler(**param_generator(z)))
-                )(self.sample, kwargs_generator)
-        
+    def sample_with(self, z):
+        params = {kw:arg(z) for kw, arg in self.callable_kwargs.items()}
+        return self.base.rvs(**params)
 
-# Bernoulli Distribution
+    def __call__(self):
+        return self.sample()
 
-def bernoulli(prob):
-    return (lambda p: lambda: float(stats.uniform.rvs() > p))(prob)
+    def short_string(self):
+        return self.description
 
-def bernoulli_sampler_for(p):
-    return float(stats.uniform.rvs() > p)
+    def __str__(self):
+        return self.description + str(self._params)
+
+
+
+def Normal(**kwargs):
+    desc = "Normal({!s}, {!s})".format(
+                                kwargs.get("loc", 0), kwargs.get("scale", 1))
+    return Distribution(stats.norm, desc, **kwargs)
+
+def Exponential(**kwargs):
+    desc = "Exp({!s})".format(kwargs.get('scale', 1))
+    return Distribution(stats.expon, desc, **kwargs)
+
+def Bernoulli(p):
+    return Distribution(stats.bernoulli, "Bern(" + str(p) + ")", p=p)
+
+
+class BinaryCorruption(Node):
+
+    def __init__(self, p):
+        self.description = str(p) + " Corruption"
+        self.bern = Bernoulli(p)
+
+    def sample_with(self, z):
+        flip = self.bern()
+        return (1 - flip) * z + flip * (1 - z)
 
