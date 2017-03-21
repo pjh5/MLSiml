@@ -72,12 +72,6 @@ class NodeLayer:
         return np.array([node.sample_with(prev_layer)
                                             for node in self.nodes]).flatten()
 
-    def __getitem__(self, index):
-        return self.nodes[index]
-
-    def __len__(self):
-        return len(self.nodes)
-
     def short_string(self):
         return "<" + self.description + " Layer>"
 
@@ -98,8 +92,8 @@ class RepeatedNodeLayer(NodeLayer):
 
 class Network:
 
-    def __init__(self, class_generator, layers, description=None):
-        self.description = description if description else ""
+    def __init__(self, description, class_generator, layers):
+        self.description = description
         self.class_generator = class_generator
         self.layers = layers
         self.dims = []
@@ -110,7 +104,6 @@ class Network:
         for layer in layers:
             result = layer.sample_with(result)
             self.dims.append(len(result))
-
 
     def sample(self):
 

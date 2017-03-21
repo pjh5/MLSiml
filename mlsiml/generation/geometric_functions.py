@@ -15,16 +15,12 @@ from mlsiml.utils import make_callable
 
 class XOR(Node):
 
-    def __init__(self, dim=None, make_even=None, base=None, scale=None):
+    def __init__(self, dim, make_even=None, base=None, scale=None):
         self.description = str(dim) + "D XOR"
 
-        # Dimension and make_even must be specified
-        if not dim:
-            raise Error("Dimension of XOR must be specified")
+        # Default values
         if not make_even:
-            raise Error("Make_even of XOR must be specified")
-
-        # Base and scale have default values
+            make_even = lambda z: z > 0.5
         if not base:
             base = lambda z: 0
         if not scale:
@@ -53,14 +49,10 @@ class XOR(Node):
                 ) + self.base(z)
 
 
-class Hypersphere(Node):
+class Shells(Node):
 
-    def __init__(self, dim=None, scale=None):
+    def __init__(self, dim, scale=None):
         self.description = str(dim) + "D Sphere"
-
-        # Dimension must be specified
-        if not dim:
-            raise Error("Dimension of XOR must be specified")
 
         # Default scale is 'z'
         if not scale:

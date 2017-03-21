@@ -2,7 +2,6 @@
 from mlsiml.analysis import experiment
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.generation.example_networks import corrupted_xor
-from mlsiml.classification.preprocessing import MetricLearnTransform
 
 
 # Classifiers

@@ -169,7 +169,8 @@ def for_random_forest(n_estimators=10, **kwargs):
                     split.  default is sqrt(n_features)
     """
     kwargs['n_estimators'] = n_estimators
-    return _make_classifier(RandomForestClassifier, "Random Forest", **kwargs)
+    return _make_classifier(RandomForestClassifier,
+            str(n_estimators) + " Random Forest", **kwargs)
 
 
 
@@ -236,8 +237,9 @@ class Classifier:
         return params
 
     def __str__(self):
-        return "{} {!s} {!s}".format(self.description, self._params,
-                                                            self.preprocessors)
+        return "{} {!s} {!s}".format(self.description,
+                            self._params if self._params else "",
+                            self.preprocessors if self.preprocessors else "")
 
     def __repr__(self):
         return self.__str__()

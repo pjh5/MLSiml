@@ -2,6 +2,7 @@
 Functions to sample from distributions and to make generators that sample from
 frozen distributions.
 """
+import numpy as np
 from scipy import stats
 
 from mlsiml.generation.bayes_networks import Node
@@ -49,15 +50,4 @@ def Exponential(**kwargs):
 
 def Bernoulli(p):
     return Distribution(stats.bernoulli, "Bern(" + str(p) + ")", p=p)
-
-
-class BinaryCorruption(Node):
-
-    def __init__(self, p):
-        self.description = str(p) + " Corruption"
-        self.bern = Bernoulli(p)
-
-    def sample_with(self, z):
-        flip = self.bern()
-        return (1 - flip) * z + flip * (1 - z)
 
