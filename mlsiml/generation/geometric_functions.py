@@ -4,16 +4,24 @@ separable data. By barely separable, we mean that this will create
 N-dimensional data that is separable in N-dimensions but not separable in any
 subset of N-1 dimensions. By separable we mean non-overlapping, but not
 linearly separable.
-
-This module makes relatively clean data. Default parameters will make regions
-of data that have non-trivial margins between them.
 """
 import numpy as np
 
 from mlsiml.generation.bayes_networks import Node
 from mlsiml.utils import make_callable
 
+
 class XOR(Node):
+    """Binary -> N-dimensional binary
+
+    Usage
+    ====
+    xor = XOR(N)
+    xor.sample_with(1)
+        => returns N-dimensional binary vector with an even number of 1s
+    xor.sample_with(0)
+        => returns N-dimensional binary vector with an odd number of 1s
+    """
 
     def __init__(self, dim, make_even=None, base=None, scale=None):
         self.description = str(dim) + "D XOR"
@@ -50,21 +58,30 @@ class XOR(Node):
 
 
 class Shells(Node):
+    """Scalar Real -> N-dimensional Real
 
-    def __init__(self, dim, scale=None):
+    Usage
+    =====
+    shell = Shells(N, radii=lambda z: z + y)    # N is an int, y is a scalar
+    shell.sample_with(x)                        # x is a scalar
+    # => returns N-dimensional point (x + y) distance (Euclidian) to origin
+    """
+
+    def __init__(self, dim, radii=None):
         self.description = str(dim) + "D Sphere"
 
-        # Default scale is 'z'
-        if not scale:
-            scale = lambda z: z
+        # Default radii is 'z'
+        if not radii:
+            radii = lambda z: z
 
         self.dim = dim
-        self.scale = make_callable(scale)
+        self.radii = make_callable(radii)
+        self._params = {"radii":self.radii, "dim":self.dim}
 
     def sample(self):
         x = np.random.normal(size=self.dim)
         return x / np.sqrt(np.square(x).sum())
 
     def sample_with(self, z):
-        return self.sample() * self.scale(z)
+        return self.sample() * self.radii(z)
 

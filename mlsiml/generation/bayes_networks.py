@@ -2,17 +2,17 @@
 This module creates single layer Bayesian networks of the following form:
 
           w_1_1
-        / 
+        /
     z_1
-  /     \ 
+  /     \
   |       w_1_M1
   /  .
 y    .
   \  .
   |       w_k_1
-  \     / 
+  \     /
     z_k
-        \ 
+        \
           w_k_Mk
 
 
@@ -27,6 +27,7 @@ k       The number of sources. The z layer is used to control the relative
 
 """
 import numpy as np
+from mlsiml.utils import make_iterable
 
 class Node:
     """A Node in a Bayesian Network.
@@ -58,11 +59,11 @@ class NodeLayer:
 
     def __init__(self, description, nodes):
         self.description = description
-        self.nodes = nodes
+        self.nodes = make_iterable(nodes)
 
     @classmethod
-    def from_function_array(cls, description, functions):
-        return cls(description, [Node(func, "Lambda") for func in functions])
+    def from_function_array(cls, desc, funcs):
+        return cls(desc, [Node(f, "Lambda") for f in make_iterable(funcs)])
 
     @classmethod
     def from_repeated(cls, description, node):

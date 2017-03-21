@@ -8,21 +8,27 @@ from sklearn.model_selection import train_test_split
 
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.utils import flatten
-from mlsiml.utils import iterable
+from mlsiml.utils import make_iterable
 
-DEFAULT_CLASSIFIERS = flatten([
+DEFAULT_CLASSIFIERS = [
             Classifier.for_logistic_regression(),
-            [Classifier.for_knn(n_neighbors=n) for n in [1, 2, 10]],
-            Classifier.for_linear_svm(),
-            [Classifier.for_svm(kernel=k) for k in ['rbf', 'poly']],
-            [Classifier.for_random_forest(n_estimators = k) for k in [10, 30, 50]],
+            Classifier.for_knn(search_params={
+                'n_neighbors':[1, 2, 10]
+                }),
+            Classifier.for_random_forest(search_params={
+                'n_estimators':[10, 100]
+                }),
+            Classifier.for_svm(kernel='rbf', search_params={
+                'C':[0.1, 1, 10],
+                'gamma':[0.01, 0.1, 1],
+                }),
             Classifier.for_gaussian_nb()
-            ])
+            ]
 
 # Default run only uses one sample size
 DEFAULT_EXPERIMENT_PARAMS = {
         "sample_sizes":5000,
-        "train_proportions":0.7
+        "test_size":0.3
         }
 
 
@@ -37,13 +43,13 @@ class Experiment:
             network_class,
             network_params_dict,
             sample_sizes=5000,
-            train_proportions=0.7,
+            test_size=0.3,
             classifiers=None):
 
         self.network_class = network_class
         self.network_params_dict = network_params_dict
-        self.sample_sizes = iterable(sample_sizes)
-        self.train_proportions = iterable(train_proportions)
+        self.sample_sizes = make_iterable(sample_sizes)
+        self.test_size = test_size
 
         # Default classifiers
         if not classifiers:
@@ -53,7 +59,7 @@ class Experiment:
         # Collect all possible keywords for logging purposes
         self.all_possible_keywords = sorted(list(set(
                 ['accuracy', 'CV_mean_accuracy'] +
-                ['sample_size', 'training_proportions'] +
+                ['sample_size', 'test_size'] +
                 list(self.network_params_dict) +
                 flatten([list(c.get_params(deep=True)) for c in self.classifiers])
                 )))
@@ -70,31 +76,26 @@ class Experiment:
         # For every network parameter
         for setting in _all_possible_settings(self.network_params_dict):
             network = self.network_class(**setting)
+            setting["test_size"] = self.test_size
 
             # For every sample size
             for sample_size in self.sample_sizes:
+                setting["sample_size"] = sample_size
                 X, y = network.bulk_sample(sample_size)
+                datasplit = train_test_split(X, y, test_size=self.test_size)
 
-                # For every proportion to split to training and testing data
-                for p_train in self.train_proportions:
-                    datasplit = train_test_split(X, y, test_size=1 - p_train)
+                # Verbose output
+                if verbosity >= 0:
+                    print("\n" + "="*79)
+                    print("BUILDING NETWORK WITH PARAMETERS:")
+                    for kw,val in setting.items():
+                        print("\t{:>20} : {!s}".format(kw, val))
+                    print()
 
-                    # Add experiment params to settings for saving
-                    setting["sample_size"] = sample_size
-                    setting["training_proportion"] = p_train
-
-                    # Verbose output
-                    if verbosity >= 0:
-                        print("\n" + "="*79)
-                        print("BUILDING NETWORK WITH PARAMETERS:")
-                        for kw,val in setting.items():
-                            print("\t{:>20} : {!s}".format(kw, val))
-                        print()
-
-                    # For every classifiers
-                    for classifier in self.classifiers:
-                        accuracy = classifier.evaluate_on(*datasplit)
-                        all_results.add_record_for(setting, classifier)
+                # For every classifiers
+                for classifier in self.classifiers:
+                    accuracy = classifier.evaluate_on(*datasplit)
+                    all_results.add_record_for(setting, classifier)
 
         return all_results
 
@@ -204,7 +205,7 @@ def _all_possible_settings(a_dict):
 
     # First map the dictionary into a list of lists of parameters
     listlist = [
-            [(k, v) for v in iterable(val)]
+            [(k, v) for v in make_iterable(val)]
             for k, val in a_dict.items()]
 
     # Iterate over all possible combinations of the above

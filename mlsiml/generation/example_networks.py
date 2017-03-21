@@ -28,8 +28,8 @@ def exponential(p=0.5):
 
     # Extra layer to make sure parameters are > 0 for the next layer
     # Note that this has to be np.maximum and not np.max
-    abs_layer = NodeLayer.from_function_array("Absolute Value",
-                                                [lambda z: np.maximum(z, 1.1)])
+    abs_layer = NodeLayer.from_function_array("AbsValue",
+                                                lambda z: np.maximum(z, 1.1))
 
     # x, outputs
     # 4 total outputs, two for each source
@@ -76,7 +76,7 @@ def xor(p=0.5,
     num_x = num_z * num_x_per_z
 
     # z is a k-dimensional XOR
-    z_layer = NodeLayer("XOR", [XOR(num_z, scale=xor_scale, base=xor_base)])
+    z_layer = NodeLayer("XOR", XOR(num_z, scale=xor_scale, base=xor_base))
 
     # x are normals on the z
     x_layer = []
@@ -121,7 +121,7 @@ def shells(p=0.5, dim=3, var=0.2, extra_noise=0):
     return Network("Simple Shells",
             Bernoulli(p),
             [
-                NodeLayer("Sphere", [Shells(dim, scale=lambda z: z+1)]),
+                NodeLayer("Sphere", Shells(dim, radii=lambda z: z+1)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
             ])

@@ -10,7 +10,7 @@ from mlsiml.utils import parse_to_args_and_kwargs
 from mlsiml.utils import flatten
 
 
-def main(which_example, sample_size=2500, plot=False,
+def main(which_example, sample_size=1000, plot=False,
         summary=False, verbose=False, **kwargs):
 
     # If verbose, print out the args and kwargs
@@ -35,10 +35,16 @@ def main(which_example, sample_size=2500, plot=False,
     print("Classifier performance:")
     for classifier in flatten([
             Classifier.for_logistic_regression(),
-            [Classifier.for_knn(n_neighbors=n) for n in [1, 2, 10]],
-            Classifier.for_linear_svm(),
-            [Classifier.for_svm(kernel=k) for k in ['rbf', 'sigmoid']],
-            [Classifier.for_random_forest(n_estimators = k) for k in [10, 30]],
+            Classifier.for_knn(search_params={
+                'n_neighbors':[1, 2, 10]
+                }),
+            Classifier.for_random_forest(search_params={
+                'n_estimators':[10, 100]
+                }),
+            Classifier.for_svm(kernel='rbf', search_params={
+                'C':[0.1, 1, 10],
+                'gamma':[0.01, 0.1, 1],
+                }),
             Classifier.for_gaussian_nb()
             ]):
 
@@ -50,21 +56,12 @@ def main(which_example, sample_size=2500, plot=False,
     if plot:
         analysis.plot_data(X, y)
 
-def test(verbose=True):
 
-    # Make experiment
-    exp = experiment.Experiment(
-            example_networks.corrupted_xor,
-            {
-                "p":0.5
-            },
-            sample_sizes=[500, 1000, 20000]
-            )
-
-    # Run experiment
-    all_results = exp.run(verbose=verbose)
-
-    return all_results
+def some_data(which="shells", sample_size=10000, **kwargs):
+    net = getattr(example_networks, which)(**kwargs)
+    X, y = net.bulk_sample(sample_size)
+    datasplit = train_test_split(X, y, test_size=0.3)
+    return datasplit
 
 
 # Allow running like "$> python main.py --xor=5"

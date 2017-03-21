@@ -145,7 +145,7 @@ def flatten(array, recursive=False):
     return flattened
 
 
-def iterable(obj):
+def make_iterable(obj):
     return obj if isinstance(obj, Iterable) else [obj]
 
 def make_callable(obj):

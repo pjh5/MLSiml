@@ -28,7 +28,7 @@ network_params = {
 
 # Experiment Parameters
 sample_sizes = [7500]
-train_proportions = 0.7
+test_size = 0.3
 
 
 # Log file
@@ -38,7 +38,7 @@ logfile = "rbf_svm"
 # Make experiment
 _exp = experiment.Experiment(network, network_params,
         sample_sizes=sample_sizes,
-        train_proportions=train_proportions,
+        test_size=test_size,
         classifiers=classifiers)
 
 results = _exp.run(logfile=logfile)

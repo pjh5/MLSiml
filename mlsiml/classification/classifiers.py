@@ -15,7 +15,7 @@ from mlsiml.utils import flatten
 # Classifier Constructors                                                    #
 ##############################################################################
 
-def for_logistic_regression(penalty='l2', solver='liblinear', **kwargs):
+def for_logistic_regression(**kwargs):
     """ Logistic Regression (aka logit, MaxEnt) classifier.
 
     This class implements regularized logistic regression using the 'liblinear'
@@ -39,8 +39,6 @@ def for_logistic_regression(penalty='l2', solver='liblinear', **kwargs):
         same scale. You can preprocess the data with a scaler from
         sklearn.preprocessing.
     """
-    kwargs["penalty"] = penalty
-    kwargs["solver"] = solver
     return _make_classifier(LogisticRegression, "Logistic Regression", **kwargs)
 
 def for_knn(n_neighbors=5, **kwargs):
@@ -77,10 +75,9 @@ def for_knn(n_neighbors=5, **kwargs):
         Additional keyword arguments for the metric function.
     """
     kwargs["n_neighbors"] = n_neighbors
-    return _make_classifier(KNeighborsClassifier,
-                            str(n_neighbors) + " Nearest Neighbors", **kwargs)
+    return _make_classifier(KNeighborsClassifier, "KNN", **kwargs)
 
-def for_linear_svm(dual=False, **kwargs):
+def for_linear_svm(**kwargs):
     """Linear Support Vector Classification.
 
     Parameters
@@ -102,10 +99,9 @@ def for_linear_svm(dual=False, **kwargs):
     max_iter : int, (default=1000)
         The maximum number of iterations to be run.
     """
-    kwargs["dual"] = dual
     return _make_classifier(svm.LinearSVC, "Linear SVM", **kwargs)
 
-def for_svm(kernel="rbf", params=None, **kwargs):
+def for_svm(kernel="rbf", **kwargs):
     """C-Support Vector Classification.
     The implementation is based on libsvm. The fit time complexity is more than
     quadratic with the number of samples which makes it hard to scale to
@@ -145,7 +141,7 @@ def for_svm(kernel="rbf", params=None, **kwargs):
         Tolerance for stopping criterion.
     """
     kwargs["kernel"] = kernel
-    return _make_classifier(svm.SVC, "SVM with " + kernel + " Kernel", **kwargs)
+    return _make_classifier(svm.SVC, "SVM", **kwargs)
 
 def for_gaussian_nb(priors=None, **kwargs):
     """Gaussian Naive Bayes.
@@ -169,8 +165,7 @@ def for_random_forest(n_estimators=10, **kwargs):
                     split.  default is sqrt(n_features)
     """
     kwargs['n_estimators'] = n_estimators
-    return _make_classifier(RandomForestClassifier,
-            str(n_estimators) + " Random Forest", **kwargs)
+    return _make_classifier(RandomForestClassifier, "Random Forest", **kwargs)
 
 
 
@@ -225,9 +220,11 @@ class Classifier:
     def record_for_last_fit(self):
         self.last_evaluation_record
 
-    def get_params(self, deep=False):
+    def get_params(self, deep=False, original=False):
         params = self._params.copy()
-        params['classifier_description'] = self.description
+
+        if not original:
+            params['classifier_description'] = self.description
 
         # Include preprocesssing params if needed
         if deep:
@@ -237,9 +234,11 @@ class Classifier:
         return params
 
     def __str__(self):
+        params = self.get_params(original=True)
+        pres = self.preprocessors
         return "{} {!s} {!s}".format(self.description,
-                            self._params if self._params else "",
-                            self.preprocessors if self.preprocessors else "")
+                                     params if params else "",
+                                     pres if pres else "")
 
     def __repr__(self):
         return self.__str__()
@@ -284,8 +283,9 @@ class CVGridSearchClassifier(Classifier):
         cv_params = [p[6:] for p in cv_results.keys() if p.startswith('param_')]
 
         # Loop over all cross validation runs
+        current_params = self.get_params(deep=True)
         for cv_run in range(len(cv_results['mean_test_score'])):
-            record = self.get_params(deep=True)
+            record = current_params.copy()
 
             # Add the cross validated parameters to the record
             for cv_param in cv_params:
@@ -297,15 +297,15 @@ class CVGridSearchClassifier(Classifier):
 
         return accuracy
 
-    def get_params(self, deep=False):
-        params = super().get_params(deep=deep)
+    def get_params(self, **kwargs):
+        params = super().get_params(**kwargs)
 
         # Add CV search params, which aren't included in the base get_params()
         for kw, val in self._search_params.items():
 
             # If this classifier has been fit, then parameters have been chosen
             if self.full_record:
-                params[kw] = val
+                params[kw] = self.base_classifier.best_params_[kw]
 
             # Otherwise, the values are still unspecified
             else:
@@ -314,7 +314,8 @@ class CVGridSearchClassifier(Classifier):
         return params
 
     def __str__(self):
-        return super().__str__() + " " + str(self.cv_kwargs)
+        return "{} {!s}".format(super().__str__(),
+                self.cv_kwargs if self.cv_kwargs else "")
 
 
 ##############################################################################
