@@ -11,13 +11,10 @@ from mlsiml.generation.geometric_functions import Shells
 
 # Classifiers
 classifiers = [
-            Classifier.for_logistic_regression(),
             Classifier.for_knn(search_params={
                 'n_neighbors':[1, 2, 10]
                 }),
-            Classifier.for_random_forest(search_params={
-                'n_estimators':[10, 100]
-                }),
+            Classifier.for_random_forest(n_estimators=100),
             Classifier.for_svm(kernel='rbf', search_params={
                 'C':[0.1, 1, 10],
                 'gamma':[0.01, 0.1, 1],
@@ -37,13 +34,13 @@ def shell_network(real_dims=0, noise_dims=0):
             ])
 network = shell_network
 network_params = {
-         "real_dims":[3, 5, 7],
-        "noise_dims":[1, 3, 5, 7]
+         "real_dims":[3, 5, 7, 9],
+        "noise_dims":[0, 2, 4, 8]
         }
 
 
 # Experiment Parameters
-sample_sizes = [10000]
+sample_sizes = [20000]
 test_size = 0.3
 
 
