@@ -27,6 +27,7 @@ k       The number of sources. The z layer is used to control the relative
 
 """
 import numpy as np
+from mlsiml.utils import flatten
 from mlsiml.utils import make_iterable
 
 class Node:
@@ -73,6 +74,9 @@ class NodeLayer:
         return np.array([node.sample_with(prev_layer)
                                             for node in self.nodes]).flatten()
 
+    def transform(self, y, z):
+        return (y, self.sample_with(z))
+
     def short_string(self):
         return "<" + self.description + " Layer>"
 
@@ -84,39 +88,43 @@ class RepeatedNodeLayer(NodeLayer):
 
     def __init__(self, description, node):
         self.description = description
-        self.nodes = [node]
         self.node = node
 
-    def sample_with(self, prev_layer):
-        return np.array([self.node.sample_with(z) for z in prev_layer]).flatten()
+    def sample_with(self, z):
+        return np.array([self.node.sample_with(_z) for _z in z]).flatten()
 
+    def __str__(self):
+        return "{} Layer: [{} (repeated)]".format(self.description,
+                                                    self.node.short_string())
 
 class Network:
 
     def __init__(self, description, class_generator, layers):
         self.description = description
         self.class_generator = class_generator
-        self.layers = layers
+        self.layers = flatten(layers)
         self.dims = []
 
         # Validate dimensions
-        result = self.class_generator()
+        y = self.class_generator()
+        result = (y, y)
         self.dims = [1]
         for layer in layers:
-            result = layer.sample_with(result)
-            self.dims.append(len(result))
+            result = layer.transform(*result)
+            self.dims.append(len(result[1]))
+
 
     def sample(self):
 
         # First layer has no inputs and is assumed to be the desired output
         y = self.class_generator.sample()
-        result = np.array(y)
+        result = (y, y)
 
         # Sample rest of the inputs
         for layer in self.layers:
-            result = layer.sample_with(result)
+            result = layer.transform(*result)
 
-        return (y, result)
+        return result
 
 
     def bulk_sample(self, n_samples):

@@ -12,10 +12,17 @@ from mlsiml.generation.noise_functions import ExtraNoiseNodes
 from mlsiml.generation.geometric_functions import XOR
 from mlsiml.generation.geometric_functions import Shells
 
+from mlsiml.generation.transformations import PlaneFlip
+
 import numpy as np
 
 
-def exponential(p=0.5):
+def exponential(p=0.5, extra_noise=0):
+    """Two normal 2D clusters (one per class), then fed into Exp
+
+    Difficulty of problem determined by distance between the normal clusters.
+    This network is not very interesting. You probably shouldn't use it.
+    """
 
     # z, sources
     # Two normal sources, first with 80% of variance
@@ -47,55 +54,45 @@ def exponential(p=0.5):
             [
                 z_layer,
                 abs_layer,
-                x_layer
+                x_layer,
+                ExtraNoiseNodes(extra_noise)
             ])
 
 
-def exp_norm(p=0.5, num_z=2, scale=5, var=0.3):
+def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0):
+    """Normal(scale*Exponential(Bernoulli()), var)
+
+    Difficulty controlled by scale; smaller is harder. This is still pretty
+    hard because the exponentials overlap so much.
+    """
 
     z_layer = NodeLayer("Exponential", [Exp(scale=lambda y: scale*y + 1)
-                                        for _ in range(num_z)])
+                                        for _ in range(dim)])
 
     return Network("Exp-Norm",
             Bernoulli(p),
             [
                 z_layer,
-                NormalNoise(var=var)
+                NormalNoise(var=var),
+                ExtraNoiseNodes(extra_noise)
             ])
 
 
-def xor(p=0.5,
-        num_z=3,
-        num_x_per_z=1,
-        var=0.2,
-        max_beta=1.0,
-        xor_scale=1,
-        xor_base=0):
+def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0):
+    """XOR(dim) + NormalNoise(var)
 
-    # Calculate total number of X
-    num_x = num_z * num_x_per_z
-
-    # z is a k-dimensional XOR
-    z_layer = NodeLayer("XOR", XOR(num_z, scale=xor_scale, base=xor_base))
-
-    # x are normals on the z
-    x_layer = []
-    for source in range(num_z):
-
-        # Each x is connected only to its z
-        beta = np.ones(num_z) * (1 - max_beta) / float(num_x)
-        beta[source] = max_beta
-
-        x_layer += [Normal(loc=(lambda b: lambda z: z.dot(b))(beta), scale=var)
-                    for x in range(num_x_per_z)]
-
-    x_layer = NodeLayer("Normal", x_layer)
+    Very difficult for dimensions > 9ish, even for SVMs. The default variance
+    is usually adequate, and corresponds to almost touching clusters. When
+    plotted the clusters will be very clearly separated, but in a way that is
+    hard to classify.
+    """
 
     return Network("XOR",
             Bernoulli(p),
             [
-                z_layer,
-                x_layer
+                NodeLayer("XOR", XOR(dim, scale=xor_scale, base=xor_base)),
+                NormalNoise(var=var),
+                ExtraNoiseNodes(extra_noise)
             ])
 
 
@@ -116,12 +113,14 @@ def corrupted_xor(p=0.5,
             ])
 
 
-def shells(p=0.5, dim=3, var=0.2, extra_noise=0):
-
+def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
+    from mlsiml.utils import flatten
     return Network("Simple Shells",
-            Bernoulli(p),
+            Bernoulli(p), flatten(
             [
-                NodeLayer("Sphere", Shells(dim, radii=lambda z: z+1)),
+                NodeLayer("Shells", Shells(dim, radii=lambda z: z+1)),
                 NormalNoise(var=var),
+                [PlaneFlip(dim=dim) for _ in range(flips)],
                 ExtraNoiseNodes(extra_noise)
-            ])
+            ]))
+
