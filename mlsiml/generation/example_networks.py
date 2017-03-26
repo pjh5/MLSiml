@@ -114,13 +114,11 @@ def corrupted_xor(p=0.5,
 
 
 def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
-    from mlsiml.utils import flatten
     return Network("Simple Shells",
-            Bernoulli(p), flatten(
             [
                 NodeLayer("Shells", Shells(dim, radii=lambda z: z+1)),
                 NormalNoise(var=var),
                 [PlaneFlip(dim=dim) for _ in range(flips)],
                 ExtraNoiseNodes(extra_noise)
-            ]))
+            ])
 
