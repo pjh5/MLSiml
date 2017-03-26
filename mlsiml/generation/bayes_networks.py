@@ -1,30 +1,9 @@
 """
-This module creates single layer Bayesian networks of the following form:
+This module creates layered networks of the following form:
 
-          w_1_1
-        /
-    z_1
-  /     \
-  |       w_1_M1
-  /  .
-y    .
-  \  .
-  |       w_k_1
-  \     /
-    z_k
-        \
-          w_k_Mk
-
-
-y       The true response. The true class for classification tasks and the true
-        value for regression tasks. This could potentially be a vector, but the
-        current implementation assumes that it will be a scalar.
-
-k       The number of sources. The z layer is used to control the relative
-        importance of every source, which is measured as the relative variance
-        of each z_i. Thus each z_i needs at minimum a variance.
-
-
+A network is essentially a sequence of layers, each of which takes the output
+of the previous layer (a vector), processes it in some waay, and then outputs a
+different vector to the next layer.
 """
 import numpy as np
 from mlsiml.utils import flatten
@@ -56,7 +35,11 @@ class Node:
         return "<" + self.description + " Node>"
 
 class NodeLayer:
-    """Basically just an array of Node objects"""
+    """Basically just an array of Node objects.
+
+    The output of the layer will always be coerced into a flat numpy array (a
+    vector).
+    """
 
     def __init__(self, description, nodes):
         self.description = description
@@ -85,6 +68,12 @@ class NodeLayer:
                     '-'.join([n.short_string() for n in self.nodes]) + "]>")
 
 class RepeatedNodeLayer(NodeLayer):
+    """A layer made from a single node, repeated as many times as needed
+
+    Every node will be given the scalar from the corresponding node of the
+    previous layer. Layers created with this method will not change the
+    dimension of the sampled vector.
+    """
 
     def __init__(self, description, node):
         self.description = description

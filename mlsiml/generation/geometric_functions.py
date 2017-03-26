@@ -1,9 +1,7 @@
 """
-This module contains functions to create structure, high-dimensional, "barely"
-separable data. By barely separable, we mean that this will create
-N-dimensional data that is separable in N-dimensions but not separable in any
-subset of N-1 dimensions. By separable we mean non-overlapping, but not
-linearly separable.
+Nodes that generate "structured" data, such as N-dimensional XORs or
+N-dimensional hyperspheres.
+
 """
 import numpy as np
 
@@ -14,13 +12,26 @@ from mlsiml.utils import make_callable
 class XOR(Node):
     """Binary -> N-dimensional binary
 
+    Sampling from an N-dimensional XOR is equivalent to sampling from the
+    corners of a N-dimensional hypercube (of 0 and 1s), where every other
+    corner is of a different class. There are two possible classes, "even"
+    (with an even number of 1s) and "odd" (with an odd number of 1s).
+
+    N-dimensional XORs are very very difficult for classification, as they have
+    very complex decision boundaries.
+
     Usage
     ====
     xor = XOR(N)
-    xor.sample_with(1)
-        => returns N-dimensional binary vector with an even number of 1s
-    xor.sample_with(0)
-        => returns N-dimensional binary vector with an odd number of 1s
+    xor.sample_with(1)      # odd xor
+    xor.sample_with(0)      # even xor
+
+
+    xor2 = XOR(N, make_even=lambda z: z > 0.8)
+    xor2.sample_with(0)     # odd xor
+    xor2.sample_with(0.7)   # odd xor
+    xor2.sample_with(0.8)   # even xor
+    xor2.sample_with(1)     # even xor
     """
 
     def __init__(self, dim, make_even=None, base=None, scale=None):
@@ -60,11 +71,16 @@ class XOR(Node):
 class Shells(Node):
     """Scalar Real -> N-dimensional Real
 
+    Samples from shells, which are circles generalized to higher dimensions.
+    When this says that it samples from a hypersphere of radius 4, it means
+    that it samples from all points in 4 dimensions that have euclidian
+    distance of 4 from the origin.
+
     Usage
     =====
-    shell = Shells(N, radii=lambda z: z + y)    # N is an int, y is a scalar
-    shell.sample_with(x)                        # x is a scalar
-    # => returns N-dimensional point (x + y) distance (Euclidian) to origin
+    shell = Shells(N, radii=lambda z: z + 4)    # N is an int
+    shell.sample_with(0)    # sample from N-dimensional hypersphere of radius 4
+    shell.sample_with(3)    # sample from N-dimensional hypersphere of radius 7
     """
 
     def __init__(self, dim, radii=None):
