@@ -186,10 +186,10 @@ class Classifier:
     sklearn docs and then edited to only be relevant to binary classification.
     """
 
-    def __init__(self, base_classifier, description, **kwargs):
+    def __init__(self, base_classifier, desc, **kwargs):
         """This probably shouldn't be called directly."""
         self.base_classifier = base_classifier
-        self.description = description
+        self.desc = desc
         self._params = kwargs
         self.last_evaluation_record = None
         self.preprocessors = []
@@ -224,7 +224,7 @@ class Classifier:
         params = self._params.copy()
 
         if not original:
-            params['classifier_description'] = self.description
+            params['classifier_desc'] = self.desc
 
         # Include preprocesssing params if needed
         if deep:
@@ -236,7 +236,7 @@ class Classifier:
     def __str__(self):
         params = self.get_params(original=True)
         pres = self.preprocessors
-        return "{} {!s} {!s}".format(self.description,
+        return "{} {!s} {!s}".format(self.desc,
                                      params if params else "",
                                      pres if pres else "")
 
@@ -246,7 +246,7 @@ class Classifier:
 
 class CVGridSearchClassifier(Classifier):
 
-    def __init__(self, base_classifier, search_params, description, **kwargs):
+    def __init__(self, base_classifier, search_params, desc, **kwargs):
         self._search_params = search_params
         self.full_record = None
 
@@ -262,7 +262,7 @@ class CVGridSearchClassifier(Classifier):
                 base_classifier(**kwargs), search_params, **self.cv_kwargs)
 
         # Now init like normal with the GridSearchCV classifier
-        super().__init__(grid_classifier, description, **kwargs)
+        super().__init__(grid_classifier, desc, **kwargs)
 
 
     def evaluate_on(self, X, X_test, Y, Y_test):
@@ -330,11 +330,11 @@ def classification_accuracy(y_true, y_hat):
 # Helper Functions                                                           #
 ##############################################################################
 
-def _make_classifier(base_classifier, description, search_params=None,
+def _make_classifier(base_classifier, desc, search_params=None,
                                                                     **kwargs):
     if search_params:
         return CVGridSearchClassifier(
-                        base_classifier, search_params, description, **kwargs)
+                        base_classifier, search_params, desc, **kwargs)
     # No search params
-    return Classifier(base_classifier(**kwargs), description)
+    return Classifier(base_classifier(**kwargs), desc)
 

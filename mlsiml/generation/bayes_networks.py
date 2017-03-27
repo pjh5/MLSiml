@@ -8,6 +8,7 @@ different vector to the next layer.
 import logging
 import numpy as np
 from mlsiml.utils import flatten
+from mlsiml.utils import to_flat_np_array
 from mlsiml.utils import make_iterable
 
 
@@ -19,21 +20,24 @@ class Node:
     vector. Note that this may output a vector.
     """
 
-    def __init__(self, f_sample, description):
-        self.description = description
+    def __init__(self, f_sample, desc):
+        self.desc = desc
         self.f_sample = f_sample
 
     def sample_with(self, prev_layer):
-        return np.array(self.f_sample(prev_layer)).ravel()
+        return to_flat_np_array(self.f_sample(prev_layer))
 
     def short_string(self):
-        return self.description
+        return self.desc
 
     def _set_index(self, idx):
         self.idx = idx
 
     def __str__(self):
-        return "<" + self.description + " Node>"
+        return "<" + self.desc + " Node>"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class NodeLayer:
@@ -58,8 +62,8 @@ class NodeLayer:
     vector).
     """
 
-    def __init__(self, description, nodes):
-        self.description = description
+    def __init__(self, desc, nodes):
+        self.desc = desc
         nodes = flatten(make_iterable(nodes))
 
         # Convert functions into Nodes automatically
@@ -70,32 +74,42 @@ class NodeLayer:
         for i, node in enumerate(self.nodes):
             node._set_index(i)
 
-        logging.debug("Built layer '{}' with nodes {!s}".format(self.description, self.nodes))
+        logging.debug("Built layer '{}' with nodes {!s}".format(
+                                                    self.desc, self.nodes))
 
     @classmethod
     def from_function_array(cls, desc, funcs):
         return cls(desc, [Node(f, "Lambda") for f in make_iterable(funcs)])
 
     @classmethod
-    def from_repeated(cls, description, node):
-        return RepeatedNodeLayer(description, node)
+    def from_repeated(cls, desc, node):
+        return RepeatedNodeLayer(desc, node)
 
     def sample_with(self, z):
-        return np.array([n.sample_with(z) for n in self.nodes]).ravel()
+        # j = [n.sample_with(z) for n in self.nodes]
+        # logging.debug(self.desc + "="*80)
+        # logging.debug(j)
+        # logging.debug([type(x) for x in j])
+        # logging.debug(np.array(j))
+        # logging.debug(np.array(j).shape)
+        # logging.debug(to_flat_np_array(j).shape)
+        # logging.debug(to_flat_np_array(j))
+        # logging.debug("="*80)
+        return to_flat_np_array([n.sample_with(z) for n in self.nodes])
 
     def transform(self, y, z):
         return (y, self.sample_with(z))
 
     def short_string(self):
-        return "<" + self.description + " Layer>"
+        return "<" + self.desc + " Layer>"
 
     def multiline_string(self):
         """Multi-line string representation, one row per node"""
-        return "{} NodeLayer:\n{}".format(self.description, "".join(
-            ["\t{!s} {}\n".format(n.idx, n.description) for n in self.nodes]))
+        return "{} NodeLayer:\n{}".format(self.desc, "".join(
+            ["\t{!s} {}\n".format(n.idx, n.desc) for n in self.nodes]))
 
     def __str__(self):
-        return ("<" + self.description + " Layer: [" +
+        return ("<" + self.desc + " Layer: [" +
                     '-'.join([n.short_string() for n in self.nodes]) + "]>")
 
     def __repr__(self):
@@ -111,15 +125,15 @@ class RepeatedNodeLayer(NodeLayer):
     vector output of the previous layer.
     """
 
-    def __init__(self, description, node):
-        self.description = description
+    def __init__(self, desc, node):
+        self.desc = desc
         self.node = node
 
     def sample_with(self, z):
-        return np.array([self.node.sample_with(_z) for _z in z]).ravel()
+        return to_flat_np_array([self.node.sample_with(_z) for _z in z])
 
     def __str__(self):
-        return "{} Layer: [{} (repeated)]".format(self.description,
+        return "{} Layer: [{} (repeated)]".format(self.desc,
                                                     self.node.short_string())
 
 class Network:
@@ -138,12 +152,12 @@ class Network:
     second NodeLayer, etc.
     """
 
-    def __init__(self, description, class_generator, layers):
+    def __init__(self, desc, class_generator, layers):
         """Creates a network
 
         Params
         ======
-        description     A human readable string that is used to describe the
+        desc     A human readable string that is used to describe the
             network. This is only used for debugging / printing purposes, but
             it really helps to have a descriptive string here.
 
@@ -161,7 +175,7 @@ class Network:
             won't ever change the class label, as NodeLayer will automatically
             call that method.
         """
-        self.description = description
+        self.desc = desc
         self.class_generator = class_generator
         self.layers = flatten(layers)
         self.dims = []
@@ -260,6 +274,6 @@ class Network:
 
     def __str__(self):
         return ("<{} Network [{}]>".format(
-                            self.description, "-".join(map(str, self.dims))))
+                            self.desc, "-".join(map(str, self.dims))))
 
 

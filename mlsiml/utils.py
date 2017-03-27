@@ -1,4 +1,5 @@
 from collections import Iterable
+import numpy as np
 import re
 
 
@@ -161,6 +162,14 @@ def flatten(array, recursive=False):
             flattened.append(elem)
     return flattened
 
+def to_flat_np_array(arr):
+    """Flatten for np arrays cause the builtin one doesn't work"""
+    return np.array(flatten(
+                map(list, map( make_iterable, make_iterable(arr)))
+                )).ravel()
+
+
+
 
 def make_iterable(obj):
     """Returns an iterable version of obj, possibly just [obj]"""
@@ -170,4 +179,19 @@ def make_callable(obj):
     """Returns a callable version of obj (with any number of parameters)"""
     return obj if callable(obj) else (lambda o: lambda *z: o)(obj)
 
+
+def nice_str(thing):
+    """Replaces lambda str()s with just 'lambda'"""
+    if callable(thing) and not isinstance(thing, Identity):
+        return "lambda"
+    return str(thing)
+
+class Identity():
+    """A wrapper around lambda z: z with a nicer string representation"""
+
+    def __call__(self, z):
+        return z
+
+    def __str__(self):
+        return "z->z"
 

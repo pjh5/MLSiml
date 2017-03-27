@@ -6,7 +6,7 @@ N-dimensional hyperspheres.
 import numpy as np
 
 from mlsiml.generation.bayes_networks import Node
-from mlsiml.generation.transformations import Identity
+from mlsiml.utils import Identity
 from mlsiml.utils import make_callable
 
 
@@ -36,7 +36,7 @@ class XOR(Node):
     """
 
     def __init__(self, dim, make_even=None, base=None, scale=None):
-        self.description = str(dim) + "D XOR"
+        self.desc = str(dim) + "D XOR"
 
         # Default values
         if not make_even:
@@ -85,7 +85,7 @@ class Shells(Node):
     """
 
     def __init__(self, dim, radii=None):
-        self.description = str(dim) + "D Sphere"
+        self.desc = str(dim) + "D Sphere"
 
         # Default radii is 'z'
         if not radii:

@@ -12,7 +12,7 @@ from mlsiml.generation.bayes_networks import NodeLayer
 from mlsiml.generation.bayes_networks import RepeatedNodeLayer
 from mlsiml.generation.stats_functions import Normal
 from mlsiml.generation.stats_functions import Bernoulli
-from mlsiml.generation.transformations import Identity
+from mlsiml.utils import Identity
 
 
 class NormalNoise(RepeatedNodeLayer):
@@ -31,7 +31,7 @@ class BinaryCorruption(Node):
     """N-dimensions -> N-dimensions, all flipped or none flipped"""
 
     def __init__(self, p):
-        self.description = "{:.1%} Corruption".format(p)
+        self.desc = "{:.1%} Corruption".format(p)
         self.bern = Bernoulli(p)
 
     def sample_with(self, z):
@@ -79,7 +79,7 @@ class ExtraNoiseNodes(NodeLayer):
 
     def __init__(self, dim, noise_nodes=None):
         self.dim = dim
-        self.description = str(dim) + " Extra Noise Dimensions"
+        self.desc = str(dim) + " Extra Noise Dimensions"
 
         # Default noise is normals with random mean and variances
         if not noise_nodes:

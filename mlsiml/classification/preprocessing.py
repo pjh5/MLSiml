@@ -18,7 +18,7 @@ class Preprocessing:
 class MetricLearnTransform(Preprocessing):
 
     def __init__(self, which, **kwargs):
-        self.description = which
+        self.desc = which
         self._params = kwargs
 
         # Save which metric_learn submodule to use
@@ -39,12 +39,12 @@ class MetricLearnTransform(Preprocessing):
         prefix = "metriclearn_" if mangled else ""
 
         params = {prefix+kw : val for kw, val in self._params.items()}
-        params[prefix + "type"] = self.description
+        params[prefix + "type"] = self.desc
 
         return params
 
     def __str__(self):
-        return "<MetricTransform {} {!s}>".format(self.description, self._params)
+        return "<MetricTransform {} {!s}>".format(self.desc, self._params)
 
     def __repr__(self):
         return self.__str__()

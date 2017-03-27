@@ -13,7 +13,7 @@ from mlsiml.generation.geometric_functions import XOR
 from mlsiml.generation.geometric_functions import Shells
 
 from mlsiml.generation.transformations import PlaneFlip
-from mlsiml.generation.transformations import Identity
+from mlsiml.utils import Identity
 
 import numpy as np
 
@@ -144,16 +144,16 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None):
     if not source1:
         source1 = {
                 "var":0.2,
-                "dim":2
+                "dim":1
                 }
     if not source2:
         source2 = {
                 "var":15,
-                "dim":3
+                "dim":1
                 }
     if not shared:
         shared = {
-                "dim":4
+                "dim":0
                 }
 
 
