@@ -13,6 +13,7 @@ from mlsiml.generation.geometric_functions import XOR
 from mlsiml.generation.geometric_functions import Shells
 
 from mlsiml.generation.transformations import PlaneFlip
+from mlsiml.generation.transformations import Identity
 
 import numpy as np
 
@@ -115,10 +116,62 @@ def corrupted_xor(p=0.5,
 
 def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
     return Network("Simple Shells",
+            Bernoulli(p),
             [
-                NodeLayer("Shells", Shells(dim, radii=lambda z: z+1)),
+                NodeLayer("Shells", Shells(dim)),
                 NormalNoise(var=var),
                 [PlaneFlip(dim=dim) for _ in range(flips)],
                 ExtraNoiseNodes(extra_noise)
+            ])
+
+
+
+
+def crosstalk(p=0.5, source1=None, source2=None, shared=None):
+    """Makes a 2 source network (z1 and z2) with shared information
+
+    Params
+    ======
+    n1, type1   - Number and type of dimensions that will be made from solely
+        z1. If n1 is 3 and type2 is Shells, then z1 3 of the final features
+        will be sampled form a 3D shell. n1 is the dimension, type1 should be a
+        constructor of a Node.
+
+    n1, type2   - Same as n1, type1 but for source 2
+
+    nshared     - The number of
+    """
+    if not source1:
+        source1 = {
+                "var":0.2,
+                "dim":2
+                }
+    if not source2:
+        source2 = {
+                "var":15,
+                "dim":3
+                }
+    if not shared:
+        shared = {
+                "dim":4
+                }
+
+
+    # Normal gaussians for the sources
+    z1 = Normal(loc=lambda y: 1 + y, scale=source1["var"])
+    z2 = Normal(loc=lambda y: 30*(1 + y), scale=source2["var"])
+    sources = NodeLayer("Sources", [z1, z2])
+
+    return Network("Crosstalk",
+            Bernoulli(p),
+            [
+                sources,
+                NodeLayer("Absolute Value",  lambda z: np.abs(z)),
+                NodeLayer("Shells",
+                    [
+                        Shells(source1["dim"], radii=lambda z: z[0]),
+                        Shells(source2["dim"], radii=lambda z: z[1]),
+                        Shells(shared["dim"], radii=lambda z: z[0] + z[1])
+                    ])
             ])
 

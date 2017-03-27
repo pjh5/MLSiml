@@ -5,9 +5,11 @@ A network is essentially a sequence of layers, each of which takes the output
 of the previous layer (a vector), processes it in some waay, and then outputs a
 different vector to the next layer.
 """
+import logging
 import numpy as np
 from mlsiml.utils import flatten
 from mlsiml.utils import make_iterable
+
 
 class Node:
     """A Node in a Bayesian Network.
@@ -21,18 +23,18 @@ class Node:
         self.description = description
         self.f_sample = f_sample
 
-        # Save the most recent sample generated
-        self.last_sample = None
-
     def sample_with(self, prev_layer):
-        self.last_sample = self.f_sample(prev_layer)
-        return self.last_sample
+        return np.array(self.f_sample(prev_layer)).ravel()
 
     def short_string(self):
         return self.description
 
+    def _set_index(self, idx):
+        self.idx = idx
+
     def __str__(self):
         return "<" + self.description + " Node>"
+
 
 class NodeLayer:
     """Basically just an array of Node objects.
@@ -58,7 +60,17 @@ class NodeLayer:
 
     def __init__(self, description, nodes):
         self.description = description
-        self.nodes = flatten(make_iterable(nodes))
+        nodes = flatten(make_iterable(nodes))
+
+        # Convert functions into Nodes automatically
+        self.nodes = [n if isinstance(n, Node) else Node(n, "Lambda")
+                        for n in nodes]
+
+        # Label all nodes with their indices
+        for i, node in enumerate(self.nodes):
+            node._set_index(i)
+
+        logging.debug("Built layer '{}' with nodes {!s}".format(self.description, self.nodes))
 
     @classmethod
     def from_function_array(cls, desc, funcs):
@@ -69,7 +81,7 @@ class NodeLayer:
         return RepeatedNodeLayer(description, node)
 
     def sample_with(self, z):
-        return np.array([n.sample_with(z) for n in self.nodes]).flatten()
+        return np.array([n.sample_with(z) for n in self.nodes]).ravel()
 
     def transform(self, y, z):
         return (y, self.sample_with(z))
@@ -77,9 +89,18 @@ class NodeLayer:
     def short_string(self):
         return "<" + self.description + " Layer>"
 
+    def multiline_string(self):
+        """Multi-line string representation, one row per node"""
+        return "{} NodeLayer:\n{}".format(self.description, "".join(
+            ["\t{!s} {}\n".format(n.idx, n.description) for n in self.nodes]))
+
     def __str__(self):
         return ("<" + self.description + " Layer: [" +
                     '-'.join([n.short_string() for n in self.nodes]) + "]>")
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class RepeatedNodeLayer(NodeLayer):
     """A layer made from a single node, repeated as many times as needed
@@ -95,7 +116,7 @@ class RepeatedNodeLayer(NodeLayer):
         self.node = node
 
     def sample_with(self, z):
-        return np.array([self.node.sample_with(_z) for _z in z]).flatten()
+        return np.array([self.node.sample_with(_z) for _z in z]).ravel()
 
     def __str__(self):
         return "{} Layer: [{} (repeated)]".format(self.description,
@@ -145,13 +166,33 @@ class Network:
         self.layers = flatten(layers)
         self.dims = []
 
-        # Validate dimensions
+        # Make sure that all the dimensions of the network match up
+        #######################################################################
+        logging.debug("")
+        logging.debug("Validating Network Dimensions")
+
+        # First check the class generator
         y = self.class_generator()
         result = (y, y)
         self.dims = [1]
-        for layer in layers:
+        logging.debug("Layer 0: 1D ({!s} from {!s})".format(y, class_generator))
+
+        # Check every other layer
+        for i, layer in enumerate(self.layers):
+
+            # Make sure every layer is actually a NodeLayer
+            if not isinstance(layer, NodeLayer):
+                raise Exception(
+                    "Layer {!s} '{!s}' is not a NodeLayer but a {!s}".format(
+                                                    i+1, layer, type(layer)))
+
+            # Propogate the result and make the results dimensions agree
             result = layer.transform(*result)
             self.dims.append(len(result[1]))
+            logging.debug("Layer {!s}: {!s}D ({!s} from {!s})".format(
+                                        i+1, len(result[1]), result[1], layer))
+        logging.debug("Final dimensions are {}\n".format(
+                                                "-".join(map(str, self.dims))))
 
 
     def sample(self):
@@ -190,25 +231,26 @@ class Network:
 
         # Sample
         for i in range(n_samples):
-            y[i], X[i,:] = self.sample()
+            try:
+                y[i], X[i,:] = self.sample()
+            except ValueError:
+                raise Exception(("Network output '{!s}' has to be a tuple of " +
+                        "arrays of dimensions ({!s}, {!s})").format(
+                                            self.sample(), 1, self.dims[-1]))
 
         return X, y
-
-
-    def __len__(self):
-        return len(self.layers)
 
 
     def pretty_string(self):
         """Bulky multi-line string representation, layer by layer"""
 
         # Header for the network
-        s = "<Network " + "-".join([str(d) for d in self.dims]) + "\n"
+        s = "<Network {}\n".format("-".join(map(str, self.dims)))
 
         # Each layer on another line
         s += "\tLayer 0: " + str(self.class_generator) + "\n"
         for i, layer in enumerate(self.layers):
-            s += "\tLayer " + str(i + 1) + ": " + str(layer) + "\n"
+            s += "\tLayer {!s}: {!s}\n".format(i + 1, layer)
 
         # Extra newline at the end
         s += "\t>\n"
@@ -217,6 +259,7 @@ class Network:
 
 
     def __str__(self):
-        return ("<" + self.description + " Network [" +
-                "-".join([str(d) for d in self.dims]) + "]>")
+        return ("<{} Network [{}]>".format(
+                            self.description, "-".join(map(str, self.dims))))
+
 

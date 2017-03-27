@@ -6,7 +6,7 @@ import re
 flag_re = re.compile("-(?P<flag>[a-zA-Z]+[a-zA-Z0-9_\-]*$)")
 options = re.compile("--(?P<kw>[a-zA-Z]+[a-zA-Z0-9_\-]*)([=:](?P<val>\S+))?")
 ints    = re.compile("(?P<int>[1-9]+[0-9]*|0)$")
-floats  = re.compile("(?P<float>([1-9]+[0-9]*|0)\.[0-9]*$)")
+floats  = re.compile("(?P<float>([1-9]+[0-9]*|0?)\.[0-9]*$)")
 
 def parse_to_args_and_kwargs(arglist, aliases=None):
 
@@ -54,12 +54,13 @@ def _parse_flag(kwargs, arglist, i, aliases):
     if match:
         flag = _clean_and_unalias(aliases, match.group('flag'))
 
-        # Don't reduplicate
+        # Automatically count duplicated flags
         if flag in kwargs:
-            raise Error("Flag " + flag + " defined twice.")
+            kwargs[flag] += 1
 
         # Set as true in kwargs
-        kwargs[flag] = True
+        else:
+            kwargs[flag] = True
 
         # Sucessfully parsed
         return True
@@ -84,7 +85,7 @@ def _parse_keyword(kwargs, arglist, i, aliases):
 
             # Require another argument
             if i + 1 >= len(arglist):
-                raise Error("Keyword argument " + sysarg[i] +
+                raise Exception("Keyword argument " + sysarg[i] +
                         " requires another argument")
 
             # Next argument should be not be - prefixed
@@ -131,8 +132,24 @@ def _try_to_cast(arg):
 
     return arg
 
+def replace_key(a_dict, old, new):
+    """Changes a_dict[old] to a_dict[new]
+
+    The key old will be removed as a key from a_dict. If a_dict does not have
+    old as a key, then this function does nothing.
+    """
+    if old not in a_dict:
+        return
+
+    a_dict[new] = a_dict[old]
+    a_dict.pop(old)
+
 
 def flatten(array, recursive=False):
+    """Flattens an array of arrays into a single array
+
+    e.g. [1, [a, b], 2, [c, d, e]] -> [1, a, b, 2, c, d, e]
+    """
     flattened = []
     for elem in array:
         if type(elem) is list:
@@ -146,7 +163,11 @@ def flatten(array, recursive=False):
 
 
 def make_iterable(obj):
+    """Returns an iterable version of obj, possibly just [obj]"""
     return obj if isinstance(obj, Iterable) else [obj]
 
 def make_callable(obj):
-    return obj if callable(obj) else (lambda o: lambda z: o)(obj)
+    """Returns a callable version of obj (with any number of parameters)"""
+    return obj if callable(obj) else (lambda o: lambda *z: o)(obj)
+
+

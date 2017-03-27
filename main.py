@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from sklearn.model_selection import train_test_split
@@ -9,14 +10,27 @@ from mlsiml.utils import parse_to_args_and_kwargs
 from mlsiml.utils import flatten
 
 
-def main(which_example, sample_size=1000, plot=False,
-        summary=False, verbose=False, **kwargs):
+classifier_list = flatten([
+                Classifier.for_logistic_regression(),
+                Classifier.for_knn(search_params={
+                    'n_neighbors':[1, 2, 10]
+                    }),
+                Classifier.for_random_forest(search_params={
+                    'n_estimators':[10, 100]
+                    }),
+                Classifier.for_svm(kernel='rbf', search_params={
+                    'C':[0.1, 1, 10],
+                    'gamma':[0.01, 0.1, 1],
+                    }),
+                Classifier.for_gaussian_nb()
+                ])
+
+
+def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
 
     # If verbose, print out the args and kwargs
-    if verbose:
-        print("Creating network with: " + which_example + "("
-            + ", ".join(["{!s}={!s}".format(k,v) for k,v in kwargs.items()])
-            + ")")
+    logging.info("Creating network with: {}({})".format(which_example,
+            ", ".join(["{!s}={!s}".format(k,v) for k,v in kwargs.items()])))
 
     # Build the network, sample from it, and split the data
     net = getattr(example_networks, which_example)(**kwargs)
@@ -24,32 +38,14 @@ def main(which_example, sample_size=1000, plot=False,
     datasplit = train_test_split(X, y, test_size=0.3)
 
     # Display network info or data summary
-    if verbose:
-        print(net.pretty_string())
-        print()
-    if summary:
-        analysis.summarize(X, y)
+    logging.info(net.pretty_string())
 
     # Test on classifier suites
-    print("Classifier performance:")
-    for classifier in flatten([
-            Classifier.for_logistic_regression(),
-            Classifier.for_knn(search_params={
-                'n_neighbors':[1, 2, 10]
-                }),
-            Classifier.for_random_forest(search_params={
-                'n_estimators':[10, 100]
-                }),
-            Classifier.for_svm(kernel='rbf', search_params={
-                'C':[0.1, 1, 10],
-                'gamma':[0.01, 0.1, 1],
-                }),
-            Classifier.for_gaussian_nb()
-            ]):
-
-        print("{:8.3f}\t{!s}".format(classifier.evaluate_on(*datasplit),
-                                                                    classifier))
-    print()
+    if test:
+        print("Classifier performance:")
+        for clsfr in classifier_list:
+            print("{:8.3f}\t{!s}".format(clsfr.evaluate_on(*datasplit), clsfr))
+        print()
 
     # Plotting at the end
     if plot:
@@ -69,12 +65,18 @@ if __name__ == "__main__":
     # Parse command line arguments into args and kwargs
     args, kwargs = parse_to_args_and_kwargs(sys.argv[1:])
 
-    # If verbose, print out the args and kwargs
+    # Set log level based on passed in verbosity
     if "verbose" in kwargs:
-        print("Detected arguments:")
-        print("\t  args: " + str(args))
-        print("\tkwargs: " + str(kwargs))
-        print()
+        if kwargs["verbose"] >= 2:
+            logging.basicConfig(level=logging.DEBUG)
+            logging.debug("Logging level set to DEBUG")
+        else:
+            logging.basicConfig(level=logging.INFO)
+            logging.info("Logging level set to INFO")
+        kwargs.pop("verbose")
+
+    logging.info("Parsed arguments are args:{!s}, kwargs:{!s}".format(
+                                                        args, kwargs))
 
     # Call main with arguments
     main(*args, **kwargs)

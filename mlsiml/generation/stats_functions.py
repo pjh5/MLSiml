@@ -23,7 +23,9 @@ import numpy as np
 from scipy import stats
 
 from mlsiml.generation.bayes_networks import Node
+from mlsiml.generation.transformations import Identity
 from mlsiml.utils import make_callable
+from mlsiml.utils import replace_key
 
 
 class Distribution(Node):
@@ -73,14 +75,36 @@ class Distribution(Node):
 
 
 def Normal(**kwargs):
+    # Allow more common terminology "mean" and "var"
+    replace_key(kwargs, "mean", "loc")
+    replace_key(kwargs, "var", "scale")
+    replace_key(kwargs, "variance", "scale")
+
+    # Build a nice description string Normal(mean, var)
+    loc = kwargs.get("loc", 0)
+    scale = kwargs.get("scale", 1)
     desc = "Normal({!s}, {!s})".format(
-                                kwargs.get("loc", 0), kwargs.get("scale", 1))
+            "lambda" if not _readable(loc) else loc,
+            "lambda" if not _readable(scale) else scale)
+
     return Distribution(stats.norm, desc, **kwargs)
 
 def Exponential(**kwargs):
-    desc = "Exp({!s})".format(kwargs.get('scale', 1))
+    # Allow more common terminology lambda or beta
+    if "lambda" in kwargs and "beta" in kwargs:
+        raise Exception("Only one of lambda or beta can be specified")
+    replace_key(kwargs, "lambda", "scale")
+    if "beta" in kwargs:
+        kwargs["scale"] = 1 / kwargs["beta"]
+        kwargs.pop("beta")
+
+    # Build a nice description string Exp(lambda)
+    scale = kwargs.get("scale", 1)
+    desc = "Exp({!s})".format("lambda" if _readable(scale) else scale)
     return Distribution(stats.expon, desc, **kwargs)
 
 def Bernoulli(p):
-    return Distribution(stats.bernoulli, "Bern(" + str(p) + ")", p=p)
+    return Distribution(stats.bernoulli, "Bernoulli(" + str(p) + ")", p=p)
 
+def _readable(thing):
+    return isinstance(thing, Identity) or not callable(thing)

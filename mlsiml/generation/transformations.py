@@ -34,3 +34,14 @@ class PlaneFlip(ClassFlipper):
 
     def __str__(self):
         return "Plane flip at {!s}".format(self.plane)
+
+
+class Identity():
+    """A wrapper around lambda z: z with a nicer string representation"""
+
+    def __call__(self, z):
+        return z
+
+    def __str__(self):
+        return "z->z"
+

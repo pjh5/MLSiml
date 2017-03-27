@@ -9,14 +9,22 @@ import numpy as np
 
 from mlsiml.generation.bayes_networks import Node
 from mlsiml.generation.bayes_networks import NodeLayer
+from mlsiml.generation.bayes_networks import RepeatedNodeLayer
 from mlsiml.generation.stats_functions import Normal
 from mlsiml.generation.stats_functions import Bernoulli
+from mlsiml.generation.transformations import Identity
 
 
-def NormalNoise(var=1):
-    """Layer that adds normal noise of (symmetrical) variance var"""
-    return NodeLayer.from_repeated("N(var={!s}) Noise".format(var),
-                                            Normal(loc=lambda z: z, scale=var))
+class NormalNoise(RepeatedNodeLayer):
+    """Layer of spherical Normal noise added to every dimension"""
+
+    def __init__(self, var=1):
+        super().__init__("Normal(0, {!s}) Noise".format(var),
+                Normal(loc=Identity(), scale=var))
+        self.var = var
+
+    def __str__(self):
+        return "Normal(0, {!s}) Noise".format(self.var)
 
 
 class BinaryCorruption(Node):
@@ -30,7 +38,7 @@ class BinaryCorruption(Node):
         flip = self.bern()
         return (1 - flip) * z + flip * (1 - z)
 
-def CorruptionLayer(p=None, corruption_levels=None):
+class CorruptionLayer(NodeLayer):
     """Returns a NodeLayer of binary corruptions
 
     Either p or corruption_levels must be defined, but not both. If p is given,
@@ -39,20 +47,14 @@ def CorruptionLayer(p=None, corruption_levels=None):
     corruption percentage given in corruption_levels.
     """
 
-    # Exactly 1 of p or corruption_levels must be defined
-    if not p and not corruption_levels:
-        Error("Either p or corruption_levels must be specified.")
-    if p and corruption_levels:
-        Error("p and corruption_levels cannot both be specified.")
-
-    # Given a p, repeat the binary corruption node
-    if p:
-        return NodeLayer.from_repeated("{:.1%} Corruption".format(p),
-                                                        BinaryCorruption(p))
-
-    # Given an array of corruption percentages, make a separate node for each
-    return NodeLayer(str(corruption_levels) + " Corruption",
+    def __init__(self, corruption_levels):
+        super().__init__("{!s} Corruption".format(corruption_levels),
                     [BinaryCorruption(level) for level in corruption_levels])
+
+    @classmethod
+    def from_constant(cls, p):
+        return NodeLayer.from_repeated("{:.0%} Corruption".format(p),
+                                                            BinaryCorruption(p))
 
 
 class ExtraNoiseNodes(NodeLayer):
@@ -88,4 +90,7 @@ class ExtraNoiseNodes(NodeLayer):
 
     def sample_with(self, z):
         return np.append(z, [x.sample() for x in self.nodes])
+
+    def __str__(self):
+        return "{!s} Extra Noise Nodes {!s}".format(self.dim, self.nodes)
 

@@ -6,6 +6,7 @@ N-dimensional hyperspheres.
 import numpy as np
 
 from mlsiml.generation.bayes_networks import Node
+from mlsiml.generation.transformations import Identity
 from mlsiml.utils import make_callable
 
 
@@ -88,7 +89,7 @@ class Shells(Node):
 
         # Default radii is 'z'
         if not radii:
-            radii = lambda z: z
+            radii = Identity()
 
         self.dim = dim
         self.radii = make_callable(radii)
