@@ -194,8 +194,8 @@ class Network:
         # Check every other layer
         for i, layer in enumerate(self.layers):
 
-            # Make sure every layer is actually a NodeLayer
-            if not isinstance(layer, NodeLayer):
+            # Make sure every layer is actually a NodeLayer TODO fix this
+            if not isinstance(layer, NodeLayer) and False:
                 raise Exception(
                     "Layer {!s} '{!s}' is not a NodeLayer but a {!s}".format(
                                                     i+1, layer, type(layer)))

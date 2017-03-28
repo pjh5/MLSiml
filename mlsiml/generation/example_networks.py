@@ -127,7 +127,7 @@ def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
 
 
 
-def crosstalk(p=0.5, source1=None, source2=None, shared=None):
+def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0):
     """Makes a 2 source network (z1 and z2) with shared information
 
     Params
@@ -144,20 +144,22 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None):
     if not source1:
         source1 = {
                 "var":0.2,
-                "dim":1
+                "dim":0
                 }
     if not source2:
         source2 = {
                 "var":15,
-                "dim":1
+                "dim":5
                 }
     if not shared:
         shared = {
-                "dim":0
+                "var":0.1,
+                "dim":5
                 }
+    total_dim = source1["dim"] + source2["dim"] + shared["dim"]
 
 
-    # Normal gaussians for the sources
+    # Normal gaussians for the sources, almost touching, z2 var >> z1 var
     z1 = Normal(loc=lambda y: 1 + y, scale=source1["var"])
     z2 = Normal(loc=lambda y: 30*(1 + y), scale=source2["var"])
     sources = NodeLayer("Sources", [z1, z2])
@@ -167,11 +169,14 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None):
             [
                 sources,
                 NodeLayer("Absolute Value",  lambda z: np.abs(z)),
-                NodeLayer("Shells",
+                NodeLayer("Stuff",
                     [
                         Shells(source1["dim"], radii=lambda z: z[0]),
-                        Shells(source2["dim"], radii=lambda z: z[1]),
-                        Shells(shared["dim"], radii=lambda z: z[0] + z[1])
-                    ])
+                        XOR(source2["dim"], make_even=lambda z: z[1] > 50),
+                        Shells(shared["dim"], radii=lambda z: z[0]*z[1])
+                    ]),
+                NormalNoise(var=shared["var"]),
+                PlaneFlip(dim=total_dim),
+                ExtraNoiseNodes(extra_noise)
             ])
 

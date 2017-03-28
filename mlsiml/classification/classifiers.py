@@ -165,7 +165,8 @@ def for_random_forest(n_estimators=10, **kwargs):
                     split.  default is sqrt(n_features)
     """
     kwargs['n_estimators'] = n_estimators
-    return _make_classifier(RandomForestClassifier, "Random Forest", **kwargs)
+    return _make_classifier(RandomForestClassifier,
+            str(n_estimators) + " Random Forest", **kwargs)
 
 
 
@@ -330,8 +331,7 @@ def classification_accuracy(y_true, y_hat):
 # Helper Functions                                                           #
 ##############################################################################
 
-def _make_classifier(base_classifier, desc, search_params=None,
-                                                                    **kwargs):
+def _make_classifier(base_classifier, desc, search_params=None, **kwargs):
     if search_params:
         return CVGridSearchClassifier(
                         base_classifier, search_params, desc, **kwargs)
