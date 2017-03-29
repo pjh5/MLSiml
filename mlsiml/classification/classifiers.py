@@ -143,7 +143,7 @@ def for_svm(kernel="rbf", **kwargs):
     kwargs["kernel"] = kernel
     return _make_classifier(svm.SVC, "SVM", **kwargs)
 
-def for_gaussian_nb(priors=None, **kwargs):
+def for_gaussian_nb(**kwargs):
     """Gaussian Naive Bayes.
 
     Parameters
@@ -151,10 +151,10 @@ def for_gaussian_nb(priors=None, **kwargs):
     priors : Prior probabilities of the classes. If specified the priors are
     not adjusted according to the data.
     """
-    kwargs['priors'] = priors
     return _make_classifier(GaussianNB, "Gaussian Naive Bayes", **kwargs)
 
-def for_random_forest(n_estimators=10, **kwargs):
+def for_random_forest(n_estimators=10, criterion="gini", max_features="sqrt",
+        **kwargs):
     """Random Forest Classifier.
 
     Parameters
@@ -165,8 +165,9 @@ def for_random_forest(n_estimators=10, **kwargs):
                     split.  default is sqrt(n_features)
     """
     kwargs['n_estimators'] = n_estimators
-    return _make_classifier(RandomForestClassifier,
-            str(n_estimators) + " Random Forest", **kwargs)
+    kwargs['criterion'] = criterion
+    kwargs['max_features'] = max_features
+    return _make_classifier(RandomForestClassifier, "Random Forest", **kwargs)
 
 
 
@@ -188,11 +189,23 @@ class Classifier:
     """
 
     def __init__(self, base_classifier, desc, **kwargs):
-        """This probably shouldn't be called directly."""
+        """Creates a Classifier wrapper around base_classifier
+
+        Params
+        ======
+        base_classifier - An instance of a sklearn.classifier (or another
+            objects that conforms to the same interface, such as a
+            sklearn.GridSearchCV or a custom class).
+        desc    - A useful human readable string to describe this classifier.
+            NOTE that this string will appear in outputted CSVs as one of the
+            columns
+        kwargs  - All of the parameters passed into this classifier. These are
+            used for auditing purposes, to include in csv output and identify
+            the classifier.
+        """
         self.base_classifier = base_classifier
         self.desc = desc
         self._params = kwargs
-        self.last_evaluation_record = None
         self.preprocessors = []
 
     def with_preprocessing(self, transform):
@@ -219,6 +232,9 @@ class Classifier:
         return accuracy
 
     def record_for_last_fit(self):
+        """The last_evaluation_record is a saving of all parameters, along with
+        the accuracy, of a evluation run
+        """
         self.last_evaluation_record
 
     def get_params(self, deep=False, original=False):
@@ -336,5 +352,5 @@ def _make_classifier(base_classifier, desc, search_params=None, **kwargs):
         return CVGridSearchClassifier(
                         base_classifier, search_params, desc, **kwargs)
     # No search params
-    return Classifier(base_classifier(**kwargs), desc)
+    return Classifier(base_classifier(**kwargs), desc, **kwargs)
 
