@@ -1,16 +1,18 @@
 from mlsiml.generation.bayes_networks import NodeLayer
 from mlsiml.generation.bayes_networks import Network
 
-from mlsiml.generation.stats_functions import Normal
-from mlsiml.generation.stats_functions import Exponential as Exp
 from mlsiml.generation.stats_functions import Bernoulli
+from mlsiml.generation.stats_functions import Exponential as Exp
+from mlsiml.generation.stats_functions import Normal
+from mlsiml.generation.stats_functions import Uniform
 
 from mlsiml.generation.noise_functions import NormalNoise
 from mlsiml.generation.noise_functions import CorruptionLayer
 from mlsiml.generation.noise_functions import ExtraNoiseNodes
 
-from mlsiml.generation.geometric_functions import XOR
-from mlsiml.generation.geometric_functions import Shells
+from mlsiml.generation.geometric_functions import XorVector
+from mlsiml.generation.geometric_functions import ShellVector
+from mlsiml.generation.geometric_functions import Trig
 
 from mlsiml.generation.transformations import PlaneFlip
 from mlsiml.utils import Identity
@@ -36,8 +38,7 @@ def exponential(p=0.5, extra_noise=0):
 
     # Extra layer to make sure parameters are > 0 for the next layer
     # Note that this has to be np.maximum and not np.max
-    abs_layer = NodeLayer.from_function_array("AbsValue",
-                                                lambda z: np.maximum(z, 1.1))
+    abs_layer = NodeLayer("AbsValue", lambda z: np.maximum(z, 1.1))
 
     # x, outputs
     # 4 total outputs, two for each source
@@ -80,7 +81,7 @@ def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0):
 
 
 def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0):
-    """XOR(dim) + NormalNoise(var)
+    """XorVector(dim) + NormalNoise(var)
 
     Very difficult for dimensions > 9ish, even for SVMs. The default variance
     is usually adequate, and corresponds to almost touching clusters. When
@@ -91,7 +92,7 @@ def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0):
     return Network("XOR",
             Bernoulli(p),
             [
-                NodeLayer("XOR", XOR(dim, scale=xor_scale, base=xor_base)),
+                NodeLayer("XOR", XorVector(dim, scale=xor_scale, base=xor_base)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
             ])
@@ -108,7 +109,7 @@ def corrupted_xor(p=0.5,
             Bernoulli(p),
             [
                 CorruptionLayer(corruptions),
-                NodeLayer.from_repeated("XOR", XOR(len(corruptions) * xor_dim)),
+                NodeLayer.from_repeated("XOR", XorVector(len(corruptions) * xor_dim)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
             ])
@@ -118,7 +119,7 @@ def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
     return Network("Simple Shells",
             Bernoulli(p),
             [
-                NodeLayer("Shells", Shells(dim)),
+                NodeLayer("Shells", ShellVector(dim)),
                 NormalNoise(var=var),
                 [PlaneFlip(dim=dim) for _ in range(flips)],
                 ExtraNoiseNodes(extra_noise)
@@ -171,12 +172,41 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0):
                 NodeLayer("Absolute Value",  lambda z: np.abs(z)),
                 NodeLayer("Stuff",
                     [
-                        Shells(source1["dim"], radii=lambda z: z[0]),
-                        XOR(source2["dim"], make_even=lambda z: z[1] > 50),
-                        Shells(shared["dim"], radii=lambda z: z[0]*z[1])
+                        ShellVector(source1["dim"], radii=lambda z: z[0]),
+                        XorVector(source2["dim"], make_even=lambda z: z[1] > 50),
+                        ShellVector(shared["dim"], radii=lambda z: z[0]*z[1])
                     ]),
                 NormalNoise(var=shared["var"]),
                 PlaneFlip(dim=total_dim),
                 ExtraNoiseNodes(extra_noise)
+            ])
+
+
+def validate():
+    return Network("Debug Network",
+            Bernoulli(0.5),
+            [
+                NodeLayer("Normal", [
+                    Normal(loc=Identity(), scale=0.2),
+                    Uniform(),
+                    Exp(beta=5)
+                    ]),
+                NodeLayer("Sine", Trig.sine())
+            ])
+
+def temp():
+    return Network("Debug Network",
+            Bernoulli(0.5),
+            [
+                NodeLayer("Uniform", [
+                    Uniform(),
+                    Uniform(),
+                    Uniform()
+                    ]),
+                NodeLayer("Sine", [
+                    lambda z: z[0],
+                    lambda z: z[1],
+                    Trig.sine()
+                    ])
             ])
 

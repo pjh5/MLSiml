@@ -86,15 +86,6 @@ class NodeLayer:
         return RepeatedNodeLayer(desc, node)
 
     def sample_with(self, z):
-        # j = [n.sample_with(z) for n in self.nodes]
-        # logging.debug(self.desc + "="*80)
-        # logging.debug(j)
-        # logging.debug([type(x) for x in j])
-        # logging.debug(np.array(j))
-        # logging.debug(np.array(j).shape)
-        # logging.debug(to_flat_np_array(j).shape)
-        # logging.debug(to_flat_np_array(j))
-        # logging.debug("="*80)
         return to_flat_np_array([n.sample_with(z) for n in self.nodes])
 
     def transform(self, y, z):

@@ -86,13 +86,13 @@ def _parse_keyword(kwargs, arglist, i, aliases):
 
             # Require another argument
             if i + 1 >= len(arglist):
-                raise Exception("Keyword argument " + sysarg[i] +
+                raise Exception("Keyword argument " + arglist[i] +
                         " requires another argument")
 
             # Next argument should be not be - prefixed
             val = arglist[i + 1]
             if flag_re.match(val) or options.match(val):
-                raise Error("Expecting extra argument after '" + sysarg[i] +
+                raise Error("Expecting extra argument after '" + arglist[i] +
                         "' but found flag or option '" + val + "' instead")
 
             # Found the argument, so move i along
@@ -169,11 +169,12 @@ def to_flat_np_array(arr):
                 )).ravel()
 
 
-
+def is_iterable(obj):
+    return isinstance(obj, Iterable)
 
 def make_iterable(obj):
     """Returns an iterable version of obj, possibly just [obj]"""
-    return obj if isinstance(obj, Iterable) else [obj]
+    return obj if is_iterable(obj) else [obj]
 
 def make_callable(obj):
     """Returns a callable version of obj (with any number of parameters)"""
