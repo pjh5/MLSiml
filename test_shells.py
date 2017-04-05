@@ -1,5 +1,6 @@
 from mlsiml.analysis import experiment
-from mlsiml.classification import classifiers as Classifier
+from mlsiml.classification import classifiers
+from mlsiml.classification.classifiers import Classifier
 from mlsiml.classification.workflow import Workflow
 
 from mlsiml.generation.stats_functions import Bernoulli
@@ -15,22 +16,41 @@ from sklearn.decomposition import PCA
 
 
 # Workflows
+conc = Concatenate()
 workflows = [
-    Workflow([Concatenate()], Classifier.for_logistic_regression()),
-    Workflow([Concatenate()], Classifier.for_gaussian_nb()),
-    Workflow([Concatenate()], Classifier.for_knn(search_params={
-        'n_neighbors':[1, 10]
-        })),
-    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_logistic_regression()),
-    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_gaussian_nb()),
-    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_knn(search_params={
-        'n_neighbors':[1, 10]
-        })),
-    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_logistic_regression()),
-    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_gaussian_nb()),
-    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_knn(search_params={
-        'n_neighbors':[1, 10]
-        }))
+    Workflow("Logistic Regression", [conc], classifiers.for_logistic_regression()),
+    Workflow("Naive Bayes", [conc], classifiers.for_gaussian_nb()),
+    Workflow("KNN", [conc], classifiers.for_knn(search_params={'n_neighbors':[1, 10]})),
+
+    Workflow("PCA + Logistic Regression",
+        [conc, Classifier("PCA", PCA())],
+        classifiers.for_logistic_regression()
+        ),
+    Workflow("PCA + Naive Bayes",
+        [conc, Classifier("PCA", PCA())],
+        classifiers.for_gaussian_nb()
+        ),
+    Workflow("PCA + KNN",
+        [conc, Classifier("PCA", PCA())],
+        classifiers.for_knn(search_params={
+            'n_neighbors':[1, 10]
+            })
+        ),
+
+    Workflow("Separate PCA + Logistic Regression",
+        [Classifier("PCA", PCA()), conc],
+        classifiers.for_logistic_regression()
+        ),
+    Workflow("Separate PCA + Naive Bayes",
+        [Classifier("PCA", PCA()), conc],
+        classifiers.for_gaussian_nb()
+        ),
+    Workflow("Separate PCA + KNN",
+        [Classifier("PCA", PCA()), conc],
+        classifiers.for_knn(search_params={
+            'n_neighbors':[1, 10]
+            })
+        )
     ]
 
 

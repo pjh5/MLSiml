@@ -78,8 +78,9 @@ class Experiment():
         self.all_possible_keywords = sorted(list(set(
                 ['accuracy', 'CV_mean_accuracy'] +
                 ['sample_size', 'test_size'] +
-                list(self.network_params_dict) +
-                flatten([list(c.get_params(deep=True)) for c in self.workflows])
+                list(self.network_params_dict.keys()) +
+                flatten([list(w.get_params(deep=True, mangled=True).keys())
+                    for w in self.workflows])
                 )))
 
 
@@ -166,7 +167,7 @@ class ExperimentResults:
     def add_record_for(self, accuracy, network_settings_dict, workflow):
 
         # Always append the workflow's last evaluation record
-        record = _make_record(network_settings_dict, workflow.get_params())
+        record = _make_record(accuracy, network_settings_dict, workflow.get_params())
         self.records.append(record)
         self.log(record)
 
@@ -176,7 +177,7 @@ class ExperimentResults:
         # CV Grid Search full record
         # If the workflow went through a CV grid search, add those results
         # too
-        if hasattr(workflow, 'full_record'):
+        if hasattr(workflow.classifier, 'full_record'):
             for cvr in workflow.full_record:
                 record = _make_record(network_settings_dict, cvr)
                 self.records.append(record)
@@ -200,8 +201,8 @@ class ExperimentResults:
 ##############################################################################
 
 
-def _make_record(network_dict, workflow_dict):
-    record = network_dict.copy()
+def _make_record(accuracy, network_dict, workflow_dict):
+    record = {"network_"+k : v for k, v in network_dict.items()}
 
     # Merge dictionaries
     for k,v in workflow_dict.items():

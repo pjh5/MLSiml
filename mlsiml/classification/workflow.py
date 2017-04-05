@@ -18,27 +18,45 @@ from mlsiml.utils import is_iterable
 
 class Workflow(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, steps, classifier):
+    def __init__(self, desc, steps, classifier):
         """Makes a new workflow (lowercase)
 
         Params
         steps   - Array-like of workflows (objects that also conform to this
             interface).
         """
+        self.desc = desc
         self.steps = steps
         self.classifier = classifier
 
-        # Build deep params, since we will always need them
-        self.params = {}
-        self.deep_params = {}
-        for step in self.steps:
-            self.params.update(step.get_params(deep=False))
-            self.deep_params.update(step.get_params(deep=True))
-        logging.debug("Created workflow:\n{!s}\nwith deep parameters:\n{!s}".format(
-            self, self.deep_params))
+        # Build deep params and mangled, since we will always need them
+        self.shallow_params = {True: {}, False: {}}
+        self.deep_params = {True: {}, False: {}}
+        for mangled in [True, False]:
+            for step in self.steps:
+                self.shallow_params[mangled].update(
+                        step.get_params(deep=False, mangled=mangled)
+                        )
+                self.deep_params[mangled].update(
+                        step.get_params(deep=True, mangled=mangled)
+                        )
+            self.shallow_params[mangled].update(
+                    self.classifier.get_params(deep=False, mangled=mangled)
+                    )
+            self.deep_params[mangled].update(
+                    self.classifier.get_params(deep=True, mangled=mangled)
+                    )
 
-    def get_params(self, deep=True):
-        return self.deep_params.copy() if deep else self.params.copy()
+        logging.debug(
+            "Created workflow:\n{!s}\nwith deep parameters:\n{!s}\n\n".format(
+            self, self.deep_params[True])
+            )
+
+    def get_params(self, deep=True, mangled=True):
+        """Returns all params, where "all" is the sklearn definition"""
+        if deep:
+            return self.deep_params[mangled].copy()
+        return self.shallow_params[mangled].copy()
 
     def fit(self, sources):
         """Propogates X and Y through all of the steps, fitting all of them
@@ -65,12 +83,6 @@ class Workflow(BaseEstimator, ClassifierMixin):
         # Unpack the prediction to just be a numpy array
         return yhat
 
-    def get_params(self, deep=True, mangled=True):
-        if deep:
-            return self.deep_params
-        else:
-            return self.params
-
     def evaluate_on(self, sources):
 
         # Fit and test the classifier on the datasplit
@@ -79,17 +91,18 @@ class Workflow(BaseEstimator, ClassifierMixin):
         y_test = sources[0].Y_test  # all Y_test should be the same for all sources
         accuracy = accuracy_score(y_test, y_hat, normalize=True)
 
-        # Save record of this evaluation
-        last_evaluation_record = self.get_params(deep=True).copy()
-        last_evaluation_record['accuracy'] = accuracy
-
         # Return just the accuracy
         return accuracy
 
     def __str__(self):
-        return "Workflow {!s} -> {!s}".format(
+        return "{} {!s} -> {!s}".format(
+                self.desc,
                 " -> ".join(["[{!s}]".format(step) for step in self.steps]),
-                self.classifier)
+                self.classifier
+                )
+
+    def __repr__(self):
+        return self.__str__()
 
 
 
@@ -114,10 +127,16 @@ class WorkflowStep(BaseEstimator, TransformerMixin):
         self.desc = desc
         self.uses_sources = uses_sources
         self.workflow = workflow
-        logging.debug("Created workflow {!s}".format(self))
+
+        logging.debug(
+            "Created step in workflow:\n{!s}\nwith params:\n{!s}\n\n".format(
+            self, self.get_params())
+            )
 
     def get_params(self, deep=True, mangled=True):
-        return self.workflow.get_params(deep=deep)
+        prefix = self.desc + "_" if mangled else ""
+        return {prefix+k : v
+                for k,v in self.workflow.get_params(deep=deep).items()}
 
     def set_params(self, *args, **kwargs):
         """Why do you want to change the parameters. Don't change the
@@ -163,7 +182,7 @@ class DoNothing(TransformerMixin):
         self.desc = desc
         self.params = kwargs
 
-    def get_params(self, deep=True):
+    def get_params(self, deep=True, mangled=True):
         return self.params.copy()
 
     def fit(self, sources):
