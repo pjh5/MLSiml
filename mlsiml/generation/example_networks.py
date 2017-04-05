@@ -15,6 +15,7 @@ from mlsiml.generation.geometric_functions import ShellVector
 from mlsiml.generation.geometric_functions import Trig
 
 from mlsiml.generation.transformations import PlaneFlip
+from mlsiml.generation.transformations import Shuffle
 from mlsiml.utils import Identity
 
 import numpy as np
@@ -165,6 +166,9 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **k
     z2 = Normal(loc=lambda y: 30*(1 + y), scale=source2["var"])
     sources = NodeLayer("Sources", [z1, z2])
 
+    move_to_1 = list(range(source1["dim"] + source2["dim"], source1["dim"] + source2["dim"] + shared["dim"]/2))
+    move_to_1.extend(list(range(source1["dim"] + source2["dim"] + shared["dim"], source1["dim"] + source2["dim"] + shared["dim"] + extra_noise/2)))
+
     return Network("Crosstalk",
             Bernoulli(p),
             [
@@ -178,8 +182,9 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **k
                     ]),
                 NormalNoise(var=shared["var"]),
                 PlaneFlip(dim=total_dim),
-                ExtraNoiseNodes(extra_noise)
-            ], split_indices=source1["dim"])
+                ExtraNoiseNodes(extra_noise),
+                Shuffle(to_idx=0, from_indices=move_to_1)
+            ], split_indices=source1["dim"] + shared["dim"]/2 + extra_noise/2)
 
 
 def validate(**kwargs):
