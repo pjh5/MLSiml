@@ -212,7 +212,7 @@ class Classifier(WorkflowStep):
             return [classifier.predict(source.X_test)
                     for classifier, source in zip(self.repeat_classifiers, sources)]
 
-class CVGridSearchClassifier(WorkflowStep, ClassifierMixin):
+class CVGridSearchClassifier(Classifier):
 
     def __init__(self, desc, base_classifier, search_params, **kwargs):
 
@@ -231,7 +231,7 @@ class CVGridSearchClassifier(WorkflowStep, ClassifierMixin):
         super().__init__(desc, grid_classifier)
 
 
-    def evaluate_on(self, X, X_test, Y, Y_test):
+    def _evaluate_on(self, X, X_test, Y, Y_test):
         accuracy = super().evaluate_on(X, X_test, Y, Y_test)
 
         # Update the last record
