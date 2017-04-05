@@ -32,6 +32,7 @@ class PlaneFlip(ClassFlipper):
         return "Plane flip at {!s}".format(self.plane)
 
 
+
 class Identity():
     """A wrapper around lambda z: z with a nicer string representation"""
 

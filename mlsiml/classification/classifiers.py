@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 from sklearn import svm
-from sklearn.base import ClassifierMixin
+from sklearn.base import ClassifierMixin, clone
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -194,12 +194,24 @@ class Classifier(WorkflowStep):
             logging.info("Automatically converting classifier {!s} to {!s}"
                     + "different classifiers.".format(self, len(sources)))
 
-            self.repeat_classifiers = [sklearn.base.clone(self.workflow, safe=True)
-                                                    for _ in len(sources)]
+            self.repeat_classifiers = [clone(self.workflow, safe=True)
+                                                    for _ in range(len(sources))]
 
             # Fit a separate classifier on each source
             for classifier, source in zip(self.repeat_classifiers, sources):
                 classifier.fit(source.X_train, source.Y_train)
+        return self
+
+    def transform(self, sources):
+
+        # Only 1 source, just predict
+        if len(sources) == 1:
+            return sources[0].transform_with(self.workflow.transform)
+
+        # Multiple sources, there should be a different classifier for each
+        else:
+            return [source.transform_with(classifier.transform)
+                    for classifier, source in zip(self.repeat_classifiers, sources)]
 
     def predict(self, sources):
 

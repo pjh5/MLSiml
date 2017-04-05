@@ -252,12 +252,9 @@ class Network:
                                             self.sample(), 1, self.dims[-1]))
 
         # Split data into train and test sets, then into sources
-        logging.debug("split is {!s}".format(train_test_split(X, y, test_size=test_size)))
-        d = Dataset(
+        return Dataset(
                 *train_test_split(X, y, test_size=test_size)
                 ).split(self.split_indices)
-        logging.debug("Returning {!s}".format(d))
-        return d
 
 
     def pretty_string(self):

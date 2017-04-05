@@ -34,6 +34,8 @@ class Workflow(BaseEstimator, ClassifierMixin):
         for step in self.steps:
             self.params.update(step.get_params(deep=False))
             self.deep_params.update(step.get_params(deep=True))
+        logging.debug("Created workflow:\n{!s}\nwith deep parameters:\n{!s}".format(
+            self, self.deep_params))
 
     def get_params(self, deep=True):
         return self.deep_params.copy() if deep else self.params.copy()
@@ -111,16 +113,8 @@ class WorkflowStep(BaseEstimator, TransformerMixin):
         """
         self.desc = desc
         self.uses_sources = uses_sources
-
-        # Try to identify lists of workflows to convert to a sequence workflow
-        if not hasattr(workflow, "fit") and is_iterable(workflow):
-            logging.info("IS  iterable: {!s} is iterable".format(workflow))
-            raise Exception("No")
-            self.workflow = _WorkflowSequence(workflow)
-
-        else:
-            logging.info("NOT iterable: {!s}".format(workflow))
-            self.workflow = workflow
+        self.workflow = workflow
+        logging.debug("Created workflow {!s}".format(self))
 
     def get_params(self, deep=True, mangled=True):
         return self.workflow.get_params(deep=deep)

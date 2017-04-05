@@ -2,6 +2,7 @@
 import csv
 from datetime import datetime
 from itertools import product as iter_product
+import logging
 import os
 from pandas import DataFrame
 
@@ -14,15 +15,15 @@ from mlsiml.utils import make_iterable
 # Experiment Class Definition                                                #
 ##############################################################################
 
-class Experiment:
-        """An experiment is a lot of workflows tested on a lot of networks.
+class Experiment():
+    """An experiment is a lot of workflows tested on a lot of networks.
 
-        An experiment is defined by:
-            A network to make data with
-            A set of parameters to make the network with
-            A list of workflows to evaluate on the data
-            A list of sample sizes to repeat the experiment with
-        """
+    An experiment is defined by:
+        A network to make data with
+        A set of parameters to make the network with
+        A list of workflows to evaluate on the data
+        A list of sample sizes to repeat the experiment with
+    """
 
 
     def __init__(self,
@@ -69,6 +70,7 @@ class Experiment:
 
         self.network_class = network_class
         self.network_params_dict = network_params_dict
+        self.workflows = workflows
         self.sample_sizes = make_iterable(sample_sizes)
         self.test_size = test_size
 
@@ -107,15 +109,15 @@ class Experiment:
             for sample_size in self.sample_sizes:
                 logging.info(
                         "Sample {!s} points with {!s}/{!s} train-test split".format(
-                            sample_size, 1 - self.test_size, test_size))
+                            sample_size, 1 - self.test_size, self.test_size))
 
                 network_setting["sample_size"] = sample_size
-                datasources = network.sample(sample_size, test_size)
+                sources = network.sample(sample_size, self.test_size)
 
                 # For every workflows
                 for workflow in self.workflows:
-                    accuracy = workflow.evaluate_on(*datasources)
-                    all_results.add_record_for(network_setting, workflow)
+                    accuracy = workflow.evaluate_on(sources)
+                    all_results.add_record_for(accuracy, network_setting, workflow)
 
         return all_results
 
@@ -141,7 +143,7 @@ class ExperimentResults:
         # Find a place to put the log, making sure never to overwrite a
         # previous log by adding [1] or [2] etc to the file name
         if os.path.isfile(self.logfile + ".csv"):
-            logging.info("Experiment logfile {} already exists".format(logfile ".csv"))
+            logging.info("Experiment logfile {} already exists".format(logfile + ".csv"))
             run = 1
             while os.path.isfile("{}({!s}).csv".format(self.logfile, run)):
                 run += 1
@@ -161,17 +163,15 @@ class ExperimentResults:
             logfile = csv.writer(csvfile)
             logfile.writerow(self.column_names)
 
-    def add_record_for(self, network_settings_dict, workflow):
+    def add_record_for(self, accuracy, network_settings_dict, workflow):
 
         # Always append the workflow's last evaluation record
-        record = _make_record(network_settings_dict, workflow.last_evaluation_record)
+        record = _make_record(network_settings_dict, workflow.get_params())
         self.records.append(record)
         self.log(record)
 
         # Verbose output
-        if self.verbosity >= 0:
-            print("\t{:8.3f}\t{!s}".format(
-                    workflow.last_evaluation_record['accuracy'], workflow))
+        logging.debug("\t{:8.3f}\t{!s}".format(accuracy, workflow))
 
         # CV Grid Search full record
         # If the workflow went through a CV grid search, add those results
