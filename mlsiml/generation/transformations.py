@@ -41,3 +41,37 @@ class Identity():
     def __str__(self):
         return "z->z"
 
+class Shuffle():
+
+    def transform(self, array, to_idx, from_indices):
+        """
+        from_indices: list 
+        to_idx: integer
+        array: numpy array
+
+        moves the elements in from indices 
+        """
+        from_list = []
+        for i in from_indices:
+            from_list.append(array[i])
+        from_array = np.array(from_list)
+    
+        new_array = np.insert(array,to_idx,from_array, axis=0)
+
+        from_indices.sort(reverse=True)
+        for i in from_indices:
+            if i < to_idx:
+                new_array = np.delete(new_array, i, axis=0)
+            else:
+                new_array = np.delete(new_array, i+len(from_indices), axis=0)
+        return new_array
+
+
+
+
+
+
+
+
+
+
