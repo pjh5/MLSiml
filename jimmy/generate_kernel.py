@@ -72,7 +72,7 @@ def cal_accuracy_based_kernels(kernel_train_list, kernel_test_list, accuracy, cu
 class KernelMachine(object):
     # must set kernel generation methods first
     # learn kernel combination after input_data has been ran
-
+    # it's important to savememory, so kernel is generated only when needed
 
     def input_data(self, sources):
         first_source = sources[0]
@@ -98,7 +98,7 @@ class KernelMachine(object):
         y_v = self.y_train.reshape(self.n_train, 1)
         train_index = range(self.n_train)
         for ind in range(len(self.sources)):
-            K = self.get_ith_kernel(ind, train_index, train_index)
+            K = self._get_ith_kernel(ind, train_index, train_index)
             cur_weight =  np.dot(y_h, np.dot(K, y_v))/ sum(sum(K * K))
             weights.append(cur_weight)
         weights = np.array(weights)
@@ -107,7 +107,7 @@ class KernelMachine(object):
         self.comb_func =  lambda some_iterable: generate_linear_combination(some_iterable, weights)
 
 
-    def get_ith_kernel(self, index, X1_indices, X2_indices):
+    def _get_ith_kernel(self, index, X1_indices, X2_indices):
         cur_source = self.sources[index]
         train_X, test_X = cur_source.train_X, cur_source.train_Y
         all_X = np.vstack(train_X, test_X)
@@ -115,18 +115,32 @@ class KernelMachine(object):
         cur_func = self.kernel_funcs[index]
         return cur_func(X1, X2)
 
-    def get_all_kernels(self, X1_indices, X2_indices):
+    def _get_all_kernels(self, X1_indices, X2_indices):
         # return an iterable to yield kernel one by one to save memory
         for ind in range(len(self.sources)):
-            yield self.get_ith_kernel(ind, X1_indices, X2_indices)
+            yield self._get_ith_kernel(ind, X1_indices, X2_indices)
 
-    def get_combined_kernel(self, X1_indices, X2_indices):
-        self.comb_func(self.get_all_kernels(X1_indices, X2_indices))
+    def _get_combined_kernel(self, X1_indices, X2_indices):
+        self.comb_func(self._get_all_kernels(X1_indices, X2_indices))
 
 
     def fit(self, options):
-        self.clf = SVC(kernel = lambda indices: self.get_combined_kernel(indices, range(self.n_train)))
+        self.clf = SVC(kernel = lambda indices: self._get_combined_kernel(indices, range(self.n_train)))
         self.clf(range(self.n_train), self.y_train, **options)
 
-    def predict_svm(self):
+    def predict(self):
         return self.clf.predict(range(self.n_train, self.n_all))
+
+
+
+# example, assume that we have 2 sources
+sources = [Source(), Source()]
+ker1 = lambda x1, x2: generate_kernel(x1, x2, 'rbf', {'gamma': 3})
+ker2 = lambda x1, x2: generate_kernel(x1, x2, 'poly')
+ker_funcs = [ker1, ker2]
+clf = KernelMachine()
+clf.set_kernel_gen_methods(kernel_funcs=ker_funcs)
+clf.input_data(sources)
+clf.use_heruistic_similarity()
+clf.fit({'C':100})
+clf.predict()
