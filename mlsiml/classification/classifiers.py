@@ -1,9 +1,10 @@
+import logging
 import numpy as np
 
-from sklearn.base import ClassifierMixin
 from sklearn.metrics import accuracy_score
 
 from sklearn import svm
+from sklearn.base import ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -11,7 +12,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from sklearn.model_selection import GridSearchCV
 
-from mlsiml.classification.workflow import Workflow
+from mlsiml.classification.workflow import WorkflowStep
 from mlsiml.utils import flatten
 
 
@@ -179,44 +180,39 @@ def for_gaussian_nb(**kwargs):
 # Classifier Object Definitions                                              #
 ##############################################################################
 
-class Classifier(Workflow, ClassifierMixin):
-    """Wrapper class for sklearn classifiers to expose evaluate_on()
+class Classifier(WorkflowStep):
 
-    Written just so that a single evaluate_on(X, X_test, Y, Y_test) method can
-    be applied to all classification algorithms. This class unifies the
-    interface for sklearn, although classifier specific parameters still need
-    to be passed into the constructors for each algorithms.
+    def fit(self, sources):
+        """Default behavior is to fit a different classifier on every source"""
 
-    Docstrings of all classifier constructs are copied from the corresponding
-    sklearn docs and then edited to only be relevant to binary classification.
-    """
+        # Only 1 source, use the 1 classifier
+        if len(sources) == 1:
+            self.workflow.fit(sources[0].X_train, sources[0].Y_train)
 
-    def predict(self, X):
-        """Fit must have been called first"""
-        return self.workflow.predict(X)
+        # Multiple sources, train a different classifier for each source
+        else:
+            logging.info("Automatically converting classifier {!s} to {!s}"
+                    + "different classifiers.".format(self, len(sources)))
 
-    def evaluate_on(self, X, X_test, Y, Y_test):
+            self.repeat_classifiers = [sklearn.base.clone(self.workflow, safe=True)
+                                                    for _ in len(sources)]
 
-        # Fit and test the classifier on the datasplit
-        self.fit(X, Y)
-        y_hat = self.predict(X_test)
-        accuracy = accuracy_score(Y_test, y_hat, normalize=True)
+            # Fit a separate classifier on each source
+            for classifier, source in zip(self.repeat_classifiers, sources):
+                classifier.fit(source.X_train, source.Y_train)
 
-        # Save record of this evaluation
-        self.last_evaluation_record = self.get_params(deep=True).copy()
-        self.last_evaluation_record['accuracy'] = accuracy
+    def predict(self, sources):
 
-        # Return just the accuracy
-        return accuracy
+        # Only 1 source, just predict
+        if len(sources) == 1:
+            return self.workflow.predict(sources[0].X_test)
 
-    def record_for_last_fit(self):
-        """The last_evaluation_record is a saving of all parameters, along with
-        the accuracy, of a evluation run
-        """
-        self.last_evaluation_record
+        # Multiple sources, there should be a different classifier for each
+        else:
+            return [classifier.predict(source.X_test)
+                    for classifier, source in zip(self.repeat_classifiers, sources)]
 
-
-class CVGridSearchClassifier(Classifier):
+class CVGridSearchClassifier(WorkflowStep, ClassifierMixin):
 
     def __init__(self, desc, base_classifier, search_params, **kwargs):
 

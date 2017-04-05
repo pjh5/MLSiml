@@ -92,7 +92,7 @@ def _parse_keyword(kwargs, arglist, i, aliases):
             # Next argument should be not be - prefixed
             val = arglist[i + 1]
             if flag_re.match(val) or options.match(val):
-                raise Error("Expecting extra argument after '" + arglist[i] +
+                raise Exception("Expecting extra argument after '" + arglist[i] +
                         "' but found flag or option '" + val + "' instead")
 
             # Found the argument, so move i along
@@ -101,7 +101,7 @@ def _parse_keyword(kwargs, arglist, i, aliases):
 
         # Don't reduplicate
         if kw in kwargs:
-            raise Error("Keyword " + kw + " defined twice.")
+            raise Exception("Keyword " + kw + " defined twice.")
 
         # Finally set kw = arg
         kwargs[kw] = _try_to_cast(val)

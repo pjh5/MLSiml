@@ -20,7 +20,7 @@ from mlsiml.utils import Identity
 import numpy as np
 
 
-def exponential(p=0.5, extra_noise=0):
+def exponential(p=0.5, extra_noise=0, **kwargs):
     """Two normal 2D clusters (one per class), then fed into Exp
 
     Difficulty of problem determined by distance between the normal clusters.
@@ -58,10 +58,10 @@ def exponential(p=0.5, extra_noise=0):
                 abs_layer,
                 x_layer,
                 ExtraNoiseNodes(extra_noise)
-            ])
+            ], **kwargs)
 
 
-def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0):
+def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0, **kwargs):
     """Normal(scale*Exponential(Bernoulli()), var)
 
     Difficulty controlled by scale; smaller is harder. This is still pretty
@@ -77,10 +77,10 @@ def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0):
                 z_layer,
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ])
+            ], **kwargs)
 
 
-def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0):
+def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0, **kwargs):
     """XorVector(dim) + NormalNoise(var)
 
     Very difficult for dimensions > 9ish, even for SVMs. The default variance
@@ -95,7 +95,7 @@ def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0):
                 NodeLayer("XOR", XorVector(dim, scale=xor_scale, base=xor_base)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ])
+            ], **kwargs)
 
 
 def corrupted_xor(p=0.5,
@@ -112,10 +112,10 @@ def corrupted_xor(p=0.5,
                 NodeLayer.from_repeated("XOR", XorVector(len(corruptions) * xor_dim)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ])
+            ], **kwargs)
 
 
-def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
+def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0, **kwargs):
     return Network("Simple Shells",
             Bernoulli(p),
             [
@@ -123,12 +123,12 @@ def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
                 NormalNoise(var=var),
                 [PlaneFlip(dim=dim) for _ in range(flips)],
                 ExtraNoiseNodes(extra_noise)
-            ])
+            ], **kwargs)
 
 
 
 
-def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0):
+def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **kwargs):
     """Makes a 2 source network (z1 and z2) with shared information
 
     Params
@@ -145,12 +145,12 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0):
     if not source1:
         source1 = {
                 "var":0.2,
-                "dim":0
+                "dim":3
                 }
     if not source2:
         source2 = {
                 "var":15,
-                "dim":5
+                "dim":3
                 }
     if not shared:
         shared = {
@@ -179,10 +179,10 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0):
                 NormalNoise(var=shared["var"]),
                 PlaneFlip(dim=total_dim),
                 ExtraNoiseNodes(extra_noise)
-            ])
+            ], split_indices=source1["dim"])
 
 
-def validate():
+def validate(**kwargs):
     return Network("Debug Network",
             Bernoulli(0.5),
             [
@@ -192,9 +192,9 @@ def validate():
                     Exp(beta=5)
                     ]),
                 NodeLayer("Sine", Trig.sine())
-            ])
+            ], **kwargs)
 
-def temp():
+def temp(**kwargs):
     return Network("Debug Network",
             Bernoulli(0.5),
             [
@@ -208,5 +208,5 @@ def temp():
                     lambda z: z[1],
                     Trig.sine()
                     ])
-            ])
+            ], **kwargs)
 

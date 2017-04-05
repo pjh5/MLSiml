@@ -22,7 +22,7 @@ def Transform(TransformerMixin):
 
 def MetricLearnTransform(self, which, **kwargs):
     if not hasattr(metric_learn, which):
-        raise Error("Metric_learn method " + which + " not found.")
+        raise Exception("Metric_learn method " + which + " not found.")
     return Transform(which, getattr(metric_learn, which)(**kwargs), **kwargs)
 
 

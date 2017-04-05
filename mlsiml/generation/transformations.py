@@ -1,14 +1,10 @@
 import numpy as np
+
+from mlsiml.classification.workflow import WorkflowStep
 from mlsiml.utils import make_callable
 
 
-class Transformation():
-
-    def transform(self, y, z):
-        pass
-
-
-class ClassFlipper(Transformation):
+class ClassFlipper(WorkflowStep):
 
     def __init__(self, flip_predicate):
         self.flip_predicate = flip_predicate

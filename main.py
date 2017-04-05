@@ -3,27 +3,18 @@ import sys
 
 from sklearn.model_selection import train_test_split
 
-from mlsiml.generation import example_networks
-from mlsiml.analysis import analysis
+from mlsiml.generation import example_networks, dataset
+from mlsiml.integration.common import Concatenate
 from mlsiml.classification import classifiers as Classifier
-from mlsiml.utils import parse_to_args_and_kwargs
-from mlsiml.utils import flatten
+from mlsiml.classification.workflow import Workflow
+from mlsiml.analysis import analysis
+from mlsiml.utils import flatten, parse_to_args_and_kwargs
 
 
-classifier_list = flatten([
-                Classifier.for_logistic_regression(),
-                Classifier.for_knn(search_params={
-                    'n_neighbors':[1, 2, 10]
-                    }),
-                Classifier.for_random_forest(search_params={
-                    'n_estimators':[10, 100]
-                    }),
-                Classifier.for_svm(kernel='rbf', search_params={
-                    'C':[0.1, 1, 10],
-                    'gamma':[0.01, 0.1, 1],
-                    }),
-                Classifier.for_gaussian_nb()
-                ])
+workflow_list = flatten([
+    Workflow([Concatenate()], Classifier.for_logistic_regression()),
+    Workflow([Concatenate()], Classifier.for_gaussian_nb()),
+    ])
 
 
 def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
@@ -34,8 +25,7 @@ def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
 
     # Build the network, sample from it, and split the data
     net = getattr(example_networks, which_example)(**kwargs)
-    X, y = net.bulk_sample(sample_size)
-    datasplit = train_test_split(X, y, test_size=0.3)
+    sources = net.sample(sample_size)
 
     # Display network info or data summary
     logging.info(net.pretty_string())
@@ -43,20 +33,21 @@ def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
     # Test on classifier suites
     if test:
         print("Classifier performance:")
-        for clsfr in classifier_list:
-            print("{:8.3f}\t{!s}".format(clsfr.evaluate_on(*datasplit), clsfr))
+        for clsfr in workflow_list:
+            print("{:8.3f}\t{!s}".format(clsfr.evaluate_on(sources), clsfr))
         print()
 
     # Plotting at the end
     if plot:
-        analysis.plot_data(X, y)
+        logging.debug(sources)
+        data = dataset.concatenate(sources)
+        analysis.plot_data(data.X_train, data.Y_train)
 
 
 def some_data(which="shells", sample_size=10000, **kwargs):
+    """Return [X, X_test, Y, Y_test] for some sample data"""
     net = getattr(example_networks, which)(**kwargs)
-    X, y = net.bulk_sample(sample_size)
-    datasplit = train_test_split(X, y, test_size=0.3)
-    return datasplit
+    return  net.sample(sample_size)
 
 
 # Allow running like "$> python main.py --xor=5"

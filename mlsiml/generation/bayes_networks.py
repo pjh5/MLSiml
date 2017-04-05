@@ -7,6 +7,10 @@ different vector to the next layer.
 """
 import logging
 import numpy as np
+
+from sklearn.model_selection import train_test_split
+
+from mlsiml.generation.dataset import Dataset
 from mlsiml.utils import flatten
 from mlsiml.utils import to_flat_np_array
 from mlsiml.utils import make_iterable
@@ -143,7 +147,7 @@ class Network:
     second NodeLayer, etc.
     """
 
-    def __init__(self, desc, class_generator, layers):
+    def __init__(self, desc, class_generator, layers, split_indices=None):
         """Creates a network
 
         Params
@@ -166,15 +170,19 @@ class Network:
             won't ever change the class label, as NodeLayer will automatically
             call that method.
         """
+        # Actually require split_indices
+        if split_indices is None:
+            raise Exception("Split_indices must be defined for all bayes_networks""")
+
         self.desc = desc
         self.class_generator = class_generator
         self.layers = flatten(layers)
+        self.split_indices = split_indices
         self.dims = []
 
         # Make sure that all the dimensions of the network match up
         #######################################################################
-        logging.debug("")
-        logging.debug("Validating Network Dimensions")
+        logging.debug("\nValidating Network Dimensions")
 
         # First check the class generator
         y = self.class_generator()
@@ -200,7 +208,7 @@ class Network:
                                                 "-".join(map(str, self.dims))))
 
 
-    def sample(self):
+    def _sample_once(self):
         """Generates a (y,x) pair, where y is a scalar and x is a numpy array"""
 
         # First layer has no inputs and is assumed to be the desired output
@@ -214,7 +222,7 @@ class Network:
         return result
 
 
-    def bulk_sample(self, n_samples):
+    def sample(self, n_samples, test_size=0.3):
         """Samples the network n_samples times.
 
         Returns
@@ -234,16 +242,22 @@ class Network:
         y = np.zeros(shape=(n_samples))
         X = np.zeros(shape=(n_samples, self.dims[-1]))
 
-        # Sample
+        # Sample all data
         for i in range(n_samples):
             try:
-                y[i], X[i,:] = self.sample()
+                y[i], X[i,:] = self._sample_once()
             except ValueError:
                 raise Exception(("Network output '{!s}' has to be a tuple of " +
                         "arrays of dimensions ({!s}, {!s})").format(
                                             self.sample(), 1, self.dims[-1]))
 
-        return X, y
+        # Split data into train and test sets, then into sources
+        logging.debug("split is {!s}".format(train_test_split(X, y, test_size=test_size)))
+        d = Dataset(
+                *train_test_split(X, y, test_size=test_size)
+                ).split(self.split_indices)
+        logging.debug("Returning {!s}".format(d))
+        return d
 
 
     def pretty_string(self):
