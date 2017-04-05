@@ -8,13 +8,28 @@ from mlsiml.integration.common import Concatenate
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.classification.workflow import Workflow
 from mlsiml.analysis import analysis
-from mlsiml.utils import flatten, parse_to_args_and_kwargs
+from mlsiml.utils import parse_to_args_and_kwargs
+
+from sklearn.decomposition import PCA
 
 
-workflow_list = flatten([
+workflow_list = [
     Workflow([Concatenate()], Classifier.for_logistic_regression()),
     Workflow([Concatenate()], Classifier.for_gaussian_nb()),
-    ])
+    Workflow([Concatenate()], Classifier.for_knn(search_params={
+        'n_neighbors':[1, 10]
+        })),
+    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_logistic_regression()),
+    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_gaussian_nb()),
+    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_knn(search_params={
+        'n_neighbors':[1, 10]
+        })),
+    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_logistic_regression()),
+    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_gaussian_nb()),
+    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_knn(search_params={
+        'n_neighbors':[1, 10]
+        }))
+    ]
 
 
 def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):

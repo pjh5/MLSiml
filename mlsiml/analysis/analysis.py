@@ -66,7 +66,7 @@ def plot_data(X, y):
     more than 3 dimensions. If X only has 2 dimensions, then just a
     2-dimensional scatterplot is returned. This will not produce a plot for 1
     dimensional data.
-    
+
     Arguments:
     X       An N x K numpy ndarray of N data vectors, each of dimension K
     y       A numpy array or size N, the class labels for X

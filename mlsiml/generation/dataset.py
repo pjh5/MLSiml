@@ -38,6 +38,12 @@ class Dataset():
     def __repr__(self):
         return self.__str__()
 
+    def __len__(self):
+        return 1
+
+    def __getitem__(self, idx):
+        return self
+
 
 def concatenate(datasets):
 
