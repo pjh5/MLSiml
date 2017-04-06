@@ -1,3 +1,0 @@
-C,CV_mean_accuracy,accuracy,classifier_desc,dim,gamma,kernel,metriclearn_type,n_neighbors,p,sample_size,test_size,var
-,,0.975833333333,KNN,3,,,,1,0.5,4000,0.3,0.2
-,0.978214285714,,KNN,3,,,,1,0.5,4000,0.3,0.2

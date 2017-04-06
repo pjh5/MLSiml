@@ -28,6 +28,7 @@ class MetricLearnTransform(Preprocessing):
         except AttributeError:
             raise Error("Metric_learn method " + which + " not found.")
 
+    #ratio defines what percent of the data to train the metric learning algorithmn on.
     def fit(self, X_train, Y_train, ratio = 0.1):
         size = X_train.shape[0]
         n_samples = int(round(size*ratio))
