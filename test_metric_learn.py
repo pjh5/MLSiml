@@ -1,30 +1,64 @@
 
+import logging
+
+
 from mlsiml.analysis import experiment
-from mlsiml.classification import classifiers as Classifier
-from mlsiml.generation.example_networks import xor as xor_network
-from mlsiml.classification.preprocessing import MetricLearnTransform
+from mlsiml.classification import classifiers
+from mlsiml.classification.workflow import Workflow
+from mlsiml.generation.example_networks import crosstalk as crosstalk_network
+from mlsiml.classification.preprocessing import MetricLearn
+
+from mlsiml.integration.common import Concatenate
 
 
-# Classifiers
+# Turn on logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Number of sources
+NUMBER_OF_SOURCES = 2
+
+# Metric_Learn Classifiers
 # ITML needs constraints
 # SDML needs a connectivity graph
 # RCA needs a chunks array
 # NCA takes forever?
 # LFDA needs some other parameter too
-classifiers = [Classifier.for_svm(kernel='rbf', search_params={
-                'C':[0.1, 10],
-                'gamma':[0.01],
-                }).with_preprocessing(MetricLearnTransform(metric))
-                for metric in ["Covariance", "LMNN"]]
+workflows = [
+        Workflow("Raw SVM", NUMBER_OF_SOURCES,
+            [Concatenate()],
+            classifiers.for_svm(kernel="rbf", search_params={
+                "C":[0.1, 10],
+                "gamma":[0.01]
+                })
+            ),
+        Workflow("LMNN SVM", NUMBER_OF_SOURCES,
+            [Concatenate(), MetricLearn("LMNN")],
+            classifiers.for_svm(kernel="rbf", search_params={
+                "C":[0.1, 10],
+                "gamma":[0.01]
+                })
+            ),
+        Workflow("2 LMNN SVM", NUMBER_OF_SOURCES,
+            [MetricLearn("LMNN"), Concatenate()],
+            classifiers.for_svm(kernel="rbf", search_params={
+                "C":[0.1, 10],
+                "gamma":[0.01]
+                })
+            )
+        ]
 
 
 # Network Parameters
-network = xor_network
+network = crosstalk_network
 network_params = {
         'p':0.5,
-        'num_z':[5],
-        'num_x_per_z':1,
-        'var':[0.2, 0.3]
+        "source1_var":0.2,
+        "source2_var":15,
+        "shared_var":0.1,
+        "source1_dim":[1, 3],
+        "source2_dim":[1, 3],
+        "shared_dim" :[1, 3],
+        "extra_noise":[1, 3]
         }
 
 
@@ -38,10 +72,13 @@ logfile = "metric_learn"
 
 
 # Make experiment
-_exp = experiment.Experiment(network, network_params,
-        sample_sizes=sample_sizes,
-        test_size=test_size,
-        classifiers=classifiers)
+_exp = experiment.Experiment(
+        network_class = network,
+        network_params_dict = network_params,
+        workflows = workflows,
+        sample_sizes = sample_sizes,
+        test_size = test_size
+        )
 
 results = _exp.run(logfile=logfile)
 df = results.as_dataframe()

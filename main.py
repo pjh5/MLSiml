@@ -1,42 +1,80 @@
 import logging
 import sys
 
-from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
 
-from mlsiml.generation import example_networks, dataset
+from mlsiml.classification import classifiers
+from mlsiml.classification.workflow import Workflow, SourceTransform
 from mlsiml.integration.common import Concatenate
-from mlsiml.classification import classifiers as Classifier
-from mlsiml.classification.workflow import Workflow
+
+from mlsiml.generation import example_networks
 from mlsiml.analysis import analysis
 from mlsiml.utils import parse_to_args_and_kwargs
 
-from sklearn.decomposition import PCA
 
+# Turn on logging
+logging.basicConfig(level=logging.DEBUG)
 
-workflow_list = [
-    Workflow([Concatenate()], Classifier.for_logistic_regression()),
-    Workflow([Concatenate()], Classifier.for_gaussian_nb()),
-    Workflow([Concatenate()], Classifier.for_knn(search_params={
-        'n_neighbors':[1, 10]
-        })),
-    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_logistic_regression()),
-    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_gaussian_nb()),
-    Workflow([Concatenate(), Classifier.Classifier("PCA", PCA())], Classifier.for_knn(search_params={
-        'n_neighbors':[1, 10]
-        })),
-    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_logistic_regression()),
-    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_gaussian_nb()),
-    Workflow([Classifier.Classifier("PCA", PCA()), Concatenate()], Classifier.for_knn(search_params={
-        'n_neighbors':[1, 10]
-        }))
+# Number of sources
+NUMBER_OF_SOURCES = 2
+
+# Default workflows to run
+conc = Concatenate()
+workflows = [
+    Workflow("Logistic Regression", NUMBER_OF_SOURCES,
+        [Concatenate()],
+        classifiers.for_logistic_regression()
+        ),
+    Workflow("Naive Bayes", NUMBER_OF_SOURCES,
+        [Concatenate()],
+        classifiers.for_gaussian_nb()
+        ),
+    Workflow("KNN", NUMBER_OF_SOURCES,
+        [Concatenate()],
+        classifiers.for_knn(search_params={'n_neighbors':[1, 10]})
+        ),
+
+    Workflow("PCA + Logistic Regression", NUMBER_OF_SOURCES,
+        [Concatenate(), SourceTransform(PCA())],
+        classifiers.for_logistic_regression()
+        ),
+    Workflow("PCA + Naive Bayes", NUMBER_OF_SOURCES,
+        [Concatenate(), SourceTransform(PCA())],
+        classifiers.for_gaussian_nb()
+        ),
+    Workflow("PCA + KNN", NUMBER_OF_SOURCES,
+        [Concatenate(), SourceTransform(PCA())],
+        classifiers.for_knn(search_params={
+            'n_neighbors':[1, 10]
+            })
+        ),
+
+    Workflow("Separate PCA + Logistic Regression", NUMBER_OF_SOURCES,
+        [SourceTransform(PCA()), Concatenate()],
+        classifiers.for_logistic_regression()
+        ),
+    Workflow("Separate PCA + Naive Bayes", NUMBER_OF_SOURCES,
+        [SourceTransform(PCA()), Concatenate()],
+        classifiers.for_gaussian_nb()
+        ),
+    Workflow("Separate PCA + KNN", NUMBER_OF_SOURCES,
+        [SourceTransform(PCA()), Concatenate()],
+        classifiers.for_knn(search_params={
+            'n_neighbors':[1, 10]
+            })
+        )
     ]
 
 
 def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
 
     # If verbose, print out the args and kwargs
-    logging.info("Creating network with: {}({})".format(which_example,
-            ", ".join(["{!s}={!s}".format(k,v) for k,v in kwargs.items()])))
+    logging.info(
+            "Creating network with: {}({})".format(
+                which_example,
+                ", ".join(["{!s}={!s}".format(k,v) for k,v in kwargs.items()])
+                )
+            )
 
     # Build the network, sample from it, and split the data
     net = getattr(example_networks, which_example)(**kwargs)
@@ -47,16 +85,15 @@ def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
 
     # Test on classifier suites
     if test:
-        print("Classifier performance:")
-        for clsfr in workflow_list:
-            print("{:8.3f}\t{!s}".format(clsfr.evaluate_on(sources), clsfr))
+        print("Workflow performance:")
+        for flow in workflows:
+            print("{:8.3f}\t{!s}".format(flow.evaluate_on(sources), flow))
         print()
 
     # Plotting at the end
     if plot:
         logging.debug(sources)
-        data = dataset.concatenate(sources)
-        analysis.plot_data(data.X_train, data.Y_train)
+        analysis.plot_data(*sources.as_X_and_Y())
 
 
 def some_data(which="shells", sample_size=10000, **kwargs):
@@ -81,8 +118,9 @@ if __name__ == "__main__":
             logging.info("Logging level set to INFO")
         kwargs.pop("verbose")
 
-    logging.info("Parsed arguments are args:{!s}, kwargs:{!s}".format(
-                                                        args, kwargs))
+    logging.info(
+            "Parsed arguments are args:{!s}, kwargs:{!s}".format(args, kwargs)
+            )
 
     # Call main with arguments
     main(*args, **kwargs)

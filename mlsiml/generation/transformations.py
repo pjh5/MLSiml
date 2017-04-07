@@ -1,10 +1,9 @@
 import numpy as np
 
-from mlsiml.classification.workflow import WorkflowStep
 from mlsiml.utils import make_callable
 
 
-class ClassFlipper(WorkflowStep):
+class ClassFlipper():
 
     def __init__(self, flip_predicate):
         self.flip_predicate = flip_predicate
@@ -51,17 +50,17 @@ class Shuffle():
 
     def transform(self, y, array):
         """
-        from_indices: list 
+        from_indices: list
         to_idx: integer
         array: numpy array
 
-        moves the elements in from indices 
+        moves the elements in from indices
         """
         from_list = []
         for i in self.from_indices:
             from_list.append(array[i])
         from_array = np.array(from_list)
-    
+
         new_array = np.insert(array,self.to_idx,from_array, axis=0)
 
         self.from_indices.sort(reverse=True)

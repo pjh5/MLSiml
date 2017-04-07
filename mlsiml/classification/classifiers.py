@@ -1,10 +1,6 @@
 import logging
-import numpy as np
-
-from sklearn.metrics import accuracy_score
 
 from sklearn import svm
-from sklearn.base import ClassifierMixin, clone
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -12,8 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from sklearn.model_selection import GridSearchCV
 
-from mlsiml.classification.workflow import WorkflowStep
-from mlsiml.utils import flatten
+from mlsiml.classification.workflow import SourceClassifier, CVSourceClassifier
 
 
 ##############################################################################
@@ -44,7 +39,7 @@ def for_logistic_regression(**kwargs):
         same scale. You can preprocess the data with a scaler from
         sklearn.preprocessing.
     """
-    return _make_classifier(LogisticRegression, "Logistic Regression", **kwargs)
+    return _make_classifier(LogisticRegression, **kwargs)
 
 def for_knn(n_neighbors=5, **kwargs):
     """Classifier implementing the k-nearest neighbors vote.
@@ -80,7 +75,7 @@ def for_knn(n_neighbors=5, **kwargs):
         Additional keyword arguments for the metric function.
     """
     kwargs["n_neighbors"] = n_neighbors
-    return _make_classifier(KNeighborsClassifier, "KNN", **kwargs)
+    return _make_classifier(KNeighborsClassifier, **kwargs)
 
 def for_linear_svm(**kwargs):
     """Linear Support Vector Classification.
@@ -104,7 +99,7 @@ def for_linear_svm(**kwargs):
     max_iter : int, (default=1000)
         The maximum number of iterations to be run.
     """
-    return _make_classifier(svm.LinearSVC, "Linear SVM", **kwargs)
+    return _make_classifier(svm.LinearSVC, **kwargs)
 
 def for_svm(kernel="rbf", **kwargs):
     """C-Support Vector Classification.
@@ -146,7 +141,7 @@ def for_svm(kernel="rbf", **kwargs):
         Tolerance for stopping criterion.
     """
     kwargs["kernel"] = kernel
-    return _make_classifier(svm.SVC, "SVM", **kwargs)
+    return _make_classifier(svm.SVC, **kwargs)
 
 def for_random_forest(n_estimators=10, criterion="gini", max_features="sqrt",
         **kwargs):
@@ -162,7 +157,7 @@ def for_random_forest(n_estimators=10, criterion="gini", max_features="sqrt",
     kwargs['n_estimators'] = n_estimators
     kwargs['criterion'] = criterion
     kwargs['max_features'] = max_features
-    return _make_classifier(RandomForestClassifier, "Random Forest", **kwargs)
+    return _make_classifier(RandomForestClassifier, **kwargs)
 
 def for_gaussian_nb(**kwargs):
     """Gaussian Naive Bayes.
@@ -172,116 +167,42 @@ def for_gaussian_nb(**kwargs):
     priors : Prior probabilities of the classes. If specified the priors are
     not adjusted according to the data.
     """
-    return _make_classifier(GaussianNB, "Gaussian Naive Bayes", **kwargs)
+    return _make_classifier(GaussianNB, **kwargs)
 
 
 
 ##############################################################################
-# Classifier Object Definitions                                              #
+# Classifier constructor
 ##############################################################################
 
-class Classifier(WorkflowStep):
+def _make_classifier(base_classifier, *, search_params=None, **kwargs):
+    """Wraps the base_classifier into a SourceClassifier, which can handle
+    MultiSourceDataset objects
+    """
 
-    def fit(self, sources):
-        """Default behavior is to fit a different classifier on every source"""
+    # If no search params, make the classifier with kwargs
+    if not search_params:
+        base_classifier = base_classifier(**kwargs)
+        return SourceClassifier(base_classifier)
 
-        # Only 1 source, use the 1 classifier
-        if len(sources) == 1:
-            self.workflow.fit(sources[0].X_train, sources[0].Y_train)
+    # If there are search params, we have to wrap the base_classifier in a
+    # GridSearchCV
+    else:
 
-        # Multiple sources, train a different classifier for each source
-        else:
-            logging.info("Automatically converting classifier {!s} to {!s}"
-                    + "different classifiers.".format(self, len(sources)))
-
-            self.repeat_classifiers = [clone(self.workflow, safe=True)
-                                                    for _ in range(len(sources))]
-
-            # Fit a separate classifier on each source
-            for classifier, source in zip(self.repeat_classifiers, sources):
-                classifier.fit(source.X_train, source.Y_train)
-        return self
-
-    def transform(self, sources):
-
-        # Only 1 source, just predict
-        if len(sources) == 1:
-            return sources[0].transform_with(self.workflow.transform)
-
-        # Multiple sources, there should be a different classifier for each
-        else:
-            return [source.transform_with(classifier.transform)
-                    for classifier, source in zip(self.repeat_classifiers, sources)]
-
-    def predict(self, sources):
-
-        # Only 1 source, just predict
-        if len(sources) == 1:
-            return self.workflow.predict(sources[0].X_test)
-
-        # Multiple sources, there should be a different classifier for each
-        else:
-            return [classifier.predict(source.X_test)
-                    for classifier, source in zip(self.repeat_classifiers, sources)]
-
-class CVGridSearchClassifier(Classifier):
-
-    def __init__(self, desc, base_classifier, search_params, **kwargs):
-
+        # Now there are search_params, so we must make a GridSearchCV for them
         # Extract parameters of the cv function itself
-        self.cv_kwargs = {}
+        cv_kwargs = {}
         for kw in ['scoring', 'fit_params', 'n_jobs', 'pre_dispatch', 'cv']:
             if kw in kwargs:
-                self.cv_kwargs[kw] = kwargs[kw]
+                cv_kwargs[kw] = kwargs[kw]
                 kwargs.pop(kw)
 
         # Base classifier is now a grid search over the params
-        grid_classifier = GridSearchCV(
-                base_classifier(**kwargs), search_params, **self.cv_kwargs)
+        base_classifier = GridSearchCV(
+                base_classifier(**kwargs), search_params, **cv_kwargs
+                )
+        return CVSourceClassifier(base_classifier)
 
-        # Now init like normal with the GridSearchCV classifier
-        super().__init__(desc, grid_classifier)
+    return SourceClassifier(base_classifier)
 
-
-    def _evaluate_on(self, X, X_test, Y, Y_test):
-        accuracy = super().evaluate_on(X, X_test, Y, Y_test)
-
-        # Update the last record
-        # Save the final parameters here since they were only determined after
-        # "fit" has been called on this classifier
-        for kw, val in self.workflow.best_params_.items():
-            self.last_evaluation_record[kw] = val
-
-        # Update the full record
-        #######################################################################
-        self.full_record = []
-        cv_results = self.workflow.cv_results_
-
-        # Extract parameters that were changed
-        cv_params = [p[6:] for p in cv_results.keys() if p.startswith('param_')]
-
-        # Loop over all cross validation runs
-        current_params = self.get_params(deep=True)
-        for cv_run in range(len(cv_results['mean_test_score'])):
-            record = current_params.copy()
-
-            # Add the cross validated parameters to the record
-            for cv_param in cv_params:
-                record[cv_param] = cv_results['param_' + cv_param][cv_run]
-
-            # Add 'accuracy' to the record and save it
-            record['CV_mean_accuracy'] = cv_results['mean_test_score'][cv_run]
-            self.full_record.append(record)
-
-        return accuracy
-
-##############################################################################
-# Helper Functions                                                           #
-##############################################################################
-
-def _make_classifier(base_classifier, desc, search_params=None, **kwargs):
-    if search_params:
-        return CVGridSearchClassifier(desc, base_classifier, search_params, **kwargs)
-
-    return Classifier(desc, base_classifier(**kwargs))
 

@@ -7,8 +7,7 @@ import os
 from pandas import DataFrame
 
 from mlsiml.classification import classifiers as Classifier
-from mlsiml.utils import flatten
-from mlsiml.utils import make_iterable
+from mlsiml.utils import dict_prefix, flatten, make_iterable, truish
 
 
 ##############################################################################
@@ -74,15 +73,6 @@ class Experiment():
         self.sample_sizes = make_iterable(sample_sizes)
         self.test_size = test_size
 
-        # Collect all possible keywords for logging purposes
-        self.all_possible_keywords = sorted(list(set(
-                ['accuracy', 'CV_mean_accuracy'] +
-                ['sample_size', 'test_size'] +
-                list(self.network_params_dict.keys()) +
-                flatten([list(w.get_params(deep=True, mangled=True).keys())
-                    for w in self.workflows])
-                )))
-
 
     def run(self, logfile=None):
         """Runs this experiment, writing outputs to logfile.
@@ -92,7 +82,7 @@ class Experiment():
         # Save all results in a massive list of dictionaries
         # Keys are network parameter dictionaries e.g. {num_z:4}
         # Values are result dictionaries {workflow:evalution_result}
-        all_results = ExperimentResults(self.all_possible_keywords, logfile=logfile)
+        all_results = ExperimentResults(logfile=logfile)
 
         # For every network parameter
         for network_setting in _all_possible_settings(self.network_params_dict):
@@ -103,14 +93,20 @@ class Experiment():
                 "\n"
                 + "==========================================================="
                 + "\nBuilding Network With Parameters:\n"
-                + "\n".join(["\t{:>20} : {!s}".format(k, v) for k, v in network_setting.items()])
-                + "\n")
+                + "\n".join(
+                    ["\t{:>20} : {!s}".format(k, v)
+                        for k, v in network_setting.items()]
+                    )
+                + "\n"
+                )
 
             # For every sample size
             for sample_size in self.sample_sizes:
                 logging.info(
                         "Sample {!s} points with {!s}/{!s} train-test split".format(
-                            sample_size, 1 - self.test_size, self.test_size))
+                            sample_size, 1 - self.test_size, self.test_size
+                            )
+                        )
 
                 network_setting["sample_size"] = sample_size
                 sources = network.sample(sample_size, self.test_size)
@@ -119,6 +115,12 @@ class Experiment():
                 for workflow in self.workflows:
                     accuracy = workflow.evaluate_on(sources)
                     all_results.add_record_for(accuracy, network_setting, workflow)
+
+                # After every network, write out the log
+                # This is done here because we only know all of the parameters
+                # (all of the CV grid search parameters) after all of the
+                # workflows have been evaluated
+                all_results.write()
 
         return all_results
 
@@ -130,10 +132,12 @@ class Experiment():
 
 class ExperimentResults:
 
-    def __init__(self, column_names, logfile=None):
+    def __init__(self, logfile=None):
         """Prepares the logfile by writing a header row to it"""
         self.records = []
+        self.new_records = []
         self.logfile = logfile
+        self.header_file_written = False
 
         # Default logfile is just experiment_date
         if not logfile:
@@ -156,35 +160,90 @@ class ExperimentResults:
         # Write a header to the csv
         #####################################################################
 
-        # Collect keywords in alphabetical order (so their order is defined)
-        self.column_names = sorted(column_names)
-
-        # Write the header row
-        with open(self.logfile, 'w') as csvfile:
-            logfile = csv.writer(csvfile)
-            logfile.writerow(self.column_names)
-
     def add_record_for(self, accuracy, network_settings_dict, workflow):
 
-        # Always append the workflow's last evaluation record
-        record = _make_record(accuracy, network_settings_dict, workflow.get_params())
-        self.records.append(record)
-        self.log(record)
+        # Mangle network settings
+        net_work_record = dict_prefix("network", network_settings_dict)
+        net_work_record.update(workflow.get_params(deep=True))
+        net_work_record = {k:v for k, v in net_work_record.items() if truish(v)}
+
+        # Append the "simple" record of accuracy + network/workflow params
+        rec_with_acc = net_work_record.copy()
+        rec_with_acc["accuracy"] = accuracy
+        self.new_records.append(rec_with_acc)
 
         # Verbose output
         logging.debug("\t{:8.3f}\t{!s}".format(accuracy, workflow))
 
-        # CV Grid Search full record
-        # If the workflow went through a CV grid search, add those results
-        # too
-        if hasattr(workflow.classifier, 'full_record'):
-            for cvr in workflow.full_record:
-                record = _make_record(network_settings_dict, cvr)
-                self.records.append(record)
-                self.log(record)
+        # Cross-Validation data
+        # For GridSearchCV classifiers, there's a lot of data hidden in
+        # cv_results_. Add all of that data here too.
+        all_cv_params = workflow.get_cv_params()
+        for wf, cv_results in all_cv_params.items():
+
+            # Mangle with which workflow if more than one CV result
+            # TODO in the future only mangle if CV names are the same too
+            prefix = wf if len(all_cv_params) > 1 else None
+
+            # Extract parameters that were changed
+            logging.debug("CV_PARAMS are {!s}".format(cv_results))
+
+            # TODO only keep interesting parameters from cv results
+            # cv_params = [p[6:] for p in cv_results.keys() if p.startswith('param_')]
+
+            # Loop over all cross validation runs, adding a record for each
+            for i in range(len(cv_results['mean_test_score'])):
+
+                # Copy the ith cv_results into a new record
+                record = dict_prefix(
+                        prefix, {k:v[i] for k, v in cv_results.items() if truish(v)}
+                        )
+
+                # Combine the ith cv_results with the net/flow settings
+                record.update(net_work_record)
+
+                # Append the record
+                self.new_records.append(record)
+
 
     def as_dataframe(self):
         return DataFrame.from_records(self.records)
+
+    def write(self):
+
+        # Write a header file if we need one
+        # This is done here instead of in __init__ because it is very hard to
+        # know all of the parameters (column names) in __init__
+        if not self.header_file_written:
+
+            # Determine column names
+            self.column_names = set()
+            for record in self.new_records:
+                self.column_names.update(set(record.keys()))
+            self.column_names = list(sorted(self.column_names))
+            logging.debug("Found column names: {!s}".format(self.column_names))
+
+            # Write the header
+            with open(self.logfile, 'w') as fobj:
+                csvfile = csv.writer(fobj)
+                csvfile.writerow(self.column_names)
+
+            self.header_file_written = True
+
+        # Write out all of the new records
+        with open(self.logfile, 'a') as fobj:
+            csvfile = csv.writer(fobj)
+
+            for record in self.new_records:
+                csvfile.writerow(
+                        [record.get(col, "") for col in self.column_names]
+                        )
+
+        # Move the new_records to records
+        self.records += self.new_records
+        self.new_records = []
+
+
 
     def log(self, record):
 
@@ -199,25 +258,6 @@ class ExperimentResults:
 ##############################################################################
 # Private Helper Functions                                                   #
 ##############################################################################
-
-
-def _make_record(accuracy, network_dict, workflow_dict):
-    record = {"network_"+k : v for k, v in network_dict.items()}
-
-    # Merge dictionaries
-    for k,v in workflow_dict.items():
-
-        # Make sure that we don't overwrite a setting
-        # TODO better error checking? Maybe just prepend 'network' to all
-        # network settings?
-        if k in record:
-            raise Exception(
-                'Workflow setting {} already in network settings {}'.format(
-                                                                    k, record))
-        record[k] = v
-
-    return record
-
 
 def _all_possible_settings(a_dict):
     """Iterator over dictionaries of single key:value pairs

@@ -129,7 +129,11 @@ def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0, **kwargs):
 
 
 
-def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **kwargs):
+def crosstalk(p=0.5,
+        source1_var=0.2, source1_dim=3,
+        source2_var=15, source2_dim=3,
+        shared_var=0.1, shared_dim=5,
+        extra_noise=0, **kwargs):
     """Makes a 2 source network (z1 and z2) with shared information
 
     Params
@@ -143,31 +147,23 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **k
 
     nshared     - The number of
     """
-    if not source1:
-        source1 = {
-                "var":0.2,
-                "dim":3
-                }
-    if not source2:
-        source2 = {
-                "var":15,
-                "dim":3
-                }
-    if not shared:
-        shared = {
-                "var":0.1,
-                "dim":5
-                }
-    total_dim = source1["dim"] + source2["dim"] + shared["dim"]
+    total_dim = source1_dim + source2_dim + shared_dim
 
 
     # Normal gaussians for the sources, almost touching, z2 var >> z1 var
-    z1 = Normal(loc=lambda y: 1 + y, scale=source1["var"])
-    z2 = Normal(loc=lambda y: 30*(1 + y), scale=source2["var"])
+    z1 = Normal(loc=lambda y: 1 + y, scale=source1_var)
+    z2 = Normal(loc=lambda y: 30*(1 + y), scale=source2_var)
     sources = NodeLayer("Sources", [z1, z2])
 
-    move_to_1 = list(range(source1["dim"] + source2["dim"], source1["dim"] + source2["dim"] + shared["dim"]/2))
-    move_to_1.extend(list(range(source1["dim"] + source2["dim"] + shared["dim"], source1["dim"] + source2["dim"] + shared["dim"] + extra_noise/2)))
+    move_to_1 = list(
+            range(
+                source1_dim + source2_dim,
+                int(source1_dim + source2_dim + shared_dim/2)
+                ))
+    move_to_1.extend(list(
+        range(
+            source1_dim + source2_dim + shared_dim,
+            int(source1_dim + source2_dim + shared_dim + extra_noise/2))))
 
     return Network("Crosstalk",
             Bernoulli(p),
@@ -176,15 +172,15 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **k
                 NodeLayer("Absolute Value",  lambda z: np.abs(z)),
                 NodeLayer("Stuff",
                     [
-                        ShellVector(source1["dim"], radii=lambda z: z[0]),
-                        XorVector(source2["dim"], make_even=lambda z: z[1] > 50),
-                        ShellVector(shared["dim"], radii=lambda z: z[0]*z[1])
+                        ShellVector(source1_dim, radii=lambda z: z[0]),
+                        XorVector(source2_dim, make_even=lambda z: z[1] > 50),
+                        ShellVector(shared_dim, radii=lambda z: z[0]*z[1])
                     ]),
-                NormalNoise(var=shared["var"]),
+                NormalNoise(var=shared_var),
                 PlaneFlip(dim=total_dim),
                 ExtraNoiseNodes(extra_noise),
                 Shuffle(to_idx=0, from_indices=move_to_1)
-            ], split_indices=source1["dim"] + shared["dim"]/2 + extra_noise/2)
+            ], split_indices=int(source1_dim + shared_dim/2 + extra_noise/2))
 
 
 def validate(**kwargs):

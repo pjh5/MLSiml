@@ -169,6 +169,20 @@ def to_flat_np_array(arr):
                 )).ravel()
 
 
+def dict_prefix(prefix, dictionary):
+    """Returns a copy of dictionary with every key prefixed by prefix"""
+    if not prefix:
+        return dictionary.copy()
+    return {"{!s}_{!s}".format(prefix, k):v for k, v in dictionary.items()}
+
+def truish(obj):
+    return ((is_iterable(obj) and len(obj) > 0)
+            or (not is_iterable(obj) and bool(obj))) and str(obj) != ""
+
+def filter_truish(dictionary):
+    return {k:v for k, v in dictionary.items() if truish(v)}
+
+
 def is_iterable(obj):
     return isinstance(obj, Iterable)
 

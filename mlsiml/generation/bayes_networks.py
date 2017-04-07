@@ -8,12 +8,8 @@ different vector to the next layer.
 import logging
 import numpy as np
 
-from sklearn.model_selection import train_test_split
-
-from mlsiml.generation.dataset import Dataset
-from mlsiml.utils import flatten
-from mlsiml.utils import to_flat_np_array
-from mlsiml.utils import make_iterable
+from mlsiml.generation.dataset import MultiSourceDataset
+from mlsiml.utils import flatten, make_iterable, to_flat_np_array
 
 
 class Node:
@@ -197,15 +193,19 @@ class Network:
             if not isinstance(layer, NodeLayer) and False:
                 raise Exception(
                     "Layer {!s} '{!s}' is not a NodeLayer but a {!s}".format(
-                                                    i+1, layer, type(layer)))
+                        i+1, layer, type(layer))
+                    )
 
             # Propogate the result and make the results dimensions agree
             result = layer.transform(*result)
             self.dims.append(len(result[1]))
-            logging.debug("Layer {!s}: {!s}D ({!s} from {!s})".format(
-                                        i+1, len(result[1]), result[1], layer))
-        logging.debug("Final dimensions are {}\n".format(
-                                                "-".join(map(str, self.dims))))
+            logging.debug(
+                    "Layer {!s}: {!s}D ({!s} from {!s})".format(
+                        i+1, len(result[1]), result[1], layer)
+                    )
+        logging.debug(
+                "Final dims are {}\n".format("-".join(map(str, self.dims)))
+                )
 
 
     def _sample_once(self):
@@ -247,14 +247,17 @@ class Network:
             try:
                 y[i], X[i,:] = self._sample_once()
             except ValueError:
-                raise Exception(("Network output '{!s}' has to be a tuple of " +
-                        "arrays of dimensions ({!s}, {!s})").format(
-                                            self.sample(), 1, self.dims[-1]))
+                raise Exception(
+                        (
+                            "Network output '{!s}' has to be a tuple of "
+                            + "arrays of dimensions ({!s}, {!s})"
+                        ).format(self.sample(), 1, self.dims[-1])
+                        )
 
         # Split data into train and test sets, then into sources
-        return Dataset(
-                *train_test_split(X, y, test_size=test_size)
-                ).split(self.split_indices)
+        return MultiSourceDataset.from_unsplit(
+                X, y, test_size, self.split_indices
+                )
 
 
     def pretty_string(self):
@@ -275,7 +278,8 @@ class Network:
 
 
     def __str__(self):
-        return ("<{} Network [{}]>".format(
-                            self.desc, "-".join(map(str, self.dims))))
+        return "<{} Network [{}]>".format(
+                self.desc, "-".join(map(str, self.dims))
+                )
 
 
