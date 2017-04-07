@@ -12,7 +12,7 @@ from mlsiml.integration.common import Concatenate
 
 
 # Turn on logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Number of sources
 NUMBER_OF_SOURCES = 2
