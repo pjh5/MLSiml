@@ -160,7 +160,9 @@ class Workflow(WorkflowIterableBase, BaseEstimator):
     def __str__(self):
         return "{} {!s} -> {!s}".format(
                 self.desc,
-                " -> ".join(["[{!s}]".format(step) for step in self.steps]),
+                " -> ".join(
+                    ["[{!s}]".format(step.short_str()) for step in self.steps]
+                    ),
                 self.classifier
                 )
 
@@ -190,6 +192,10 @@ class RawWorkflowStep(BaseEstimator, metaclass=ABCMeta):
 
     def get_cv_params(self):
         return {}
+
+    @abstractmethod
+    def short_str(self):
+        pass
 
 class WorkflowStep(WorkflowIterableBase, RawWorkflowStep):
     """A collection of transformations to transform a multisource-dataset with
@@ -232,6 +238,15 @@ class WorkflowStep(WorkflowIterableBase, RawWorkflowStep):
     def num_output_sources(self, num_input_sources):
         return num_input_sources
 
+    def short_str(self):
+
+        # Not iterable, leave out the workflow-step part
+        if len(self.transformers) == 1:
+            return self.transformers[0].short_str()
+
+        # Concatenate all of the steps together
+        return " || ".join(t.short_str() for t in self.transformers)
+
 
 ##############################################################################
 # SourceTransform, wrapper around sklearn transformers to handle sources
@@ -251,11 +266,15 @@ class RawSourceTransform(BaseEstimator, metaclass=ABCMeta):
     def get_cv_params(self):
         return {}
 
+    @abstractmethod
+    def short_str(self):
+        pass
+
 
 class SourceTransform(RawSourceTransform):
     """Wrapper around a sklearn.transformations for MultiSourceDatasets"""
 
-    def __init__(self, transform_base):
+    def __init__(self, transform_base, interesting_args=None):
         """Wraps transform_base in a object that can handle MultiSourceDatasets
 
         Params
@@ -264,7 +283,17 @@ class SourceTransform(RawSourceTransform):
             subclasses MatrixTransformation (the same interface).
         """
         self.transform_base = transform_base
+        self.interesting_args = interesting_args
         self.real_name = self.transform_base.__class__.__name__
+
+        # Print args are cached arguments to use while printing
+        if interesting_args is None:
+            self.print_args = self.transform_base.get_params()
+        else:
+            self.print_args = filter_truish({
+                arg:self.transform_base.get_params().get(arg, None)
+                for arg in self.interesting_args
+                })
 
     def fit(self, source):
         """Fits the wrapped transform to the given dataset source
@@ -284,7 +313,10 @@ class SourceTransform(RawSourceTransform):
 
     def clone(self):
         """Returns a safe deep copy of this transformer object"""
-        return SourceTransform(clone(self.transform_base, safe=True))
+        return SourceTransform(
+                clone(self.transform_base, safe=True),
+                interesting_args=self.interesting_args
+                )
 
 
     def get_params(self, deep=True):
@@ -300,10 +332,21 @@ class SourceTransform(RawSourceTransform):
                     )
         return {}
 
-    def __str__(self):
-        return "Wrapped({})".format(
-                re.sub(r"\s+", " ", str(self.transform_base))
+    def short_str(self):
+        return "{!s}({})".format(
+                self.real_name,
+                ", ".join(
+                    "{!s}={!s}".format(k, v) for k, v in self.print_args.items()
+                    )
                 )
+
+    def __str__(self):
+        return self.short_str()
+        """ # Full param version not being used
+        return "{!s}".format(
+                re.sub("\s+", " ", self.transform_base.__str__())
+                )
+        """
 
 
 ##############################################################################
@@ -321,6 +364,9 @@ class SourceClassifier(SourceTransform):
     object that conforms to the same interface)
     """
 
+    def __init__(self, base_classifier, interesting_args=None):
+        super().__init__(base_classifier, interesting_args=interesting_args)
+
     def predict(self, source):
         """Uses the fitted model to predict sources.X_test
 
@@ -337,11 +383,14 @@ class SourceClassifier(SourceTransform):
     def transform(self, source):
         return self.predict(source)
 
+    def short_str(self):
+        return super().short_str()
+
 class CVSourceClassifier(SourceClassifier):
     """SourceClassifier for GridSearchCVs for better parameter naming"""
 
-    def __init__(self, classifier):
-        super().__init__(classifier)
+    def __init__(self, classifier, interesting_args=None):
+        super().__init__(classifier, interesting_args=interesting_args)
         self.real_name = classifier.estimator.__class__.__name__
 
     def get_params(self, deep=True):

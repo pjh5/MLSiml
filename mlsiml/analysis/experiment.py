@@ -89,7 +89,7 @@ class Experiment():
             network = self.network_class(**network_setting)
             network_setting["test_size"] = self.test_size
 
-            logging.info(
+            print(
                 "\n"
                 + "==========================================================="
                 + "\nBuilding Network With Parameters:\n"
@@ -102,11 +102,10 @@ class Experiment():
 
             # For every sample size
             for sample_size in self.sample_sizes:
-                logging.info(
-                        "Sample {!s} points with {!s}/{!s} train-test split".format(
-                            sample_size, 1 - self.test_size, self.test_size
-                            )
-                        )
+                print("Sample {!s} points with {!s}/{!s} train-test split".format(
+                    sample_size, 1 - self.test_size, self.test_size
+                    )
+                    )
 
                 network_setting["sample_size"] = sample_size
                 sources = network.sample(sample_size, self.test_size)
@@ -173,7 +172,7 @@ class ExperimentResults:
         self.new_records.append(rec_with_acc)
 
         # Verbose output
-        logging.debug("\t{:8.3f}\t{!s}".format(accuracy, workflow))
+        print("\t{:8.3f}\t{!s}".format(accuracy, workflow))
 
         # Cross-Validation data
         # For GridSearchCV classifiers, there's a lot of data hidden in

@@ -1,3 +1,5 @@
+
+from functools import wraps
 import logging
 
 from sklearn import svm
@@ -11,10 +13,26 @@ from sklearn.model_selection import GridSearchCV
 from mlsiml.classification.workflow import SourceClassifier, CVSourceClassifier
 
 
+# Decorator to set which parameters are "interesting" for marking which ones to
+# print out
+def set_interesting_arguments(*interests):
+
+    def decorator(func):
+
+        @wraps(func)
+        def new_func(*orig_args, **orig_kwargs):
+            return func(
+                    *orig_args, interesting_args=interests, **orig_kwargs
+                    )
+        return new_func
+    return decorator
+
+
 ##############################################################################
 # Classifier Constructors                                                    #
 ##############################################################################
 
+@set_interesting_arguments("penalty", "solver")
 def for_logistic_regression(**kwargs):
     """ Logistic Regression (aka logit, MaxEnt) classifier.
 
@@ -39,9 +57,10 @@ def for_logistic_regression(**kwargs):
         same scale. You can preprocess the data with a scaler from
         sklearn.preprocessing.
     """
-    return _make_classifier(LogisticRegression, **kwargs)
+    return wrap_classifier(LogisticRegression, **kwargs)
 
-def for_knn(n_neighbors=5, **kwargs):
+@set_interesting_arguments("n_neighbors", "metric", "p")
+def for_knn(**kwargs):
     """Classifier implementing the k-nearest neighbors vote.
 
     Parameters
@@ -74,9 +93,9 @@ def for_knn(n_neighbors=5, **kwargs):
     metric_params : dict, optional (default = None)
         Additional keyword arguments for the metric function.
     """
-    kwargs["n_neighbors"] = n_neighbors
-    return _make_classifier(KNeighborsClassifier, **kwargs)
+    return wrap_classifier(KNeighborsClassifier, **kwargs)
 
+@set_interesting_arguments("loss", "penalty", "dual")
 def for_linear_svm(**kwargs):
     """Linear Support Vector Classification.
 
@@ -99,9 +118,10 @@ def for_linear_svm(**kwargs):
     max_iter : int, (default=1000)
         The maximum number of iterations to be run.
     """
-    return _make_classifier(svm.LinearSVC, **kwargs)
+    return wrap_classifier(svm.LinearSVC, **kwargs)
 
-def for_svm(kernel="rbf", **kwargs):
+@set_interesting_arguments("kernel", "C", "gamma")
+def for_svm(**kwargs):
     """C-Support Vector Classification.
     The implementation is based on libsvm. The fit time complexity is more than
     quadratic with the number of samples which makes it hard to scale to
@@ -140,11 +160,10 @@ def for_svm(kernel="rbf", **kwargs):
     tol : float, optional (default=1e-3)
         Tolerance for stopping criterion.
     """
-    kwargs["kernel"] = kernel
-    return _make_classifier(svm.SVC, **kwargs)
+    return wrap_classifier(svm.SVC, **kwargs)
 
-def for_random_forest(n_estimators=10, criterion="gini", max_features="sqrt",
-        **kwargs):
+@set_interesting_arguments("n_estimators", "criterion", "max_features")
+def for_random_forest(**kwargs):
     """Random Forest Classifier.
 
     Parameters
@@ -154,11 +173,9 @@ def for_random_forest(n_estimators=10, criterion="gini", max_features="sqrt",
     max_features : The number of features to consider when looking for the best
                     split.  default is sqrt(n_features)
     """
-    kwargs['n_estimators'] = n_estimators
-    kwargs['criterion'] = criterion
-    kwargs['max_features'] = max_features
-    return _make_classifier(RandomForestClassifier, **kwargs)
+    return wrap_classifier(RandomForestClassifier, **kwargs)
 
+@set_interesting_arguments("priors")
 def for_gaussian_nb(**kwargs):
     """Gaussian Naive Bayes.
 
@@ -167,7 +184,7 @@ def for_gaussian_nb(**kwargs):
     priors : Prior probabilities of the classes. If specified the priors are
     not adjusted according to the data.
     """
-    return _make_classifier(GaussianNB, **kwargs)
+    return wrap_classifier(GaussianNB, **kwargs)
 
 
 
@@ -175,34 +192,44 @@ def for_gaussian_nb(**kwargs):
 # Classifier constructor
 ##############################################################################
 
-def _make_classifier(base_classifier, *, search_params=None, **kwargs):
-    """Wraps the base_classifier into a SourceClassifier, which can handle
-    MultiSourceDataset objects
+def wrap_classifier(
+        classifier_class, interesting_args=None, search_params=None, **kwargs
+        ):
+    """Wraps the classifier into an object that can handle Dataset sources
+
+    Parmams
+    =======
+    classifier_class    - The class object of the classifier to make, which
+        must be capable of creating new instances of that class. E.g.,
+        sklearn.svm.SVC (NOT sklearn.svm.svc(), but sklearn.svm.svc withOUT the
+        parenthesis.
+    interesting_args    - The set of params that will be printed only
+        short/sparse string methods are called. If None (default), then all
+        params will always be printed.
     """
 
     # If no search params, make the classifier with kwargs
     if not search_params:
-        base_classifier = base_classifier(**kwargs)
-        return SourceClassifier(base_classifier)
-
-    # If there are search params, we have to wrap the base_classifier in a
-    # GridSearchCV
-    else:
-
-        # Now there are search_params, so we must make a GridSearchCV for them
-        # Extract parameters of the cv function itself
-        cv_kwargs = {}
-        for kw in ['scoring', 'fit_params', 'n_jobs', 'pre_dispatch', 'cv']:
-            if kw in kwargs:
-                cv_kwargs[kw] = kwargs[kw]
-                kwargs.pop(kw)
-
-        # Base classifier is now a grid search over the params
-        base_classifier = GridSearchCV(
-                base_classifier(**kwargs), search_params, **cv_kwargs
+        return SourceClassifier(
+                classifier_class(**kwargs), interesting_args=interesting_args
                 )
-        return CVSourceClassifier(base_classifier)
 
-    return SourceClassifier(base_classifier)
+    # If there are search params, we have to wrap the classifier in a
+    # GridSearchCV
+
+    # Extract parameters of the cv function itself
+    cv_kwargs = {}
+    for kw in ['scoring', 'fit_params', 'n_jobs', 'pre_dispatch', 'cv']:
+        if kw in kwargs:
+            cv_kwargs[kw] = kwargs[kw]
+            kwargs.pop(kw)
+
+    # Base classifier is now a grid search over the params
+    return CVSourceClassifier(
+            GridSearchCV(
+                classifier_class(**kwargs), search_params, **cv_kwargs
+                ),
+            interesting_args=interesting_args
+            )
 
 

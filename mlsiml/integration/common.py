@@ -19,6 +19,9 @@ class Concatenate(RawWorkflowStep):
         """This will lead to only 1 source being left"""
         return 1
 
+    def short_str(self):
+        return "Concatenate"
+
     def __str__(self):
         return "Concatenate"
 

@@ -28,9 +28,8 @@ class MetricLearn(SourceTransform):
                 source.X_train[sample_axies,], source.Y_train[sample_axies,]
                 )
 
-
 def PCA(n_components=None, **kwargs):
     kwargs["n_components"] = n_components
-    return SourceTransform(sklearn_pca(**kwargs))
+    return SourceTransform(sklearn_pca(**kwargs), interesting_args=["n_components"])
 
 
