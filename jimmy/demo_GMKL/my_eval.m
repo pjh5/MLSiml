@@ -26,7 +26,8 @@ cv_indices = crossvalind('Kfold', n, num_exps);
     end
 % times: number of trials
 % number of training points, and number of test points
-for i = 1: num_exps
+% for i = 1: num_exps
+for i = 1: 1
     [train_ind, cv_ind] = cv_split(i);
     xapp = X(train_ind,:);
     xtest = X(cv_ind,:);
@@ -60,24 +61,24 @@ for i = 1: num_exps
     
     %     % %     %% Level of L12
     % %     %------------------------------------------------------------------
-    disp('----------    Level L12 --------')
-    [Sigma,w,bsvm,posw,fval,history] = feval(algo2,K,yapp,C,options,verbose); 
-    timeCost(i,3)=history.timecost;
-    % test
-    Kt=mklkernel(xtest,InfoKernel,Weight,options,xapp(posw,:),Sigma);
-    ypred=Kt*w+bsvm;
-    disp('weight used for combination is ')
-    Sigma = Sigma
-
-    bc(i,3)=mean(sign(ypred)==ytest)*100
-    selKer(i,3) = length(find(Sigma>options.numericalprecision));
-    
-    % the number of evaluations
-    nbeval(i,3) = length(history.obj_t); 
+%     disp('----------    Level L12 --------')
+%     [Sigma,w,bsvm,posw,fval,history] = feval(algo2,K,yapp,C,options,verbose); 
+%     timeCost(i,3)=history.timecost;
+%     % test
+%     Kt=mklkernel(xtest,InfoKernel,Weight,options,xapp(posw,:),Sigma);
+%     ypred=Kt*w+bsvm;
+%     disp('weight used for combination is ')
+%     Sigma = Sigma
+% 
+%     bc(i,3)=mean(sign(ypred)==ytest)*100
+%     selKer(i,3) = length(find(Sigma>options.numericalprecision));
+%     
+%     % the number of evaluations
+%     nbeval(i,3) = length(history.obj_t); 
      
 end
-nbalgo = 3;
-
+nbalgo = 2;
+nbiter = 1;
 if (nbiter==1)
     t = timeCost
     stdt = zeros(1, nbalgo);
@@ -99,7 +100,7 @@ else
 end
 
 %% 
-nbalgo = 3;
+nbalgo = 2;
 nbMessure = 4;
 temVec = zeros(nbMessure,2*nbalgo);
 

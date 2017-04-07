@@ -55,18 +55,23 @@ addpath('/Users/Zhe/Downloads/mosek/8/toolbox/r2014a')
 % addpath('G:\project\toolbox\simplemkl');
 
 algo = 'my_eval'
+mydir = '/tmp/simple_xor/test_set'
+all_files = dir(strcat(mydir, '/*.mat'));
 
-load /tmp/simple_xor/simple_or_dim5_ext0_size3000.mat
+for file_ind = 1: length(all_files)
+    f = all_files(file_ind);
+    load(strcat(mydir,'/' , f.name))
+    file_name = f.name
+    data_option.X = X;
+    y_encode = y * 2 - 1;
+    data_option.y = y_encode';
+    % data_option.train_raio = 0.8; test should be performed in a higher level
+    data_option.kernel_type = {'gaussian', 'gaussian'};
+    data_option.kernel_param = {2.^[-3:6], 2.^[-3:6]};
+    data_option.indices = {1: separator(1), separator(1) + 1: separator(2)};
+    data_option.cv = 3
 
-data_option.X = X;
-y_encode = y * 2 - 1;
-data_option.y = y_encode';
-% data_option.train_raio = 0.8; test should be performed in a higher level
-data_option.kernel_type = {'gaussian', 'gaussian'};
-data_option.kernel_param = {2.^[-3:6], 2.^[-3:6]};
-data_option.indices = {1: separator(1), separator(1) + 1: separator(2)};
-data_option.cv = 3
-
-mklRes{1}  = feval(algo,data_option, options); % 
+    mklRes{1}  = feval(algo,data_option, options); % 
+end
 
 
