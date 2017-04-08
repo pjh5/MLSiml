@@ -5,6 +5,7 @@ from itertools import product as iter_product
 import os
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler 
 
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.utils import flatten
@@ -82,6 +83,7 @@ class Experiment:
             for sample_size in self.sample_sizes:
                 setting["sample_size"] = sample_size
                 X, y = network.bulk_sample(sample_size)
+                X = StandardScaler().fit_transform(X)
                 datasplit = train_test_split(X, y, test_size=self.test_size)
 
                 # Verbose output
