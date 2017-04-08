@@ -1,10 +1,6 @@
-import logging
 import numpy as np
 
-from sklearn.metrics import accuracy_score
-
 from sklearn import svm
-from sklearn.base import ClassifierMixin, clone
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
@@ -12,7 +8,6 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from sklearn.model_selection import GridSearchCV
 
-from mlsiml.classification.workflow import WorkflowStep
 from mlsiml.utils import flatten
 
 
@@ -148,6 +143,16 @@ def for_svm(kernel="rbf", **kwargs):
     kwargs["kernel"] = kernel
     return _make_classifier(svm.SVC, "SVM", **kwargs)
 
+def for_gaussian_nb(**kwargs):
+    """Gaussian Naive Bayes.
+
+    Parameters
+    ----------
+    priors : Prior probabilities of the classes. If specified the priors are
+    not adjusted according to the data.
+    """
+    return _make_classifier(GaussianNB, "Gaussian Naive Bayes", **kwargs)
+
 def for_random_forest(n_estimators=10, criterion="gini", max_features="sqrt",
         **kwargs):
     """Random Forest Classifier.
@@ -164,69 +169,103 @@ def for_random_forest(n_estimators=10, criterion="gini", max_features="sqrt",
     kwargs['max_features'] = max_features
     return _make_classifier(RandomForestClassifier, "Random Forest", **kwargs)
 
-def for_gaussian_nb(**kwargs):
-    """Gaussian Naive Bayes.
-
-    Parameters
-    ----------
-    priors : Prior probabilities of the classes. If specified the priors are
-    not adjusted according to the data.
-    """
-    return _make_classifier(GaussianNB, "Gaussian Naive Bayes", **kwargs)
-
 
 
 ##############################################################################
 # Classifier Object Definitions                                              #
 ##############################################################################
 
-class Classifier(WorkflowStep):
 
-    def fit(self, sources):
-        """Default behavior is to fit a different classifier on every source"""
+class Classifier:
+    """Wrapper class for sklearn classifiers to expose evaluate_on()
 
-        # Only 1 source, use the 1 classifier
-        if len(sources) == 1:
-            self.workflow.fit(sources[0].X_train, sources[0].Y_train)
+    Written just so that a single evaluate_on(X, X_test, Y, Y_test) method can
+    be applied to all classification algorithms. This class unifies the
+    interface for sklearn, although classifier specific parameters still need
+    to be passed into the constructors for each algorithms.
 
-        # Multiple sources, train a different classifier for each source
-        else:
-            logging.info("Automatically converting classifier {!s} to {!s}"
-                    + "different classifiers.".format(self, len(sources)))
+    Docstrings of all classifier constructs are copied from the corresponding
+    sklearn docs and then edited to only be relevant to binary classification.
+    """
 
-            self.repeat_classifiers = [clone(self.workflow, safe=True)
-                                                    for _ in range(len(sources))]
+    def __init__(self, base_classifier, desc, **kwargs):
+        """Creates a Classifier wrapper around base_classifier
 
-            # Fit a separate classifier on each source
-            for classifier, source in zip(self.repeat_classifiers, sources):
-                classifier.fit(source.X_train, source.Y_train)
-        return self
+        Params
+        ======
+        base_classifier - An instance of a sklearn.classifier (or another
+            objects that conforms to the same interface, such as a
+            sklearn.GridSearchCV or a custom class).
+        desc    - A useful human readable string to describe this classifier.
+            NOTE that this string will appear in outputted CSVs as one of the
+            columns
+        kwargs  - All of the parameters passed into this classifier. These are
+            used for auditing purposes, to include in csv output and identify
+            the classifier.
+        """
+        self.base_classifier = base_classifier
+        self.desc = desc
+        self._params = kwargs
+        self.preprocessors = []
 
-    def transform(self, sources):
+    def with_preprocessing(self, transform):
+        self.preprocessors.append(transform)
+        return self # return self for pipelining
 
-        # Only 1 source, just predict
-        if len(sources) == 1:
-            return sources[0].transform_with(self.workflow.transform)
+    def evaluate_on(self, X, X_test, Y, Y_test):
 
-        # Multiple sources, there should be a different classifier for each
-        else:
-            return [source.transform_with(classifier.transform)
-                    for classifier, source in zip(self.repeat_classifiers, sources)]
+        # Preprocess the data
+        for preprocess in self.preprocessors:
+            preprocess.fit(X, Y)
+            X, X_test, Y, Y_test = preprocess.process(X, X_test, Y, Y_test)
 
-    def predict(self, sources):
+        # Fit and test the classifier on the datasplit
+        self.base_classifier.fit(X, Y)
+        y_hat = self.base_classifier.predict(X_test)
+        accuracy = classification_accuracy(Y_test, y_hat)
 
-        # Only 1 source, just predict
-        if len(sources) == 1:
-            return self.workflow.predict(sources[0].X_test)
+        # Save record of this evaluation
+        self.last_evaluation_record = self.get_params(deep=True).copy()
+        self.last_evaluation_record['accuracy'] = accuracy
 
-        # Multiple sources, there should be a different classifier for each
-        else:
-            return [classifier.predict(source.X_test)
-                    for classifier, source in zip(self.repeat_classifiers, sources)]
+        # Return just the accuracy
+        return accuracy
+
+    def record_for_last_fit(self):
+        """The last_evaluation_record is a saving of all parameters, along with
+        the accuracy, of a evluation run
+        """
+        self.last_evaluation_record
+
+    def get_params(self, deep=False, original=False):
+        params = self._params.copy()
+
+        if not original:
+            params['classifier_desc'] = self.desc
+
+        # Include preprocesssing params if needed
+        if deep:
+            for preprocessor in self.preprocessors:
+                params.update(preprocessor.get_params(mangled=True))
+
+        return params
+
+    def __str__(self):
+        params = self.get_params(original=True)
+        pres = self.preprocessors
+        return "{} {!s} {!s}".format(self.desc,
+                                     params if params else "",
+                                     pres if pres else "")
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class CVGridSearchClassifier(Classifier):
 
-    def __init__(self, desc, base_classifier, search_params, **kwargs):
+    def __init__(self, base_classifier, search_params, desc, **kwargs):
+        self._search_params = search_params
+        self.full_record = None
 
         # Extract parameters of the cv function itself
         self.cv_kwargs = {}
@@ -240,22 +279,22 @@ class CVGridSearchClassifier(Classifier):
                 base_classifier(**kwargs), search_params, **self.cv_kwargs)
 
         # Now init like normal with the GridSearchCV classifier
-        super().__init__(desc, grid_classifier)
+        super().__init__(grid_classifier, desc, **kwargs)
 
 
-    def _evaluate_on(self, X, X_test, Y, Y_test):
+    def evaluate_on(self, X, X_test, Y, Y_test):
         accuracy = super().evaluate_on(X, X_test, Y, Y_test)
 
         # Update the last record
         # Save the final parameters here since they were only determined after
         # "fit" has been called on this classifier
-        for kw, val in self.workflow.best_params_.items():
+        for kw, val in self.base_classifier.best_params_.items():
             self.last_evaluation_record[kw] = val
 
         # Update the full record
         #######################################################################
         self.full_record = []
-        cv_results = self.workflow.cv_results_
+        cv_results = self.base_classifier.cv_results_
 
         # Extract parameters that were changed
         cv_params = [p[6:] for p in cv_results.keys() if p.startswith('param_')]
@@ -275,13 +314,43 @@ class CVGridSearchClassifier(Classifier):
 
         return accuracy
 
+    def get_params(self, **kwargs):
+        params = super().get_params(**kwargs)
+
+        # Add CV search params, which aren't included in the base get_params()
+        for kw, val in self._search_params.items():
+
+            # If this classifier has been fit, then parameters have been chosen
+            if self.full_record:
+                params[kw] = self.base_classifier.best_params_[kw]
+
+            # Otherwise, the values are still unspecified
+            else:
+                params[kw] = "UNSPECIFIED"
+
+        return params
+
+    def __str__(self):
+        return "{} {!s}".format(super().__str__(),
+                self.cv_kwargs if self.cv_kwargs else "")
+
+
+##############################################################################
+# Public Helper Functions                                                    #
+##############################################################################
+
+def classification_accuracy(y_true, y_hat):
+    return 1 - np.sum(np.abs(y_true - y_hat)) / float(y_true.shape[0])
+
+
 ##############################################################################
 # Helper Functions                                                           #
 ##############################################################################
 
 def _make_classifier(base_classifier, desc, search_params=None, **kwargs):
     if search_params:
-        return CVGridSearchClassifier(desc, base_classifier, search_params, **kwargs)
-
-    return Classifier(desc, base_classifier(**kwargs))
+        return CVGridSearchClassifier(
+                        base_classifier, search_params, desc, **kwargs)
+    # No search params
+    return Classifier(base_classifier(**kwargs), desc, **kwargs)
 

@@ -1,27 +1,24 @@
 from mlsiml.generation.bayes_networks import NodeLayer
 from mlsiml.generation.bayes_networks import Network
 
-from mlsiml.generation.stats_functions import Bernoulli
-from mlsiml.generation.stats_functions import Exponential as Exp
 from mlsiml.generation.stats_functions import Normal
-from mlsiml.generation.stats_functions import Uniform
+from mlsiml.generation.stats_functions import Exponential as Exp
+from mlsiml.generation.stats_functions import Bernoulli
 
 from mlsiml.generation.noise_functions import NormalNoise
 from mlsiml.generation.noise_functions import CorruptionLayer
 from mlsiml.generation.noise_functions import ExtraNoiseNodes
 
-from mlsiml.generation.geometric_functions import XorVector
-from mlsiml.generation.geometric_functions import ShellVector
-from mlsiml.generation.geometric_functions import Trig
+from mlsiml.generation.geometric_functions import XOR
+from mlsiml.generation.geometric_functions import Shells
 
 from mlsiml.generation.transformations import PlaneFlip
-from mlsiml.generation.transformations import Shuffle
 from mlsiml.utils import Identity
 
 import numpy as np
 
 
-def exponential(p=0.5, extra_noise=0, **kwargs):
+def exponential(p=0.5, extra_noise=0):
     """Two normal 2D clusters (one per class), then fed into Exp
 
     Difficulty of problem determined by distance between the normal clusters.
@@ -39,7 +36,8 @@ def exponential(p=0.5, extra_noise=0, **kwargs):
 
     # Extra layer to make sure parameters are > 0 for the next layer
     # Note that this has to be np.maximum and not np.max
-    abs_layer = NodeLayer("AbsValue", lambda z: np.maximum(z, 1.1))
+    abs_layer = NodeLayer.from_function_array("AbsValue",
+                                                lambda z: np.maximum(z, 1.1))
 
     # x, outputs
     # 4 total outputs, two for each source
@@ -59,10 +57,10 @@ def exponential(p=0.5, extra_noise=0, **kwargs):
                 abs_layer,
                 x_layer,
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ])
 
 
-def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0, **kwargs):
+def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0):
     """Normal(scale*Exponential(Bernoulli()), var)
 
     Difficulty controlled by scale; smaller is harder. This is still pretty
@@ -78,11 +76,11 @@ def exp_norm(p=0.5, dim=2, scale=5, var=0.3, extra_noise=0, **kwargs):
                 z_layer,
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ])
 
 
-def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0, **kwargs):
-    """XorVector(dim) + NormalNoise(var)
+def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0):
+    """XOR(dim) + NormalNoise(var)
 
     Very difficult for dimensions > 9ish, even for SVMs. The default variance
     is usually adequate, and corresponds to almost touching clusters. When
@@ -93,10 +91,10 @@ def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0, **kwargs)
     return Network("XOR",
             Bernoulli(p),
             [
-                NodeLayer("XOR", XorVector(dim, scale=xor_scale, base=xor_base)),
+                NodeLayer("XOR", XOR(dim, scale=xor_scale, base=xor_base)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ])
 
 
 def corrupted_xor(p=0.5,
@@ -109,27 +107,27 @@ def corrupted_xor(p=0.5,
     return Network("Corrupted XOR",
             Bernoulli(p),
             [
-                CorruptionLayer(corruptions),
-                NodeLayer.from_repeated("XOR", XorVector(len(corruptions) * xor_dim)),
+                CorruptionLayer(corruption_levels=corruptions),
+                NodeLayer.from_repeated("XOR", XOR(len(corruptions) * xor_dim)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ])
 
 
-def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0, **kwargs):
+def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0):
     return Network("Simple Shells",
             Bernoulli(p),
             [
-                NodeLayer("Shells", ShellVector(dim)),
+                NodeLayer("Shells", Shells(dim)),
                 NormalNoise(var=var),
                 [PlaneFlip(dim=dim) for _ in range(flips)],
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ])
 
 
 
 
-def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **kwargs):
+def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0):
     """Makes a 2 source network (z1 and z2) with shared information
 
     Params
@@ -146,12 +144,12 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **k
     if not source1:
         source1 = {
                 "var":0.2,
-                "dim":3
+                "dim":0
                 }
     if not source2:
         source2 = {
                 "var":15,
-                "dim":3
+                "dim":5
                 }
     if not shared:
         shared = {
@@ -166,9 +164,6 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **k
     z2 = Normal(loc=lambda y: 30*(1 + y), scale=source2["var"])
     sources = NodeLayer("Sources", [z1, z2])
 
-    move_to_1 = list(range(source1["dim"] + source2["dim"], source1["dim"] + source2["dim"] + shared["dim"]/2))
-    move_to_1.extend(list(range(source1["dim"] + source2["dim"] + shared["dim"], source1["dim"] + source2["dim"] + shared["dim"] + extra_noise/2)))
-
     return Network("Crosstalk",
             Bernoulli(p),
             [
@@ -176,42 +171,12 @@ def crosstalk(p=0.5, source1=None, source2=None, shared=None, extra_noise=0, **k
                 NodeLayer("Absolute Value",  lambda z: np.abs(z)),
                 NodeLayer("Stuff",
                     [
-                        ShellVector(source1["dim"], radii=lambda z: z[0]),
-                        XorVector(source2["dim"], make_even=lambda z: z[1] > 50),
-                        ShellVector(shared["dim"], radii=lambda z: z[0]*z[1])
+                        Shells(source1["dim"], radii=lambda z: z[0]),
+                        XOR(source2["dim"], make_even=lambda z: z[1] > 50),
+                        Shells(shared["dim"], radii=lambda z: z[0]*z[1])
                     ]),
                 NormalNoise(var=shared["var"]),
                 PlaneFlip(dim=total_dim),
-                ExtraNoiseNodes(extra_noise),
-                Shuffle(to_idx=0, from_indices=move_to_1)
-            ], split_indices=source1["dim"] + shared["dim"]/2 + extra_noise/2)
-
-
-def validate(**kwargs):
-    return Network("Debug Network",
-            Bernoulli(0.5),
-            [
-                NodeLayer("Normal", [
-                    Normal(loc=Identity(), scale=0.2),
-                    Uniform(),
-                    Exp(beta=5)
-                    ]),
-                NodeLayer("Sine", Trig.sine())
-            ], **kwargs)
-
-def temp(**kwargs):
-    return Network("Debug Network",
-            Bernoulli(0.5),
-            [
-                NodeLayer("Uniform", [
-                    Uniform(),
-                    Uniform(),
-                    Uniform()
-                    ]),
-                NodeLayer("Sine", [
-                    lambda z: z[0],
-                    lambda z: z[1],
-                    Trig.sine()
-                    ])
-            ], **kwargs)
+                ExtraNoiseNodes(extra_noise)
+            ])
 

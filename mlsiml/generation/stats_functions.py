@@ -19,7 +19,6 @@ any parameter that the sklearn.stats distribution does, and any parameter can
 be specified either as a value (e.g. 4) or as a lambda that will be fed the
 output from the previous layer (e.g. lambda z: z+1)
 """
-import logging
 import numpy as np
 from scipy import stats
 
@@ -65,7 +64,7 @@ class Distribution(Node):
             self.str_args.pop("loc")
         if "scale" in self.str_args:
             self.str_args.pop("scale")
-        self.str_args = {k:nice_str(v) for k,v in self.str_args.items()},
+        self.str_args = {k:nice_str(v) for k,v in self.str_args.items()}
 
     def sample(self):
         return self.base.rvs(**self._params)
@@ -101,9 +100,9 @@ def Normal(**kwargs):
 
 def Exponential(**kwargs):
     # Allow more common terminology lambda or beta
-    if "lamb" in kwargs and "beta" in kwargs:
+    if "lambda" in kwargs and "beta" in kwargs:
         raise Exception("Only one of lambda or beta can be specified")
-    replace_key(kwargs, "lamb", "scale")
+    replace_key(kwargs, "lambda", "scale")
     if "beta" in kwargs:
         kwargs["scale"] = 1 / kwargs["beta"]
         kwargs.pop("beta")
@@ -115,12 +114,6 @@ def Exponential(**kwargs):
 
 def Bernoulli(p):
     return Distribution(stats.bernoulli, "Bernoulli(" + str(p) + ")", p=p)
-
-def Uniform(low=0, high=1, **kwargs):
-    replace_key(kwargs, "low", "loc")
-    replace_key(kwargs, "high", "scale")
-    return Distribution(stats.uniform, "Uniform({!s}, {!s})".format(low, high),
-            **kwargs)
 
 def _readable(thing):
     return isinstance(thing, Identity) or not callable(thing)

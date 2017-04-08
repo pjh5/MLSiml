@@ -1,10 +1,14 @@
 import numpy as np
-
-from mlsiml.classification.workflow import WorkflowStep
 from mlsiml.utils import make_callable
 
 
-class ClassFlipper(WorkflowStep):
+class Transformation():
+
+    def transform(self, y, z):
+        pass
+
+
+class ClassFlipper(Transformation):
 
     def __init__(self, flip_predicate):
         self.flip_predicate = flip_predicate
@@ -32,7 +36,6 @@ class PlaneFlip(ClassFlipper):
         return "Plane flip at {!s}".format(self.plane)
 
 
-
 class Identity():
     """A wrapper around lambda z: z with a nicer string representation"""
 
@@ -41,43 +44,4 @@ class Identity():
 
     def __str__(self):
         return "z->z"
-
-class Shuffle():
-
-    def __init__(self, to_idx, from_indices):
-        self.to_idx = to_idx
-        self.from_indices = from_indices
-
-
-    def transform(self, y, array):
-        """
-        from_indices: list 
-        to_idx: integer
-        array: numpy array
-
-        moves the elements in from indices 
-        """
-        from_list = []
-        for i in self.from_indices:
-            from_list.append(array[i])
-        from_array = np.array(from_list)
-    
-        new_array = np.insert(array,self.to_idx,from_array, axis=0)
-
-        self.from_indices.sort(reverse=True)
-        for i in self.from_indices:
-            if i < self.to_idx:
-                new_array = np.delete(new_array, i, axis=0)
-            else:
-                new_array = np.delete(new_array, i+len(self.from_indices), axis=0)
-        return y, new_array
-
-
-
-
-
-
-
-
-
 

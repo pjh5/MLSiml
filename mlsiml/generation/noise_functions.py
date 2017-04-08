@@ -38,7 +38,27 @@ class BinaryCorruption(Node):
         flip = self.bern()
         return (1 - flip) * z + flip * (1 - z)
 
-class CorruptionLayer(NodeLayer):
+
+# class CorruptionLayer(NodeLayer):
+#     """Returns a NodeLayer of binary corruptions
+
+#     Either p or corruption_levels must be defined, but not both. If p is given,
+#     then every node will have the same chance of corruption. If
+#     corruption_levels is given, then there will be one node for every
+#     corruption percentage given in corruption_levels.
+#     """
+
+#     def __init__(self, corruption_levels):
+#         super().__init__("{!s} Corruption".format(corruption_levels),
+#                     [BinaryCorruption(level) for level in corruption_levels])
+
+#     @classmethod
+#     def from_constant(cls, p):
+#         return NodeLayer.from_repeated("{:.0%} Corruption".format(p),
+#                                                             BinaryCorruption(p))
+
+
+def CorruptionLayer(p=None, corruption_levels=None):
     """Returns a NodeLayer of binary corruptions
 
     Either p or corruption_levels must be defined, but not both. If p is given,
@@ -47,14 +67,20 @@ class CorruptionLayer(NodeLayer):
     corruption percentage given in corruption_levels.
     """
 
-    def __init__(self, corruption_levels):
-        super().__init__("{!s} Corruption".format(corruption_levels),
-                    [BinaryCorruption(level) for level in corruption_levels])
+    # Exactly 1 of p or corruption_levels must be defined
+    if not p and not corruption_levels:
+        Error("Either p or corruption_levels must be specified.")
+    if p and corruption_levels:
+        Error("p and corruption_levels cannot both be specified.")
 
-    @classmethod
-    def from_constant(cls, p):
-        return NodeLayer.from_repeated("{:.0%} Corruption".format(p),
-                                                            BinaryCorruption(p))
+    # Given a p, repeat the binary corruption node
+    if p:
+        return NodeLayer.from_repeated("{:.1%} Corruption".format(p),
+                                                        BinaryCorruption(p))
+
+    # Given an array of corruption percentages, make a separate node for each
+    return NodeLayer(str(corruption_levels) + " Corruption",
+                    [BinaryCorruption(level) for level in corruption_levels])
 
 
 class ExtraNoiseNodes(NodeLayer):
@@ -83,8 +109,8 @@ class ExtraNoiseNodes(NodeLayer):
 
         # Default noise is normals with random mean and variances
         if not noise_nodes:
-            noise_nodes = [Normal(loc=20*np.random.randn(),
-                                  scale=20*np.random.rand())
+            noise_nodes = [Normal(loc=0,
+                                  scale=0.2)
                             for i in range(dim)]
         self.nodes = noise_nodes
 

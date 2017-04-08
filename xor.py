@@ -6,10 +6,12 @@ from mlsiml.generation.bayes_networks import NodeLayer
 from mlsiml.generation.bayes_networks import Network
 from mlsiml.generation.noise_functions import NormalNoise
 from mlsiml.generation.noise_functions import ExtraNoiseNodes
-from mlsiml.generation.geometric_functions import Shells
+from mlsiml.generation.geometric_functions import XOR
+from mlsiml.generation.noise_functions import BinaryCorruption
 
 
 # Classifiers
+
 classifiers = [
             Classifier.for_knn(search_params={
                 'n_neighbors':[1, 2, 10]
@@ -19,33 +21,36 @@ classifiers = [
                 'C':[0.1, 1, 10],
                 'gamma':[0.01, 0.1, 1],
                 }),
-            Classifier.for_gaussian_nb()
             ]
 
 
 # Network Parameters
-def shell_network(real_dims=0, noise_dims=0):
-    return Network("Shells",
+def xor_network(first_dims=0, second_dims=0, corruption=0,noise_dims=0):
+    return Network("XOR",
             Bernoulli(0.5),
             [
-                NodeLayer("Shells", Shells(real_dims)),
+                NodeLayer("XOR", XOR(first_dims)),
+                NodeLayer.from_repeated("XOR", XOR(second_dims)),
+                NodeLayer("Corruption", BinaryCorruption(corruption)),
                 NormalNoise(var=0.2),
                 ExtraNoiseNodes(noise_dims)
             ])
-network = shell_network
+network = xor_network
 network_params = {
-         "real_dims":[3, 5, 7, 9],
-        "noise_dims":[0, 2, 4, 8]
+        "first_dims":[2],
+        "second_dims": [3, 5, 7],
+        "corruption": [0.0],
+        "noise_dims":[2,4,6,8,10,12,14,20,28]
         }
 
 
 # Experiment Parameters
-sample_sizes = [20000]
-test_size = 0.3
+sample_sizes = [5000]
+test_size = 0.3333333333
 
 
 # Log file
-logfile = "shell_experiment"
+logfile = "double_xor_base_noise_dim"
 
 
 # Make experiment

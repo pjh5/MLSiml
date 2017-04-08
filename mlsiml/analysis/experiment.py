@@ -2,123 +2,100 @@
 import csv
 from datetime import datetime
 from itertools import product as iter_product
-import logging
 import os
 from pandas import DataFrame
+from sklearn.model_selection import train_test_split
 
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.utils import flatten
 from mlsiml.utils import make_iterable
+
+DEFAULT_CLASSIFIERS = [
+            Classifier.for_logistic_regression(),
+            Classifier.for_knn(search_params={
+                'n_neighbors':[1, 2, 10]
+                }),
+            Classifier.for_random_forest(search_params={
+                'n_estimators':[10, 100]
+                }),
+            Classifier.for_svm(kernel='rbf', search_params={
+                'C':[0.1, 1, 10],
+                'gamma':[0.01, 0.1, 1],
+                }),
+            Classifier.for_gaussian_nb()
+            ]
+
+# Default run only uses one sample size
+DEFAULT_EXPERIMENT_PARAMS = {
+        "sample_sizes":5000,
+        "test_size":0.3
+        }
 
 
 ##############################################################################
 # Experiment Class Definition                                                #
 ##############################################################################
 
-class Experiment():
-    """An experiment is a lot of workflows tested on a lot of networks.
-
-    An experiment is defined by:
-        A network to make data with
-        A set of parameters to make the network with
-        A list of workflows to evaluate on the data
-        A list of sample sizes to repeat the experiment with
-    """
+class Experiment:
 
 
     def __init__(self,
-            network_class=None,
-            network_params_dict=None,
-            workflows=None,
-            sample_sizes=None,
-            test_size=0.3
-            ):
-        """Prepares an experiment which can then be run with "experiment.run()"
-
-        Params
-        NOTE, none of these are actually optional. You must specify all of them
-        ======
-        network_class   - The class of a BayesNetwork. This is the CLASS not
-            the instance, so calling network_class()
-            should create a new instance of the network with the given
-            parameters
-
-        network_params_dict - A dictionary of parameter options to make
-            networks with. This isn't just keyword:value arguments, but can
-            (should) also include keyword:[values to try]. E.g. if "dimension"
-            is a key in network_params_dict with value [3, 5, 7] then this
-            experiment will run over networks with dimensions of 3, 5, and 7.
-            Specifically, a new network will be created for every possible
-            combination of parameters in this dictionary (the cartesian product
-            of all values of this dictionary).
-
-        workflows   - Array-like of Workflow instances. For every network that
-            is created in this experiment, all of these workflows will be
-            evaluated on it.
-
-        sample_sizes    - Array-like of sample sizes to repeat this experiment
-            over. This has to be array-like, so wrap single values in lists
-            e.g. sample_sizes=[5000] instead of sample_sizes=5000
-
-        test_size   - (Optional) The proportion of the data (given in
-            sample_sizes) to use for testing data
-        """
-
-        # Parameters aren't actually optional
-        if not network_class or not network_params_dict or not workflows or not sample_sizes:
-            raise Exception("Parameters to Experiment are not optional. All must be specified")
+            network_class,
+            network_params_dict,
+            sample_sizes=5000,
+            test_size=0.3,
+            classifiers=None):
 
         self.network_class = network_class
         self.network_params_dict = network_params_dict
-        self.workflows = workflows
         self.sample_sizes = make_iterable(sample_sizes)
         self.test_size = test_size
+
+        # Default classifiers
+        if not classifiers:
+            classifiers = DEFAULT_CLASSIFIERS
+        self.classifiers = classifiers
 
         # Collect all possible keywords for logging purposes
         self.all_possible_keywords = sorted(list(set(
                 ['accuracy', 'CV_mean_accuracy'] +
                 ['sample_size', 'test_size'] +
-                list(self.network_params_dict.keys()) +
-                flatten([list(w.get_params(deep=True, mangled=True).keys())
-                    for w in self.workflows])
+                list(self.network_params_dict) +
+                flatten([list(c.get_params(deep=True)) for c in self.classifiers])
                 )))
 
 
-    def run(self, logfile=None):
-        """Runs this experiment, writing outputs to logfile.
-        This may take a very long time and use lots of CPU
-        """
+    def run(self, logfile=None, verbosity=0):
 
         # Save all results in a massive list of dictionaries
         # Keys are network parameter dictionaries e.g. {num_z:4}
-        # Values are result dictionaries {workflow:evalution_result}
-        all_results = ExperimentResults(self.all_possible_keywords, logfile=logfile)
+        # Values are result dictionaries {classifier:evalution_result}
+        all_results = ExperimentResults(self.all_possible_keywords,
+                                        logfile=logfile, verbosity=verbosity)
 
         # For every network parameter
-        for network_setting in _all_possible_settings(self.network_params_dict):
-            network = self.network_class(**network_setting)
-            network_setting["test_size"] = self.test_size
-
-            logging.info(
-                "\n"
-                + "==========================================================="
-                + "\nBuilding Network With Parameters:\n"
-                + "\n".join(["\t{:>20} : {!s}".format(k, v) for k, v in network_setting.items()])
-                + "\n")
+        for setting in _all_possible_settings(self.network_params_dict):
+            network = self.network_class(**setting)
+            setting["test_size"] = self.test_size
 
             # For every sample size
             for sample_size in self.sample_sizes:
-                logging.info(
-                        "Sample {!s} points with {!s}/{!s} train-test split".format(
-                            sample_size, 1 - self.test_size, self.test_size))
+                setting["sample_size"] = sample_size
+                X, y = network.bulk_sample(sample_size)
+                datasplit = train_test_split(X, y, test_size=self.test_size)
 
-                network_setting["sample_size"] = sample_size
-                sources = network.sample(sample_size, self.test_size)
+                # Verbose output
+                if verbosity >= 0:
+                    print("\n" + "="*79)
+                    print("BUILDING NETWORK WITH PARAMETERS:")
+                    for kw,val in setting.items():
+                        print("\t{:>20} : {!s}".format(kw, val))
+                    print()
 
-                # For every workflows
-                for workflow in self.workflows:
-                    accuracy = workflow.evaluate_on(sources)
-                    all_results.add_record_for(accuracy, network_setting, workflow)
+                # For every classifiers
+                for classifier in self.classifiers:
+                    accuracy = classifier.evaluate_on(*datasplit)
+                    all_results.add_record_for(setting, classifier)
 
         return all_results
 
@@ -130,9 +107,9 @@ class Experiment():
 
 class ExperimentResults:
 
-    def __init__(self, column_names, logfile=None):
-        """Prepares the logfile by writing a header row to it"""
+    def __init__(self, column_names, logfile=None, verbosity=0):
         self.records = []
+        self.verbosity = verbosity
         self.logfile = logfile
 
         # Default logfile is just experiment_date
@@ -144,12 +121,10 @@ class ExperimentResults:
         # Find a place to put the log, making sure never to overwrite a
         # previous log by adding [1] or [2] etc to the file name
         if os.path.isfile(self.logfile + ".csv"):
-            logging.info("Experiment logfile {} already exists".format(logfile + ".csv"))
             run = 1
             while os.path.isfile("{}({!s}).csv".format(self.logfile, run)):
                 run += 1
             self.logfile = "{}({!s}).csv".format(self.logfile, run)
-            logging.info("Writing experiment results to {}.csv instead".format(self.logfile))
         else:
             self.logfile = self.logfile + ".csv"
 
@@ -164,22 +139,24 @@ class ExperimentResults:
             logfile = csv.writer(csvfile)
             logfile.writerow(self.column_names)
 
-    def add_record_for(self, accuracy, network_settings_dict, workflow):
+    def add_record_for(self, settings_dict, classifier):
 
-        # Always append the workflow's last evaluation record
-        record = _make_record(accuracy, network_settings_dict, workflow.get_params())
+        # Always append the classifier's last evaluation record
+        record = _make_record(settings_dict, classifier.last_evaluation_record)
         self.records.append(record)
         self.log(record)
 
         # Verbose output
-        logging.debug("\t{:8.3f}\t{!s}".format(accuracy, workflow))
+        if self.verbosity >= 0:
+            print("\t{:8.3f}\t{!s}".format(
+                    classifier.last_evaluation_record['accuracy'], classifier))
 
         # CV Grid Search full record
-        # If the workflow went through a CV grid search, add those results
+        # If the classifier went through a CV grid search, add those results
         # too
-        if hasattr(workflow.classifier, 'full_record'):
-            for cvr in workflow.full_record:
-                record = _make_record(network_settings_dict, cvr)
+        if hasattr(classifier, 'full_record'):
+            for cvr in classifier.full_record:
+                record = _make_record(settings_dict, cvr)
                 self.records.append(record)
                 self.log(record)
 
@@ -191,7 +168,7 @@ class ExperimentResults:
         # Build up row, using "" when a parameter is not found
         row = [record[kw] if kw in record else "" for kw in self.column_names]
 
-        # Assume that network_settings will be the same every time
+        # Assume that settings will be the same every time
         with open(self.logfile, 'a') as csvfile:
             logfile = csv.writer(csvfile)
             logfile.writerow(row)
@@ -201,18 +178,18 @@ class ExperimentResults:
 ##############################################################################
 
 
-def _make_record(accuracy, network_dict, workflow_dict):
-    record = {"network_"+k : v for k, v in network_dict.items()}
+def _make_record(network_dict, classifier_dict):
+    record = network_dict.copy()
 
     # Merge dictionaries
-    for k,v in workflow_dict.items():
+    for k,v in classifier_dict.items():
 
         # Make sure that we don't overwrite a setting
         # TODO better error checking? Maybe just prepend 'network' to all
         # network settings?
         if k in record:
-            raise Exception(
-                'Workflow setting {} already in network settings {}'.format(
+            raise Error(
+                'Classifier setting {} already in network settings {}'.format(
                                                                     k, record))
         record[k] = v
 
