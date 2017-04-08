@@ -256,6 +256,10 @@ def replace_keys(**replacement_dict):
         def new_func(*orig_args, **orig_kwargs):
             """The decorated function with keys in kwargs substituted out"""
 
+            # Process transformations that require other kwargs last
+            values_with_transforms = []
+
+            # Loop through replacements
             for old_key, new_key in replacement_dict.items():
 
                 # Replace the key in orig_kwargs if its in our replacement dict
@@ -266,16 +270,22 @@ def replace_keys(**replacement_dict):
                     # trans_func) where trans_func is fed (old_key_value,
                     # all_other_kwargs)
                     if isinstance(new_key, tuple):
-                        orig_kwargs[new_key[0]] = (
-                                new_key[1](orig_kwargs[old_key], **orig_kwargs)
-                                )
+                        values_with_transforms.append((old_key, new_key))
 
                     else:
                         orig_kwargs[new_key] = orig_kwargs[old_key]
 
-                    # Remove the old key to avoid eventual exceptions
-                    # (unexpected keyword parameter)
-                    orig_kwargs.pop(old_key)
+            # Process values with transformations
+            for old_key, new_and_transf in values_with_transforms:
+                new_key, transform = new_and_transf
+                orig_kwargs[new_key] = transform(
+                        orig_kwargs[old_key], **orig_kwargs
+                        )
+
+            # Remove the old keys to avoid eventual exceptions
+            # (unexpected keyword parameter)
+            for old_key in replacement_dict.keys():
+                orig_kwargs.pop(old_key)
 
             return func(*orig_args, **orig_kwargs)
         return new_func
