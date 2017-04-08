@@ -96,7 +96,8 @@ def xor(p=0.5, dim=3, var=0.2, xor_scale=1, xor_base=0, extra_noise=0, **kwargs)
                 NodeLayer("XOR", XorVector(dim, scale=xor_scale, base=xor_base)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ],
+            split_indices=dim//2)
 
 
 def corrupted_xor(p=0.5,
@@ -113,7 +114,9 @@ def corrupted_xor(p=0.5,
                 NodeLayer.from_repeated("XOR", XorVector(len(corruptions) * xor_dim)),
                 NormalNoise(var=var),
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ],
+            split_indices=xor_dim * len(corruptions)//2
+            )
 
 
 def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0, **kwargs):
@@ -124,7 +127,9 @@ def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0, **kwargs):
                 NormalNoise(var=var),
                 [PlaneFlip(dim=dim) for _ in range(flips)],
                 ExtraNoiseNodes(extra_noise)
-            ], **kwargs)
+            ],
+            split_indices=dim//2
+            )
 
 
 
@@ -155,6 +160,7 @@ def crosstalk(p=0.5,
     z2 = Normal(loc=lambda y: 30*(1 + y), scale=source2_var)
     sources = NodeLayer("Sources", [z1, z2])
 
+    # Reposition "shared" and extra_noise dimensions among the 2 sources
     move_to_1 = list(
             range(
                 source1_dim + source2_dim,
@@ -193,21 +199,32 @@ def validate(**kwargs):
                     Exp(beta=5)
                     ]),
                 NodeLayer("Sine", Trig.sine())
-            ], **kwargs)
+            ], split_indices=1)
 
-def temp(**kwargs):
+def temp(xmin=0, xmax=10, ymin=0, ymax=10):
     return Network("Debug Network",
             Bernoulli(0.5),
             [
                 NodeLayer("Uniform", [
-                    Uniform(),
-                    Uniform(),
-                    Uniform()
+                    Uniform(low=xmin, high=xmax),
+                    Uniform(low=ymin, high=ymax),
+                    lambda z: z + 1
                     ]),
                 NodeLayer("Sine", [
                     lambda z: z[0],
                     lambda z: z[1],
-                    Trig.sine()
+                    Trig.sine(
+                        z_transform=lambda z: z[0] + z[2]
+                        ),
+                    Trig.sine(
+                        z_transform=lambda z: z[1] + z[2]
+                    )
+                    ]),
+                NodeLayer("Prod", [
+                    lambda z: z[0],
+                    lambda z: z[1],
+                    lambda z: z[2] * z[3]
                     ])
-            ], **kwargs)
+            ],
+            split_indices=1)
 

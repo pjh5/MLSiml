@@ -24,10 +24,7 @@ import numpy as np
 from scipy import stats
 
 from mlsiml.generation.bayes_networks import Node
-from mlsiml.utils import Identity
-from mlsiml.utils import make_callable
-from mlsiml.utils import nice_str
-from mlsiml.utils import replace_key
+from mlsiml.utils import Identity, make_callable, nice_str, replace_keys
 
 
 class Distribution(Node):
@@ -84,11 +81,8 @@ class Distribution(Node):
         return self.desc + (str(self.str_args) if self.str_args else "")
 
 
+@replace_keys(mean="loc", var="scale", variance="scale")
 def Normal(**kwargs):
-    # Allow more common terminology "mean" and "var"
-    replace_key(kwargs, "mean", "loc")
-    replace_key(kwargs, "var", "scale")
-    replace_key(kwargs, "variance", "scale")
 
     # Build a nice desc string Normal(mean, var)
     loc = kwargs.get("loc", 0)
@@ -99,14 +93,8 @@ def Normal(**kwargs):
 
     return Distribution(stats.norm, desc, **kwargs)
 
+@replace_keys(lamb="scale", lambd="scale", beta=("scale", lambda x: 1/x))
 def Exponential(**kwargs):
-    # Allow more common terminology lambda or beta
-    if "lamb" in kwargs and "beta" in kwargs:
-        raise Exception("Only one of lambda or beta can be specified")
-    replace_key(kwargs, "lamb", "scale")
-    if "beta" in kwargs:
-        kwargs["scale"] = 1 / kwargs["beta"]
-        kwargs.pop("beta")
 
     # Build a nice desc string Exp(lambda)
     scale = kwargs.get("scale", 1)
@@ -116,11 +104,11 @@ def Exponential(**kwargs):
 def Bernoulli(p):
     return Distribution(stats.bernoulli, "Bernoulli(" + str(p) + ")", p=p)
 
+@replace_keys(low="loc", high=("scale", lambda z, **kv: z - kv["loc"]))
 def Uniform(low=0, high=1, **kwargs):
-    replace_key(kwargs, "low", "loc")
-    replace_key(kwargs, "high", "scale")
-    return Distribution(stats.uniform, "Uniform({!s}, {!s})".format(low, high),
-            **kwargs)
+    return Distribution(
+            stats.uniform, "Uniform({!s}, {!s})".format(low, high), **kwargs
+            )
 
 def _readable(thing):
     return isinstance(thing, Identity) or not callable(thing)

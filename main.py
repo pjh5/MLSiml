@@ -1,19 +1,15 @@
 import logging
 import sys
 
-from sklearn.decomposition import PCA
 
 from mlsiml.classification import classifiers
-from mlsiml.classification.workflow import Workflow, SourceTransform
+from mlsiml.classification.preprocessing import PCA
+from mlsiml.classification.workflow import Workflow
 from mlsiml.integration.common import Concatenate
 
 from mlsiml.generation import example_networks
 from mlsiml.analysis import analysis
 from mlsiml.utils import parse_to_args_and_kwargs
-
-
-# Turn on logging
-logging.basicConfig(level=logging.DEBUG)
 
 # Number of sources
 NUMBER_OF_SOURCES = 2
@@ -35,30 +31,30 @@ workflows = [
         ),
 
     Workflow("PCA + Logistic Regression", NUMBER_OF_SOURCES,
-        [Concatenate(), SourceTransform(PCA())],
+        [Concatenate(), PCA()],
         classifiers.for_logistic_regression()
         ),
     Workflow("PCA + Naive Bayes", NUMBER_OF_SOURCES,
-        [Concatenate(), SourceTransform(PCA())],
+        [Concatenate(), PCA()],
         classifiers.for_gaussian_nb()
         ),
     Workflow("PCA + KNN", NUMBER_OF_SOURCES,
-        [Concatenate(), SourceTransform(PCA())],
+        [Concatenate(), PCA()],
         classifiers.for_knn(search_params={
             'n_neighbors':[1, 10]
             })
         ),
 
     Workflow("Separate PCA + Logistic Regression", NUMBER_OF_SOURCES,
-        [SourceTransform(PCA()), Concatenate()],
+        [PCA(), Concatenate()],
         classifiers.for_logistic_regression()
         ),
     Workflow("Separate PCA + Naive Bayes", NUMBER_OF_SOURCES,
-        [SourceTransform(PCA()), Concatenate()],
+        [PCA(), Concatenate()],
         classifiers.for_gaussian_nb()
         ),
     Workflow("Separate PCA + KNN", NUMBER_OF_SOURCES,
-        [SourceTransform(PCA()), Concatenate()],
+        [PCA(), Concatenate()],
         classifiers.for_knn(search_params={
             'n_neighbors':[1, 10]
             })

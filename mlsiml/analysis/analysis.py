@@ -87,19 +87,32 @@ def plot_data(X, y):
         plt.show()
         return
 
-    # For at least 3 dimensions, do PCA
-    pca = PCA(n_components=3)
-    pca.fit(X)
-    plot_x = pca.transform(X)
+    # For at least 4 dimensions, do PCA
+    if x_dim >= 4:
+        pca = PCA(n_components=3)
+        pca.fit(X)
+        plot_x = pca.transform(X)
+    else:
+        plot_x = X
 
     # Plot the now 3 dimensional data
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(plot_x[:,0], plot_x[:,1], plot_x[:,2], c=y)
-    ax.set_title("PCA of Generated Data")
-    ax.set_xlabel("1st Principal Component")
-    ax.set_ylabel("2nd Principal Component")
-    ax.set_zlabel("3rd Principal Component")
+
+    # Label plot
+    if x_dim >= 4:
+        ax.set_title("PCA of Generated Data")
+        ax.set_xlabel("1st Principal Component")
+        ax.set_ylabel("2nd Principal Component")
+        ax.set_zlabel("3rd Principal Component")
+    else:
+        ax.set_title("Original Data")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+
+    # Display!
     plt.show()
 
 

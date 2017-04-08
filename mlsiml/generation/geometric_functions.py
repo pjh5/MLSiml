@@ -139,17 +139,19 @@ class Trig(Node):
 
         # Store the sampling function
         # For slightest efficiency, store an uncallable _params if possible
-        if not [True for p in self._params.values() if callable(p)]:
-            self.f_sample = (lambda t,a,s,f,p: lambda z: a * t(f * (z - p)) + s
-                            )(trig, amplitude, shift, frequency, phase_shift)
+        if not any(map(callable, self._params.values())):
+            self.f_sample = (
+                    lambda t,a,s,f,p: lambda z: a * t(f * (z - p)) + s
+                    )(trig, amplitude, shift, frequency, phase_shift)
         else:
-            self.f_sample = (lambda t,a,s,f,p:
-                                lambda z: a(z) * t(f(z) * (z-p(z))) + s(z)
-                             )(trig,
-                               make_callable(amplitude),
-                               make_callable(shift),
-                               make_callable(frequency),
-                               make_callable(phase_shift))
+            self.f_sample = _make_sample_func(
+                    trig,
+                    z_transform,
+                    make_callable(amplitude),
+                    make_callable(shift),
+                    make_callable(frequency),
+                    make_callable(phase_shift)
+                    )
 
     @classmethod
     def sine(cls, **kwargs):
@@ -162,3 +164,11 @@ class Trig(Node):
     @classmethod
     def tangent(cls, **kwargs):
         return cls(np.tan, **kwargs)
+
+
+def _make_sample_func(trig, z_transform, amp, shift, freq, phase_shift):
+    def trig_func(z):
+        z = z_transform(z)
+        return amp(z) * trig(freq(z) * (z - phase_shift(z))) + shift(z)
+    return trig_func
+
