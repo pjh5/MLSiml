@@ -53,12 +53,9 @@ def main(
     net = getattr(example_networks, which_example)(**kwargs)
     sources = net.sample(sample_size)
 
-    # Display network info or data summary
-    logging.info(net.pretty_string())
-
-
     # Summarize data columns
     if summary:
+        print(net.pretty_string())
         analysis.summarize(sources)
 
     # Test on classifier suites

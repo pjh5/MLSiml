@@ -116,6 +116,18 @@ class Trig(Node):
     NOTE remember that z is the entire output of the previous layer, and is
     probably a vector. Thus, if z_transform(z) returns a vector (or if
     z_transform is not set), then this Node will also return a vector.
+
+    You probably don't want to use tangent. It has lots of undefined values and
+    is not well behaved.
+
+    "Amplitude" is fun to play with. It makes things pretty.
+    "Frequency" can usually be left alone. Increasing frequency is equivalent
+        to just increasing the bounds. Classifiers will probably scale all the
+        data to 0,1 anyways so it's probably more intuitive and easy to
+        understand to change bounds rather than the frequency.
+    "Shift" is a good way to separate the two classes
+        - e.g. shift=lambda class_label: desired_margin * class_label
+    "Phase shift" will overlap the classes
     """
 
     def __init__(self, trig, z_transform=None,
@@ -138,9 +150,9 @@ class Trig(Node):
                 "frequency":frequency, "phase_shift":phase_shift}
 
         # Make a nice readable description
-        str_params = [nice_str(t[1])
-                for t in sorted(self._params.items(), key=lambda t: t[0])]
-        self.desc = "{!s} * sin({!s}(z-{!s})) + {!s}".format(*str_params)
+        self.desc = _nice_trig_str(
+                trig, z_transform, amplitude, frequency, phase_shift, shift
+                )
 
         # Store the sampling function
         # For slightest efficiency, store an uncallable _params if possible
@@ -181,3 +193,39 @@ def _make_sample_func(trig, z_transform, amp, shift, freq, phase_shift):
                 ) + shift(z)
     return trig_func
 
+
+def _nice_trig_str(
+            trig, z_transform, amplitude, frequency, phase_shift, shift
+            ):
+    string = ""
+
+    # Only show ampltude if not 1
+    if amplitude != 1:
+        string += nice_str(amplitude) + " * "
+
+    # Always show trig
+    string += trig.__name__ + "("
+
+    # Only show frequency if not 1
+    if frequency != 1:
+        string += nice_str(frequency) + " * "
+
+    # Only show phase shift if not 0
+    if phase_shift != 0:
+        string += "(" + nice_str(phase_shift) + " "
+
+    # Include the actual 'z'
+    string += nice_str(z_transform)
+
+    # Close out the parenthesis for phase_shift
+    if phase_shift != 0:
+        string += ")"
+
+    # Close out parenthesis for trig
+    string += ")"
+
+    # Only show shift if not 0
+    if shift != 0:
+        string += " + " + nice_str(shift)
+
+    return string

@@ -201,13 +201,21 @@ def validate(**kwargs):
                 NodeLayer("Sine", Trig.sine())
             ], split_indices=1)
 
-def trig(xmin=-10, xmax=10, ymin=-10, ymax=10, margin=5, var=0, extra_noise=0):
+def sine(p=.5, scale=10, margin=5, var=0, extra_noise=0):
+    """
+    Total height (max - min) is 2 * ymax * xmax
+    Total "overlap" (if looking along z-plane) is 2 * (ymax*xmax - margin)
+    Soft margin between points is about margin - 2*var
+
+    For a wild time, change the 2nd output dimensions (lambda z: z[1]) to
+    (lambda z: z[2] - z[1])
+    """
     return Network("Debug Network",
-            Bernoulli(0.5),
+            Bernoulli(p),
             [
                 NodeLayer("Uniform", [
-                    Uniform(low=xmin, high=xmax),
-                    Uniform(low=ymin, high=ymax),
+                    Uniform(low=-scale, high=scale),
+                    Uniform(low=-scale, high=scale),
                     lambda z: z + 1
                     ]),
                 NodeLayer("Sine", [
@@ -219,7 +227,101 @@ def trig(xmin=-10, xmax=10, ymin=-10, ymax=10, margin=5, var=0, extra_noise=0):
                         shift=lambda z: margin*z[2]
                         )
                     ]),
-                NormalNoise(var=var),
+                NodeLayer("Vertical Normal Noise", [
+                    lambda z: z[0],
+                    lambda z: z[1],
+                    Normal(mean=lambda z: z[2], var=var)
+                    ]),
+                ExtraNoiseNodes(extra_noise)
+            ],
+            split_indices=1)
+
+def cross_sine(
+        p=.5, xmin=-5, xmax=10, ymin=-5, ymax=10, margin=5, var=0, extra_noise=0
+        ):
+    """
+    Max height (max - 0) is the maximum of "(x*sin(x))^2 + margin". Due to the
+        periodicity of sine, this may not be where x=xmax
+
+    Soft margin between points is about "margin - 2*var"
+        If var=0, then it will be "margin" exactly
+
+    For a wild time, change the 2nd output dimensions (lambda z: z[2]) to
+        (lambda z: z[4] - z[3] + z[2] - z[1]) for what looks like curved
+        stacked mountains
+    """
+    # Until the last layer, dim[0] is kept as the class label
+    return Network("Debug Network",
+            Bernoulli(p),
+            [
+                NodeLayer("Uniform", [
+                    lambda z: z,
+                    Uniform(low=xmin, high=xmax),
+                    Uniform(low=ymin, high=ymax),
+                    ]),
+                NodeLayer("Sine", [
+                    lambda z: z[0],
+                    lambda z: z[1],
+                    lambda z: z[2],
+                    Trig.sine(
+                        z_transform=lambda z: z[1],
+                        amplitude=lambda z: z[1]
+                        ),
+                    Trig.sine(
+                        z_transform=lambda z: z[2],
+                        amplitude=lambda z: z[2]
+                        )
+                    ]),
+                NodeLayer("Vertical Normal Noise", [
+                    lambda z: z[1],
+                    lambda z: z[2],
+                    Normal(mean=lambda z: z[3]*z[4] + margin*z[0], var=var)
+                    ]),
+                ExtraNoiseNodes(extra_noise)
+            ],
+            split_indices=1)
+
+def trig(
+        p=.5, xmin=-5, xmax=10, ymin=-5, ymax=10, margin=5, var=0, extra_noise=0
+        ):
+    """
+    Max height (max - 0) is the maximum of "(x*sin(x))^2 + margin". Due to the
+        periodicity of sine, this may not be where x=xmax
+
+    Soft margin between points is about "margin - 2*var"
+        If var=0, then it will be "margin" exactly
+
+    For a wild time, change the 2nd output dimensions (lambda z: z[2]) to
+        (lambda z: z[4] - z[3] + z[2] - z[1]) for what looks like curved
+        stacked mountains
+    """
+    # Until the last layer, dim[0] is kept as the class label
+    return Network("Debug Network",
+            Bernoulli(p),
+            [
+                NodeLayer("Uniform", [
+                    lambda z: z,
+                    Uniform(low=xmin, high=xmax),
+                    Uniform(low=ymin, high=ymax),
+                    ]),
+                NodeLayer("Sine", [
+                    lambda z: z[0],
+                    lambda z: z[1],
+                    lambda z: z[2],
+                    Trig.sine(
+                        z_transform=lambda z: z[1],
+                        amplitude=lambda z: z[1]
+                        )
+                    * Trig.cosine(
+                        z_transform=lambda z: z[2],
+                        amplitude=lambda z: 2*z[2] - z[1]
+                        )
+                    ]),
+                NodeLayer("Vertical Normal Noise", [
+                    lambda z: z[1],
+                    lambda z: z[2],
+                    Normal(mean=lambda z: z[3] + margin*z[0], var=var)
+                    ]),
                 ExtraNoiseNodes(extra_noise)
             ],
             split_indices=1)

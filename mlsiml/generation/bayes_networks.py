@@ -33,11 +33,57 @@ class Node:
     def _set_index(self, idx):
         self.idx = idx
 
+    def __mul__(self, other):
+        if not isinstance(other, Node):
+            other = Node(make_callable(other), str(other))
+
+        return ProdNode(self, other)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __add__(self, other):
+        if not isinstance(other, Node):
+            other = Node(make_callable(other), str(other))
+
+        return SumNode(self, other)
+
     def __str__(self):
         return "<" + self.desc + " Node>"
 
     def __repr__(self):
         return self.__str__()
+
+
+class ProdNode(Node):
+
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+        super().__init__(
+                self.sample_with, "{!s} * {!s}".format(left.desc, right.desc)
+                )
+
+    def sample_with(self, z):
+        return self.left.sample_with(z) * self.right.sample_with(z)
+
+    def __str__(self):
+        return "{!s} * {!s}".format(self.left, self.right)
+
+class SumNode(Node):
+
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+        super().__init__(
+                self.sample_with, "{!s} + {!s}".format(left.desc, right.desc)
+                )
+
+    def sample_with(self, z):
+        return self.left.sample_with(z) + self.right.sample_with(z)
+
+    def __str__(self):
+        return "{!s} + {!s}".format(self.left, self.right)
 
 
 class NodeLayer:
