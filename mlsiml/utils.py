@@ -285,7 +285,8 @@ def replace_keys(**replacement_dict):
             # Remove the old keys to avoid eventual exceptions
             # (unexpected keyword parameter)
             for old_key in replacement_dict.keys():
-                orig_kwargs.pop(old_key)
+                if old_key in orig_kwargs:
+                    orig_kwargs.pop(old_key)
 
             return func(*orig_args, **orig_kwargs)
         return new_func

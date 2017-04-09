@@ -201,7 +201,7 @@ def validate(**kwargs):
                 NodeLayer("Sine", Trig.sine())
             ], split_indices=1)
 
-def trig(xmin=-10, xmax=10, ymin=-10, ymax=10, margin=5):
+def trig(xmin=-10, xmax=10, ymin=-10, ymax=10, margin=5, var=0, extra_noise=0):
     return Network("Debug Network",
             Bernoulli(0.5),
             [
@@ -218,7 +218,9 @@ def trig(xmin=-10, xmax=10, ymin=-10, ymax=10, margin=5):
                         amplitude=lambda z: z.sum(),
                         shift=lambda z: margin*z[2]
                         )
-                    ])
+                    ]),
+                NormalNoise(var=var),
+                ExtraNoiseNodes(extra_noise)
             ],
             split_indices=1)
 
