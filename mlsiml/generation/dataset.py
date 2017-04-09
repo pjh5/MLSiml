@@ -204,6 +204,13 @@ class Dataset():
                 self.Y_test
                 )
 
+    def as_X_and_Y(self):
+        """Concatenates everything back to just X and Y. Good for plotting"""
+        return (
+                np.vstack([self.X_train, self.X_test]),
+                np.concatenate([self.Y_train, self.Y_test])
+                )
+
     def is_multisource(self):
         """Returns if this object still contains multi-source data"""
         return False

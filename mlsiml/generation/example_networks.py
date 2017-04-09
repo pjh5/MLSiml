@@ -201,31 +201,23 @@ def validate(**kwargs):
                 NodeLayer("Sine", Trig.sine())
             ], split_indices=1)
 
-def temp(xmin=0, xmax=20, ymin=0, ymax=20, sep=10):
+def trig(xmin=-10, xmax=10, ymin=-10, ymax=10, margin=5):
     return Network("Debug Network",
             Bernoulli(0.5),
             [
                 NodeLayer("Uniform", [
                     Uniform(low=xmin, high=xmax),
                     Uniform(low=ymin, high=ymax),
-                    lambda z: z + 2
+                    lambda z: z + 1
                     ]),
                 NodeLayer("Sine", [
                     lambda z: z[0],
                     lambda z: z[1],
                     Trig.sine(
+                        z_transform=lambda z: z[0],
                         amplitude=lambda z: z.sum(),
-                        shift=lambda z: sep*z[2]
-                        ),
-                    Trig.sine(
-                        amplitude=lambda z: z.sum(),
-                        frequency=lambda z: z[2] + 1
-                    )
-                    ]),
-                NodeLayer("Prod", [
-                    lambda z: z[0],
-                    lambda z: z[1],
-                    lambda z: z[2] * z[3]
+                        shift=lambda z: margin*z[2]
+                        )
                     ])
             ],
             split_indices=1)

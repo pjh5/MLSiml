@@ -17,52 +17,29 @@ NUMBER_OF_SOURCES = 2
 # Default workflows to run
 conc = Concatenate()
 workflows = [
-    Workflow("Logistic Regression", NUMBER_OF_SOURCES,
+    Workflow("Random Forest", NUMBER_OF_SOURCES,
         [Concatenate()],
-        classifiers.for_logistic_regression()
-        ),
-    Workflow("Naive Bayes", NUMBER_OF_SOURCES,
-        [Concatenate()],
-        classifiers.for_gaussian_nb()
+        classifiers.for_random_forest(search_params={
+            'n_estimators':[10, 100]
+            })
         ),
     Workflow("KNN", NUMBER_OF_SOURCES,
         [Concatenate()],
         classifiers.for_knn(search_params={'n_neighbors':[1, 10]})
         ),
-
-    Workflow("PCA + Logistic Regression", NUMBER_OF_SOURCES,
-        [Concatenate(), PCA()],
-        classifiers.for_logistic_regression()
-        ),
-    Workflow("PCA + Naive Bayes", NUMBER_OF_SOURCES,
-        [Concatenate(), PCA()],
-        classifiers.for_gaussian_nb()
-        ),
-    Workflow("PCA + KNN", NUMBER_OF_SOURCES,
-        [Concatenate(), PCA()],
-        classifiers.for_knn(search_params={
-            'n_neighbors':[1, 10]
-            })
-        ),
-
-    Workflow("Separate PCA + Logistic Regression", NUMBER_OF_SOURCES,
-        [PCA(), Concatenate()],
-        classifiers.for_logistic_regression()
-        ),
-    Workflow("Separate PCA + Naive Bayes", NUMBER_OF_SOURCES,
-        [PCA(), Concatenate()],
-        classifiers.for_gaussian_nb()
-        ),
-    Workflow("Separate PCA + KNN", NUMBER_OF_SOURCES,
-        [PCA(), Concatenate()],
-        classifiers.for_knn(search_params={
-            'n_neighbors':[1, 10]
-            })
-        )
+    Workflow("RBF SVM", NUMBER_OF_SOURCES,
+            [Concatenate()],
+            classifiers.for_svm(search_params={
+                'gamma':[0.01, 0.1, 1, 10],
+                'C':[0.1, 1, 10, 100]
+                })
+            ),
     ]
 
 
-def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
+def main(
+        which_example, sample_size=5000, plot=False, test=False, summary=False, **kwargs
+        ):
 
     # If verbose, print out the args and kwargs
     logging.info(
@@ -78,6 +55,11 @@ def main(which_example, sample_size=5000, plot=False, test=False, **kwargs):
 
     # Display network info or data summary
     logging.info(net.pretty_string())
+
+
+    # Summarize data columns
+    if summary:
+        analysis.summarize(sources)
 
     # Test on classifier suites
     if test:

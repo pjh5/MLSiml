@@ -4,8 +4,15 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
+def summarize(sources, by_source=False, decimals=4):
+    if not by_source:
+        summarize_source(*sources.as_X_and_Y(), decimals=decimals)
+    else:
+        for i, source in enumerate(sources):
+            print("\n\nSource {!s}\n".format(i))
+            summarize_source(*source.as_X_and_Y(), decimals=decimals)
 
-def summarize(X, y, decimals=4):
+def summarize_source(X, y, decimals=4):
     """Prints summary statistics for every column of X, split into 2 classes
 
     X is the data, y is the class labels, assumed to be 0 or 1. This will also

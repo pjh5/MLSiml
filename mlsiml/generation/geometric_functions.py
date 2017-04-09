@@ -108,9 +108,14 @@ class Trig(Node):
     """N -> N trigonometric transformation of every input
 
     Implements the function:
-        amplitude * trig(frequency * (z_transform(z) - phase_shift)) + shift
-
+        amplitude(z) * trig(
+                        frequency(z) * (z_transform(z) - phase_shift(z))
+                            ) + shift(z)
     where "trig" is one of {np.sine, np.cosine, np.tangent, etc.}
+
+    NOTE remember that z is the entire output of the previous layer, and is
+    probably a vector. Thus, if z_transform(z) returns a vector (or if
+    z_transform is not set), then this Node will also return a vector.
     """
 
     def __init__(self, trig, z_transform=None,
@@ -163,12 +168,16 @@ class Trig(Node):
 
     @classmethod
     def tangent(cls, **kwargs):
+        """Remember that tangent is undefined for many values and very very
+        large for others
+        """
         return cls(np.tan, **kwargs)
 
 
 def _make_sample_func(trig, z_transform, amp, shift, freq, phase_shift):
     def trig_func(z):
-        z = z_transform(z)
-        return amp(z) * trig(freq(z) * (z - phase_shift(z))) + shift(z)
+        return amp(z) * trig(
+                freq(z) * (z_transform(z) - phase_shift(z))
+                ) + shift(z)
     return trig_func
 
