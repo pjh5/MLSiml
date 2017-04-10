@@ -206,7 +206,7 @@ def to_flat_np_array(arr):
 
 def dict_prefix(prefix, dictionary):
     """Returns a copy of dictionary with every key prefixed by prefix"""
-    if not prefix:
+    if len(prefix) == 0:
         return dictionary.copy()
     return {"{!s}_{!s}".format(prefix, k):v for k, v in dictionary.items()}
 

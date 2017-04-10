@@ -7,7 +7,7 @@ import os
 from pandas import DataFrame
 
 from mlsiml.classification import classifiers as Classifier
-from mlsiml.utils import dict_prefix, flatten, make_iterable, truish
+from mlsiml.utils import dict_prefix, filter_truish, flatten, make_iterable
 
 
 ##############################################################################
@@ -112,8 +112,13 @@ class Experiment():
 
                 # For every workflows
                 for workflow in self.workflows:
-                    accuracy = workflow.evaluate_on(sources)
-                    all_results.add_record_for(accuracy, network_setting, workflow)
+                    accuracy, record, cv_params = workflow.evaluate_on(sources)
+                    all_results.add_record_for(
+                            network_setting, record, cv_params
+                            )
+
+                    # Verbose output
+                    print("\t{:8.3f}\t{!s}".format(accuracy, workflow))
 
                 # After every network, write out the log
                 # This is done here because we only know all of the parameters
@@ -159,50 +164,19 @@ class ExperimentResults:
         # Write a header to the csv
         #####################################################################
 
-    def add_record_for(self, accuracy, network_settings_dict, workflow):
+    def add_record_for(self, network_settings_dict, final_params, cv_params):
 
         # Mangle network settings
-        net_work_record = dict_prefix("network", network_settings_dict)
-        net_work_record.update(workflow.get_params(deep=True))
-        net_work_record = {k:v for k, v in net_work_record.items() if truish(v)}
-
-        # Append the "simple" record of accuracy + network/workflow params
-        rec_with_acc = net_work_record.copy()
-        rec_with_acc["accuracy"] = accuracy
-        self.new_records.append(rec_with_acc)
-
-        # Verbose output
-        print("\t{:8.3f}\t{!s}".format(accuracy, workflow))
+        net_flow_record = dict_prefix("network", network_settings_dict)
+        net_flow_record.update(final_params)
+        net_flow_record = filter_truish(net_flow_record)
+        self.new_records.append(net_flow_record)
 
         # Cross-Validation data
-        # For GridSearchCV classifiers, there's a lot of data hidden in
-        # cv_results_. Add all of that data here too.
-        all_cv_params = workflow.get_cv_params()
-        for wf, cv_results in all_cv_params.items():
-
-            # Mangle with which workflow if more than one CV result
-            # TODO in the future only mangle if CV names are the same too
-            prefix = wf if len(all_cv_params) > 1 else None
-
-            # Extract parameters that were changed
-            logging.debug("CV_PARAMS are {!s}".format(cv_results))
-
-            # TODO only keep interesting parameters from cv results
-            # cv_params = [p[6:] for p in cv_results.keys() if p.startswith('param_')]
-
-            # Loop over all cross validation runs, adding a record for each
-            for i in range(len(cv_results['mean_test_score'])):
-
-                # Copy the ith cv_results into a new record
-                record = dict_prefix(
-                        prefix, {k:v[i] for k, v in cv_results.items() if truish(v)}
-                        )
-
-                # Combine the ith cv_results with the net/flow settings
-                record.update(net_work_record)
-
-                # Append the record
-                self.new_records.append(record)
+        for cvr in cv_params:
+            record = net_flow_record.copy()
+            record.update(cvr)
+            self.new_records.append(net_flow_record)
 
 
     def as_dataframe(self):

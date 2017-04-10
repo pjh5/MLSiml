@@ -18,7 +18,8 @@ from mlsiml.utils import dict_prefix, filter_truish, is_iterable
 class WorkflowIterableBase():
     """Base class to Workflow and WorkflowStep to define get_params for them"""
 
-    def __init__(self, iterable):
+    def __init__(self, desc, iterable):
+        self.desc = desc
         self._iterable = iterable
 
         # Mangle all deep params with their index
@@ -47,7 +48,7 @@ class WorkflowIterableBase():
 #   MultiSourceDataset -> y_hat and accuracy_score
 ##############################################################################
 
-class Workflow(WorkflowIterableBase, BaseEstimator):
+class Workflow():
 
     def __init__(self, desc, num_sources, steps, classifier):
         """Makes a new workflow (lowercase)
@@ -103,15 +104,9 @@ class Workflow(WorkflowIterableBase, BaseEstimator):
         # Init succesfully
         ######################################################################
 
-        super().__init__(newsteps + [classifier])
         self.desc = desc
         self.steps = newsteps
         self.classifier = classifier
-
-        logging.debug(
-            "Created workflow:\n{!s}\nwith deep parameters:\n{!s}\n\n".format(
-            self, self.deep_params[True])
-            )
 
     def fit(self, sources):
         """Propogates X and Y through all of the steps, fitting all of them
@@ -154,8 +149,29 @@ class Workflow(WorkflowIterableBase, BaseEstimator):
         y_hat = self.predict(sources)
         accuracy = accuracy_score(sources.Y_test, y_hat, normalize=True)
 
-        # Return just the accuracy
-        return accuracy
+        # Collect all parameters that led to the final accuracy, along with all
+        # parameters for all intermediate results
+        final_params = {}
+        intermediate_params = []
+        for i, step in enumerate(self.steps):
+            prefix = "{}_{!s}".format(re.sub("[^a-zA-Z]+", "", self.desc), i)
+
+            final_params.update(dict_prefix(prefix, step.get_final_params()))
+            intermediate_params += map(
+                    lambda p: dict_prefix(prefix, p),
+                    step.get_intermediate_params()
+                    )
+        final_params.update(dict_prefix(prefix, self.classifier.get_final_params()))
+        intermediate_params += map(
+                lambda p: dict_prefix(re.sub("[^a-zA-Z]+", "", self.desc), p),
+                self.classifier.get_intermediate_params()
+                )
+
+        # Add 'accuracy' to final_params
+        final_params["{}_accuracy".format(re.sub("[^a-zA-Z]+", "", self.desc))] = accuracy
+
+        # All parameters
+        return accuracy, final_params, intermediate_params
 
     def __str__(self):
         return "{} {!s} -> {!s}".format(
@@ -176,7 +192,7 @@ class Workflow(WorkflowIterableBase, BaseEstimator):
 #   MultiSourceDataset -> MultiSourceDataset
 ##############################################################################
 
-class RawWorkflowStep(BaseEstimator, metaclass=ABCMeta):
+class RawWorkflowStep(metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, sources):
@@ -190,14 +206,18 @@ class RawWorkflowStep(BaseEstimator, metaclass=ABCMeta):
     def num_output_sources(self, num_input_sources):
         pass
 
-    def get_cv_params(self):
-        return {}
+    @abstractmethod
+    def get_final_params(self):
+        pass
+
+    def get_intermediate_params(self):
+        return []
 
     @abstractmethod
     def short_str(self):
         pass
 
-class WorkflowStep(WorkflowIterableBase, RawWorkflowStep):
+class WorkflowStep(RawWorkflowStep):
     """A collection of transformations to transform a multisource-dataset with
 
     This is the default implementation. In this default (which should be used
@@ -208,7 +228,6 @@ class WorkflowStep(WorkflowIterableBase, RawWorkflowStep):
     """
 
     def __init__(self, transformers):
-        super().__init__(transformers)
         self.transformers = transformers
 
     @classmethod
@@ -238,6 +257,35 @@ class WorkflowStep(WorkflowIterableBase, RawWorkflowStep):
     def num_output_sources(self, num_input_sources):
         return num_input_sources
 
+    def get_final_params(self):
+
+        # Don't mangle with transform index if there is only one index
+        if len(self.transformers) == 1:
+            return self.transformers[0].get_final_params()
+
+        # Otherwise mangle every parameter with the transformer's index
+        final_params = {}
+        for i, transform in enumerate(self.transformers):
+            final_params.update(dict_prefix(i, transform.get_final_params()))
+
+        return final_params
+
+    def get_intermediate_params(self):
+
+        # Don't mangle with transform index if there is only one index
+        if len(self.transformers) == 1:
+            return self.transformers[0].get_intermediate_params()
+
+        # Otherwise mangle every parameter with the transformer's index
+        records = []
+        for i, transform in enumerate(self.transformers):
+            records += map(
+                    lambda p: dict_prefix(i, p),
+                    transform.get_intermediate_params()
+                    )
+
+        return final_params
+
     def short_str(self):
 
         # Not iterable, leave out the workflow-step part
@@ -250,7 +298,7 @@ class WorkflowStep(WorkflowIterableBase, RawWorkflowStep):
 
 ##############################################################################
 # SourceTransform, wrapper around sklearn transformers to handle sources
-#   .transform(X: np.ndarray) -> .transform(sources: Dataset)
+#   .transform(X: np.ndarray) -> .transform(source: Dataset)
 ##############################################################################
 
 class RawSourceTransform(BaseEstimator, metaclass=ABCMeta):
@@ -319,18 +367,35 @@ class SourceTransform(RawSourceTransform):
                 )
 
 
-    def get_params(self, deep=True):
+    def get_final_params(self):
         """Replace undescriptive "transformer_base" with actual name"""
         return dict_prefix(
-                self.real_name, self.transform_base.get_params(deep=deep)
+                self.real_name, self.transform_base.get_params(deep=True)
                 )
 
-    def get_cv_params(self):
-        if hasattr(self.transform_base, "cv_results_"):
-            return filter_truish(
-                    {self.real_name + "_cv":self.transform_base.cv_results_}
-                    )
-        return {}
+    def get_intermediate_params(self):
+        if not hasattr(self.transform_base, "cv_results_"):
+            return []
+
+        # Filter out timing data and masked numpy arrays
+        cvs = {
+                k:v
+                for k, v in self.transform_base.cv_results_.items()
+                if "time" not in k and "param_" not in k
+                }
+
+        # Change from array of dicts to dict of arrays
+        records = [
+                filter_truish({k:v[i] for k, v in cvs.items()})
+                for i in range(len(cvs["params"]))
+                ]
+
+        # Unwrap "params" into the base dictionary
+        for record in records:
+            record.update(record["params"])
+            record.pop("params")
+
+        return records
 
     def short_str(self):
         return "{!s}({})".format(
@@ -393,8 +458,8 @@ class CVSourceClassifier(SourceClassifier):
         super().__init__(classifier, interesting_args=interesting_args)
         self.real_name = classifier.estimator.__class__.__name__
 
-    def get_params(self, deep=True):
-        params = self.transform_base.estimator.get_params()
+    def get_final_params(self):
+        params = self.transform_base.estimator.get_params(deep=True)
         params = {
                 re.sub(
                     "GridSearchCV_estimator", self.real_name + "_cv", k

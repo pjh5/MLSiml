@@ -201,40 +201,56 @@ def validate(**kwargs):
                 NodeLayer("Sine", Trig.sine())
             ], split_indices=1)
 
-def sine(p=.5, scale=10, margin=5, var=0, extra_noise=0):
+def sine(p=.5, periods=2, margin=1, var=0, extra_noise=0):
     """
-    Total height (max - min) is 2 * ymax * xmax
-    Total "overlap" (if looking along z-plane) is 2 * (ymax*xmax - margin)
+    Samples from (x+y)*sine(x) + var for x,y in pi*[-periods, periods]
+
+    Total height is 2 * pi * periods
     Soft margin between points is about margin - 2*var
+
+    Params
+    ======
+    periods - How many periods to plot. Each additional period adds about one
+        more big swell on each side. The higher the period, the more complex
+        the decision boundary.
+    margin  - The margin to have between the two classes. If var is 0, then
+        this margin will be exact. Otherwise, the actual margin will be about
+        "margin - 2*var". If "margin 2*var > 2 * pi * periods" then the
+        decision boundary will become linear
+    var - The amount of vertical noise. Note how this noise is added only in
+        the direction of the margin (between the two classes).
+    extra_noise - How many additional dimensions of pure noise to add. TODO
+        right now all extra_noise is added to the second source
 
     For a wild time, change the 2nd output dimensions (lambda z: z[1]) to
     (lambda z: z[2] - z[1])
     """
+    scale = periods * np.pi
     return Network("Debug Network",
             Bernoulli(p),
             [
                 NodeLayer("Uniform", [
+                    lambda z: z,
                     Uniform(low=-scale, high=scale),
                     Uniform(low=-scale, high=scale),
-                    lambda z: z + 1
                     ]),
                 NodeLayer("Sine", [
                     lambda z: z[0],
                     lambda z: z[1],
+                    lambda z: z[2],
                     Trig.sine(
-                        z_transform=lambda z: z[0],
-                        amplitude=lambda z: z.sum(),
-                        shift=lambda z: margin*z[2]
+                        z_transform=lambda z: z[1],
+                        amplitude=lambda z: z.sum()
                         )
                     ]),
                 NodeLayer("Vertical Normal Noise", [
-                    lambda z: z[0],
                     lambda z: z[1],
-                    Normal(mean=lambda z: z[2], var=var)
+                    lambda z: z[2],
+                    Normal(mean=lambda z: z[3] + margin*z[0], var=var)
                     ]),
                 ExtraNoiseNodes(extra_noise)
             ],
-            split_indices=1)
+            split_indices=(3 + extra_noise) // 2)
 
 def cross_sine(
         p=.5, xmin=-5, xmax=10, ymin=-5, ymax=10, margin=5, var=0, extra_noise=0
