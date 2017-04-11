@@ -8,7 +8,7 @@ from pandas import DataFrame
 from scipy.io import savemat
 
 from mlsiml.classification import classifiers as Classifier
-from mlsiml.utils import dict_prefix, filter_truish, flatten, make_iterable
+from mlsiml.utils import dict_prefix, filter_truish_str, flatten, make_iterable
 
 
 ##############################################################################
@@ -216,7 +216,7 @@ class ExperimentResults:
         final_record = dict_prefix("network", network_settings_dict)
         for record in final_records_arr:
             final_record.update(record)
-        final_record = filter_truish(final_record)
+        final_record = filter_truish_str(final_record)
 
         # Write a header file if we need one
         # This is done here instead of in __init__ because it is very hard to

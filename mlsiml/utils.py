@@ -141,10 +141,10 @@ def _try_to_cast(arg):
 # Miscellaneous helper functions
 ##############################################################################
 
-def truish(obj):
+def truish_str(obj):
     """Returns if an object evaluates to 'True', handling numpy arrays too"""
     return ((is_iterable(obj) and len(obj) > 0)
-            or (not is_iterable(obj) and bool(obj))) and str(obj) != ""
+            or (not is_iterable(obj) and obj is not None and str(obj) != ""))
 
 def make_callable(obj):
     """Returns a callable version of obj (with any number of parameters)"""
@@ -210,9 +210,9 @@ def dict_prefix(prefix, dictionary):
         return dictionary.copy()
     return {"{!s}_{!s}".format(prefix, k):v for k, v in dictionary.items()}
 
-def filter_truish(dictionary):
-    """Returns dictionary without and keys mapped to non-truish values"""
-    return {k:v for k, v in dictionary.items() if truish(v)}
+def filter_truish_str(dictionary):
+    """Returns dictionary without any keys mapped to non-truish string values"""
+    return {k:v for k, v in dictionary.items() if truish_str(v)}
 
 def replace_keys(**replacement_dict):
     """Decorator (with arguments) to replace some kwarg keywords with others

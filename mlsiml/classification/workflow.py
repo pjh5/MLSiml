@@ -12,7 +12,7 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.metrics import accuracy_score
 
 from mlsiml.generation import dataset
-from mlsiml.utils import dict_prefix, filter_truish, is_iterable
+from mlsiml.utils import dict_prefix, filter_truish_str, is_iterable
 
 
 
@@ -318,7 +318,7 @@ class SourceTransform(RawSourceTransform):
         if interesting_args is None:
             self.print_args = self.transform_base.get_params()
         else:
-            self.print_args = filter_truish({
+            self.print_args = filter_truish_str({
                 arg:self.transform_base.get_params().get(arg, None)
                 for arg in self.interesting_args
                 })
@@ -366,7 +366,7 @@ class SourceTransform(RawSourceTransform):
 
         # Change from array of dicts to dict of arrays
         records = [
-                filter_truish({k:v[i] for k, v in cvs.items()})
+                filter_truish_str({k:v[i] for k, v in cvs.items()})
                 for i in range(len(cvs["params"]))
                 ]
 
