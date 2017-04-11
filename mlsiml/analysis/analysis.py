@@ -102,10 +102,18 @@ def plot_data(X, y):
     else:
         plot_x = X
 
+    # Assumes y is either 1 or 0
+    pos_idxs = np.where(y == 1)[0]
+    neg_idxs = np.where(y == 0)[0]
+
     # Plot the now 3 dimensional data
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(plot_x[:,0], plot_x[:,1], plot_x[:,2], c=y)
+
+    Xs = plot_x[neg_idxs, :]
+    ax.scatter(Xs[:,0], Xs[:,1], Xs[:,2], color='orange')
+    Xs = plot_x[pos_idxs, :]
+    ax.scatter(Xs[:,0], Xs[:,1], Xs[:,2], color='purple')
 
     # Label plot
     if x_dim >= 4:
@@ -113,11 +121,11 @@ def plot_data(X, y):
         ax.set_xlabel("1st Principal Component")
         ax.set_ylabel("2nd Principal Component")
         ax.set_zlabel("3rd Principal Component")
+
     else:
-        ax.set_title("Original Data")
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_zticklabels([])
 
     # Display!
     plt.show()

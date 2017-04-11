@@ -6,9 +6,11 @@ from mlsiml.generation.stats_functions import Exponential as Exp
 from mlsiml.generation.stats_functions import Normal
 from mlsiml.generation.stats_functions import Uniform
 
+from mlsiml.generation.noise_functions import BinaryCorruption
 from mlsiml.generation.noise_functions import NormalNoise
 from mlsiml.generation.noise_functions import CorruptionLayer
 from mlsiml.generation.noise_functions import ExtraNoiseNodes
+from mlsiml.generation.noise_functions import ExtraNoiseNodesDivide
 
 from mlsiml.generation.geometric_functions import XorVector
 from mlsiml.generation.geometric_functions import ShellVector
@@ -113,11 +115,71 @@ def corrupted_xor(p=0.5,
                 CorruptionLayer(corruptions),
                 NodeLayer.from_repeated("XOR", XorVector(len(corruptions) * xor_dim)),
                 NormalNoise(var=var),
-                ExtraNoiseNodes(extra_noise)
+                ExtraNoiseNodesDivide(extra_noise, xor_dim)
             ],
-            split_indices=xor_dim * len(corruptions)//2
+            split_indices=(extra_noise + xor_dim*len(corruptions)) // 2
             )
 
+def xor_sine(*, p=0.5,
+        xor_corruption=0, xor_dim=2, xor_var=0.1,
+        sine_corruption=0, sine_periods=2, sine_margin=1, sine_var=0,
+        extra_noise=0
+        ):
+
+    # Map sine wave periods to real numbers
+    sine_scale = sine_periods * np.pi
+
+    # Corruption layer and x,y
+    # 0: sine class
+    # 1: x
+    # 2: y
+    # 3: xor class
+    corruptions = NodeLayer("Corruptions", [
+                    BinaryCorruption(sine_corruption),
+                    Uniform(low=-sine_scale, high=sine_scale),
+                    Uniform(low=-sine_scale, high=sine_scale),
+                    BinaryCorruption(xor_corruption)
+                    ])
+
+    # XOR and sine
+    #   ==> (source2_0,1, XOR(xor_dim), x, y, (x+y)*sine(x) + var)
+    # 0: sine class
+    # 1: sine x
+    # 2: sine y
+    # 3: (x+y) * sine(x)
+    # 4 - 4+xor_dim: XOR
+    sine_and_xor = NodeLayer("XOR and Sine", [
+        lambda z: z[0],
+        lambda z: z[1],
+        lambda z: z[2],
+        Trig.sine(z_transform=lambda z: z[1], amplitude=lambda z: z[1] + z[2]),
+        XorVector(xor_dim, lambda z: z[3] > 0.5)
+        ])
+
+    # Normal noise
+    # 0: sine x
+    # 1: sine y
+    # 2: (x+y) * sine(x)
+    # 3 - 3+xor_dim: XOR
+    normal_noise = NodeLayer("Normal Noise", [
+        lambda z: z[1],
+        lambda z: z[2],
+        Normal(mean=lambda z: z[3] + sine_margin*z[0], var=sine_var),
+        Normal(mean=lambda z: z[4], var=xor_var),
+        Normal(mean=lambda z: z[5], var=xor_var),
+        Normal(mean=lambda z: z[6], var=xor_var)
+        ])
+
+    return Network("Corrupted XOR",
+            Bernoulli(p),
+            [
+                corruptions,
+                sine_and_xor,
+                normal_noise,
+                ExtraNoiseNodesDivide(extra_noise, 3)
+            ],
+            split_indices=3 + extra_noise
+            )
 
 def shells(p=0.5, dim=3, var=0.2, flips=0, extra_noise=0, **kwargs):
     return Network("Simple Shells",

@@ -94,3 +94,41 @@ class ExtraNoiseNodes(NodeLayer):
     def __str__(self):
         return "{!s} Extra Noise Nodes {!s}".format(self.dim, self.nodes)
 
+
+class ExtraNoiseNodesDivide(NodeLayer):
+    """Layer that adds additional dimensions of Normal noise
+
+    Example Usage:
+    ==============
+    network = Network("Example network", [
+                    some_layer,
+                    ExtraNoiseNodes(4)
+                    ])
+
+    In the network above, some_layer will output some vector of dimension K.
+    The ExtraNoiseNodes will not alter this vector, but will output another
+    vector of length K + 4, where the extra 4 dimensions are samples from
+    random Normal distributions.
+
+    Currently, the Normal distributions are sampled from
+    Normals(Normal(0,20), Uniform(0,20)).
+    """
+
+
+    def __init__(self, dim, divide_node, noise_nodes=None):
+        self.desc = "Divided Extra Noise"
+        self.dim = dim
+        self.description = str(dim) + " Extra Noise Dimensions"
+
+        # Default noise is normals with random mean and variances
+        if not noise_nodes:
+            noise_nodes = [Normal(loc=0, scale=0.2) for i in range(dim)]
+        self.nodes = noise_nodes
+        self.divide_node = divide_node
+
+    def sample_with(self, z):
+        left_z = z[0: self.divide_node]
+        right_z = z[self.divide_node:]
+        left_z = np.append(left_z, [x.sample() for x in self.nodes])
+        right_z = np.append(right_z, [x.sample() for x in self.nodes])
+        return np.append(left_z, right_z)

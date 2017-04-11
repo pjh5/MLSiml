@@ -15,33 +15,6 @@ from mlsiml.generation import dataset
 from mlsiml.utils import dict_prefix, filter_truish, is_iterable
 
 
-class WorkflowIterableBase():
-    """Base class to Workflow and WorkflowStep to define get_params for them"""
-
-    def __init__(self, desc, iterable):
-        self.desc = desc
-        self._iterable = iterable
-
-        # Mangle all deep params with their index
-        self.deep_params = {True:{}, False:{}}
-        for deep in [True, False]:
-            for idx, obj in enumerate(iterable):
-                self.deep_params[deep].update(
-                        dict_prefix(idx, obj.get_params(deep=deep))
-                        )
-
-    def get_params(self, deep=True):
-        """Returns all params, where "all" is the sklearn definition"""
-        return self.deep_params[deep]
-
-    def get_cv_params(self):
-        """Returns all cv_results_ (mangled) from any of the steps"""
-        out = {}
-        for obj in self._iterable:
-            out.update(obj.get_cv_params())
-        return filter_truish(out)
-
-
 
 ##############################################################################
 # Workflow, sequence of preprocessing steps + final classifier
@@ -153,22 +126,29 @@ class Workflow():
         # parameters for all intermediate results
         final_params = {}
         intermediate_params = []
+        prefix_name = re.sub("[^a-zA-Z]+", "", self.desc)
+
+        # Add parameters of all steps before the classifier
         for i, step in enumerate(self.steps):
-            prefix = "{}_{!s}".format(re.sub("[^a-zA-Z]+", "", self.desc), i)
+            prefix = "{}_{}".format(prefix_name, i)
 
             final_params.update(dict_prefix(prefix, step.get_final_params()))
             intermediate_params += map(
                     lambda p: dict_prefix(prefix, p),
                     step.get_intermediate_params()
                     )
-        final_params.update(dict_prefix(prefix, self.classifier.get_final_params()))
+
+        # Add all parameters of the classifier
+        final_params.update(
+                dict_prefix(prefix_name, self.classifier.get_final_params())
+                )
         intermediate_params += map(
-                lambda p: dict_prefix(re.sub("[^a-zA-Z]+", "", self.desc), p),
+                lambda p: dict_prefix(prefix_name, p),
                 self.classifier.get_intermediate_params()
                 )
 
         # Add 'accuracy' to final_params
-        final_params["{}_accuracy".format(re.sub("[^a-zA-Z]+", "", self.desc))] = accuracy
+        final_params["accuracy_{}".format(prefix_name)] = accuracy
 
         # All parameters
         return accuracy, final_params, intermediate_params
@@ -280,7 +260,7 @@ class WorkflowStep(RawWorkflowStep):
         records = []
         for i, transform in enumerate(self.transformers):
             records += map(
-                    lambda p: dict_prefix(i, p),
+                    lambda p: dict_prefix("s" + str(i), p),
                     transform.get_intermediate_params()
                     )
 

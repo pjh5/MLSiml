@@ -15,7 +15,6 @@ from mlsiml.utils import parse_to_args_and_kwargs
 NUMBER_OF_SOURCES = 2
 
 # Default workflows to run
-conc = Concatenate()
 workflows = [
     Workflow("Random Forest", NUMBER_OF_SOURCES,
         [Concatenate()],

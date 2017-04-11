@@ -5,6 +5,7 @@ from itertools import product as iter_product
 import logging
 import os
 from pandas import DataFrame
+from scipy.io import savemat
 
 from mlsiml.classification import classifiers as Classifier
 from mlsiml.utils import dict_prefix, filter_truish, flatten, make_iterable
@@ -30,7 +31,10 @@ class Experiment():
             network_params_dict=None,
             workflows=None,
             sample_sizes=None,
-            test_size=0.3
+            test_size=0.3,
+            save_data=False,
+            mat_dir=None,
+            mat_fileformat=None
             ):
         """Prepares an experiment which can then be run with "experiment.run()"
 
@@ -64,14 +68,27 @@ class Experiment():
         """
 
         # Parameters aren't actually optional
-        if not network_class or not network_params_dict or not workflows or not sample_sizes:
-            raise Exception("Parameters to Experiment are not optional. All must be specified")
+        if (not network_class or not network_params_dict or not workflows
+                or not sample_sizes):
+            raise Exception(
+                    "Parameters to Experiment are not optional. "
+                    "All must be specified"
+                    )
+
+        # Mat dir and fileformat must be specified if saving data
+        if save_data and (not mat_dir or not mat_fileformat):
+            raise Exception(
+                    "Mat_dir and fileformat must be specified if saving data"
+                    )
 
         self.network_class = network_class
         self.network_params_dict = network_params_dict
         self.workflows = workflows
         self.sample_sizes = make_iterable(sample_sizes)
         self.test_size = test_size
+        self.save_data= save_data
+        self.mat_dir = mat_dir
+        self.mat_fileformat = mat_fileformat
 
 
     def run(self, logfile=None):
@@ -102,29 +119,51 @@ class Experiment():
 
             # For every sample size
             for sample_size in self.sample_sizes:
-                print("Sample {!s} points with {!s}/{!s} train-test split".format(
-                    sample_size, 1 - self.test_size, self.test_size
-                    )
+                print(
+                    "Sample {!s} points with {!s}/{!s} train-test split".format(
+                        sample_size, 1 - self.test_size, self.test_size
+                        )
                     )
 
                 network_setting["sample_size"] = sample_size
                 sources = network.sample(sample_size, self.test_size)
 
-                # For every workflows
-                for workflow in self.workflows:
-                    accuracy, record, cv_params = workflow.evaluate_on(sources)
-                    all_results.add_record_for(
-                            network_setting, record, cv_params
+                # If we just want data, export everything as matlab matrices
+                if self.save_data:
+                    X, y = sources.as_X_and_Y()
+                    split_idx = sources[0].X_train.shape[1] # TODO fix this
+
+                    print(network_setting)
+                    print(self.mat_fileformat)
+                    savemat(
+                            os.path.join(
+                                self.mat_dir,
+                                self.mat_fileformat.format(**network_setting)
+                                ),
+                            {"X":X, "y":y, "separator":[split_idx, X.shape[1]]}
                             )
 
-                    # Verbose output
+
+                # For every workflows
+                final_workflow_records = []
+                cv_records = []
+                for workflow in self.workflows:
+                    accuracy, record, cv_params = workflow.evaluate_on(sources)
+
+                    # Output accuracy to the console
                     print("\t{:8.3f}\t{!s}".format(accuracy, workflow))
+
+                    # Record all parameters for writing to a csv later
+                    final_workflow_records.append(record)
+                    cv_records += cv_params
 
                 # After every network, write out the log
                 # This is done here because we only know all of the parameters
                 # (all of the CV grid search parameters) after all of the
                 # workflows have been evaluated
-                all_results.write()
+                all_results.write_records(
+                        network_setting, final_workflow_records, cv_records
+                        )
 
         return all_results
 
@@ -132,101 +171,114 @@ class Experiment():
 ##############################################################################
 # Experiment Results Object Class Definition                                 #
 ##############################################################################
-
+# Constant for accessing which logfile/records/etc.
+FOR_CV = True
+NOT_FOR_CV = False
 
 class ExperimentResults:
 
     def __init__(self, logfile=None):
         """Prepares the logfile by writing a header row to it"""
-        self.records = []
-        self.new_records = []
-        self.logfile = logfile
-        self.header_file_written = False
 
         # Default logfile is just experiment_date
         if not logfile:
-            self.logfile = "experiment_" + str(datetime.now())[:10] + ".csv"
+            logfile = "experiment_" + str(datetime.now())[:10] + ".csv"
 
         # Validate logfile name
         ######################################################################
         # Find a place to put the log, making sure never to overwrite a
         # previous log by adding [1] or [2] etc to the file name
-        if os.path.isfile(self.logfile + ".csv"):
-            logging.info("Experiment logfile {} already exists".format(logfile + ".csv"))
+        if os.path.isfile(logfile + ".csv"):
+            logging.info(
+                    "Experiment logfile {} already exists".format(
+                        logfile + ".csv"
+                        )
+                    )
             run = 1
-            while os.path.isfile("{}({!s}).csv".format(self.logfile, run)):
+            while os.path.isfile("{}({}).csv".format(logfile, run)):
                 run += 1
-            self.logfile = "{}({!s}).csv".format(self.logfile, run)
-            logging.info("Writing experiment results to {}.csv instead".format(self.logfile))
-        else:
-            self.logfile = self.logfile + ".csv"
+            logfile = "{}({}).csv".format(logfile, run)
+            logging.info(
+                    "Writing experiment results to {}.csv instead".format(
+                        logfile
+                        )
+                    )
 
-        # Write a header to the csv
-        #####################################################################
+        self.logfile = {NOT_FOR_CV:logfile + ".csv", FOR_CV:logfile + "_cv.csv"}
+        self.records = {NOT_FOR_CV:[], FOR_CV:[]}
+        self.header_rows_written = False
 
-    def add_record_for(self, network_settings_dict, final_params, cv_params):
+    def write_records(
+            self, network_settings_dict, final_records_arr, cv_records_arr
+            ):
 
-        # Mangle network settings
-        net_flow_record = dict_prefix("network", network_settings_dict)
-        net_flow_record.update(final_params)
-        net_flow_record = filter_truish(net_flow_record)
-        self.new_records.append(net_flow_record)
-
-        # Cross-Validation data
-        for cvr in cv_params:
-            record = net_flow_record.copy()
-            record.update(cvr)
-            self.new_records.append(net_flow_record)
-
-
-    def as_dataframe(self):
-        return DataFrame.from_records(self.records)
-
-    def write(self):
+        # Make the unified row for this network setting
+        final_record = dict_prefix("network", network_settings_dict)
+        for record in final_records_arr:
+            final_record.update(record)
+        final_record = filter_truish(final_record)
 
         # Write a header file if we need one
         # This is done here instead of in __init__ because it is very hard to
-        # know all of the parameters (column names) in __init__
-        if not self.header_file_written:
+        # know all of the parameters (column names) in __init__. This is also
+        # done after making the unified row so that we have those headers too
+        if not self.header_rows_written:
+            self.write_header_rows(
+                    final_record.keys(), map(lambda p: p.keys(), cv_records_arr)
+                    )
+            self.header_rows_written = True
 
-            # Determine column names
-            self.column_names = set()
-            for record in self.new_records:
-                self.column_names.update(set(record.keys()))
-            self.column_names = list(sorted(self.column_names))
-            logging.debug("Found column names: {!s}".format(self.column_names))
+        # Write out final record
+        self.records[NOT_FOR_CV].append(final_record)
+        with open(self.logfile[NOT_FOR_CV], 'a') as fobj:
+            csvfile = csv.writer(fobj)
+            csvfile.writerow([
+                final_record.get(col, "")
+                for col in self.column_names[NOT_FOR_CV]
+                ])
 
-            # Write the header
-            with open(self.logfile, 'w') as fobj:
-                csvfile = csv.writer(fobj)
-                csvfile.writerow(self.column_names)
-
-            self.header_file_written = True
-
-        # Write out all of the new records
-        with open(self.logfile, 'a') as fobj:
+        # Write out all of the CV records
+        with open(self.logfile[FOR_CV], 'a') as fobj:
             csvfile = csv.writer(fobj)
 
-            for record in self.new_records:
-                csvfile.writerow(
-                        [record.get(col, "") for col in self.column_names]
-                        )
+            for cv_record in cv_records_arr:
 
-        # Move the new_records to records
-        self.records += self.new_records
-        self.new_records = []
+                # Build CV record off of final record
+                full_cv_record = final_record.copy()
+                full_cv_record.update(cv_record)
 
+                # Write the full cv record
+                self.records[FOR_CV].append(full_cv_record)
+                csvfile.writerow([
+                    full_cv_record.get(col, "")
+                    for col in self.column_names[FOR_CV]
+                    ])
 
+    def write_header_rows(self, final_keys, cv_keys):
+        self.column_names = {}
 
-    def log(self, record):
+        # Headers for non-cv are easy
+        self.column_names[NOT_FOR_CV] = set(final_keys)
 
-        # Build up row, using "" when a parameter is not found
-        row = [record[kw] if kw in record else "" for kw in self.column_names]
+        # Headers for CV are built off of non-cv
+        self.column_names[FOR_CV] = set(final_keys)
+        for additional_keys in cv_keys:
+            self.column_names[FOR_CV].update(set(additional_keys))
 
-        # Assume that network_settings will be the same every time
-        with open(self.logfile, 'a') as csvfile:
-            logfile = csv.writer(csvfile)
-            logfile.writerow(row)
+        # Write the headers
+        for for_cv in [FOR_CV, NOT_FOR_CV]:
+            self.column_names[for_cv] = list(sorted(self.column_names[for_cv]))
+            with open(self.logfile[for_cv], 'w') as fobj:
+                csvfile = csv.writer(fobj)
+                csvfile.writerow(self.column_names[for_cv])
+
+        self.header_row_written = True
+
+    def as_dataframes(self):
+        return (
+                DataFrame.from_records(self.records[NOT_FOR_CV]),
+                DataFrame.from_records(self.records[FOR_CV])
+                )
 
 ##############################################################################
 # Private Helper Functions                                                   #
