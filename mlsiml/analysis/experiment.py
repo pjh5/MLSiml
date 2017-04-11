@@ -274,7 +274,7 @@ class ExperimentResults:
 
         self.header_row_written = True
 
-    def as_dataframes(self):
+    def as_dataframe(self):
         return (
                 DataFrame.from_records(self.records[NOT_FOR_CV]),
                 DataFrame.from_records(self.records[FOR_CV])
