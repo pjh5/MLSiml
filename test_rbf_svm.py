@@ -14,21 +14,24 @@ NUM_SOURCES = 2
 
 # Workflows
 workflows = [
-        Workflow("Raw RBF SVM", NUM_SOURCES,
+    Workflow("Random Forest", NUMBER_OF_SOURCES,
+        [Concatenate()],
+        classifiers.for_random_forest(search_params={
+            'n_estimators':[10, 100]
+            })
+        ),
+    Workflow("KNN", NUMBER_OF_SOURCES,
+        [Concatenate()],
+        classifiers.for_knn(search_params={'n_neighbors':[1, 10]})
+        ),
+    Workflow("RBF SVM", NUMBER_OF_SOURCES,
             [Concatenate()],
-            Classifier.for_svm(kernel='rbf', search_params={
-                'C':[0.1, 1, 10, 100],
-                'gamma':[0.001, 0.01, 0.1, 1]
+            classifiers.for_svm(search_params={
+                'gamma':[0.01, 0.1, 1, 10],
+                'C':[0.1, 1, 10, 100]
                 })
             ),
-        Workflow("PCA -> RBF SVM", NUM_SOURCES,
-            [Concatenate(), PCA()],
-            Classifier.for_svm(kernel='rbf', search_params={
-                'C':[0.1, 1, 10, 100],
-                'gamma':[0.001, 0.01, 0.1, 1]
-                })
-            )
-        ]
+    ]
 
 # Network Parameters
 network = corrupted_xor
