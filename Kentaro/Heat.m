@@ -53,40 +53,29 @@ mklcon7.name = 'mkl concatenation 7';
 mklcon7.value =	[63.99	60.11	59.12	55.97	54.89	57.47	58.73	58.85	56.6	55.1	55.43	56	53.99	56.75	54.77	52.94	51.8	53.51	49.58	50	52.13];
 
 
-%toplot = [mkl3, mklcon3, mklsingle3, rf3, knn3, svm3];
- toplot = [mkl5, mklcon5, mklsingle5];
-% toplot = [mkl7, mklcon7, mklsingle7, rf7, knn7, svm7];
-N = length(toplot);
-col_num = ceil(N /2);
-% subplot(2, col_num);
-collim = [0, 100];
+toplot = [mkl5, mklcon5, mklsingle5];
 
-for i = 1: N
 
-    subplot(1,3, i )
+for i = 1:3
+
     cur_struct = toplot(i);
     cur_name = cur_struct.name
     cur_vec = cur_struct.value;
+
+    % Fill in top triangle
     num_rows = floor(sqrt(length(cur_vec)* 2));
     cur_mat = triu(ones(num_rows));
-    cur_mat = cur_mat';
-    myfloor = collim(1);
-    cur_mat(cur_mat==1) = cur_vec
-    cur_mat(cur_mat == 0) = myfloor + 10 ;
-    cur_mat = cur_mat;
-    
-    surf(cur_mat)
-%     zlim([0, 150])
-%     hold on 
-    im = imagesc(cur_mat, collim)
-%     im.XData = [0, 5]
-%     im.YData = [0, 5]
-%     hold off
-%     im  = imagesc(cur_mat, collim);
-%     im.AlphaData = .7;
 
-    colorbar()
-    title(cur_name, 'FontSize', 20)
-    %axis([0.5 5.5 0.5 5.5])
+    cur_mat(cur_mat==1) = cur_vec
+
+    % Make symmetrical
+    cur_mat = cur_mat' + triu(ones(num_rows), 1) .* cur_mat
+
+    % Heatmap
+    heatmap(cur_mat)
+
     set(gca,'fontsize',15)
+    pause
 end
+
+
