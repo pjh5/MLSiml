@@ -10,23 +10,6 @@
 \usepackage{listings}
 \usepackage{booktabs}
 \setlength{\parindent}{0cm}
-\lstset{
-	frame=tb,
-	aboveskip=3mm,
-	belowskip=3mm,
-	showstringspaces=false,
-	mathescape=true,
-	columns=flexible,
-	basicstyle={\ttfamily},
-	numbers=left,
-	numbersep=-10pt,
-	breaklines=true,
-	breakatwhitespace=true,
-	tabsize=4,
-	keywordstyle=\bfseries,
-	keywords={foreach, do, while, if, then, else, return, def, :, Input,
-		Output, function, not}
-}
 
 \begin{document}
 \title{Data Integration on High-Difficulty Binary Classification}
@@ -34,8 +17,20 @@
 \maketitle
 
 
-\section{Motivation}
-Cause Guerra made us.
+\section{Overview and Motivation}
+For many fields, especially in medicine and the social sciences, it is
+increasingly common for data to come from multiple disparate data sources. For
+example, a sociologist might be interested in predicting future income with two
+datasets, family environment and school environment. For the best analysis, all
+data sources should be utilized.
+
+A naive approach is to concatenate the sources together into one large feature
+matrix. Although simple and computationally efficient, this method throws away
+information about the separate sources and forces downstream processing to
+treat all of the sources in the same way. Various data integration techniques
+have been proposed to more cleverly and effectively combine multiple sources.
+Unfortunately, most of these techniques are poorly understood or poorly tested,
+and there has been no systematic evaluation of their effectiveness.
 
 
 \end{document}
