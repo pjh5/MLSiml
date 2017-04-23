@@ -24,6 +24,7 @@ example, a sociologist might be interested in predicting future income with two
 datasets, family environment and school environment. For the best analysis, all
 data sources should be utilized.
 
+
 A naive approach is to concatenate the sources together into one large feature
 matrix. Although simple and computationally efficient, this method throws away
 information about the separate sources and forces downstream processing to
@@ -31,6 +32,42 @@ treat all of the sources in the same way. Various data integration techniques
 have been proposed to more cleverly and effectively combine multiple sources.
 Unfortunately, most of these techniques are poorly understood or poorly tested,
 and there has been no systematic evaluation of their effectiveness.
+
+
+This paper evaluates Generalized Metric Kernel Learning (GMKL) over simulated
+data.
+
+
+\section{Data Generation}
+
+\subsection{Desirable Properties of Simulation Data}
+We simulated data with a feed-forward fully connected conditional network
+(figure \ref{fig:data_generation_model.png}).
+
+The data was not generated with a linear model. It is common to simulate
+"realistic" data by randomly picking coefficients of a linear model. This model
+has notable shortcomings, mainly that it is not possible to know if the 2
+classes of the generated data are 1) separated by a complex decision boundary
+or 2) are overlapping and unseparable. Classification techniques can only be
+accurately compared to each other on non-overlapping data. If the two classes
+of generated data overlap and are not separable, then there is no theoretical
+classifier that can correctly the overlapped part.
+
+
+We used this data generation model to generate 2 class, 2 source data. This
+model allowed us to make data where:
+\begin{itemize}
+    \item the decision boundary between the two classes is known and calculable
+    \item the two classes are completely separable
+    \item the decision boundary's complexity can be parametrized
+    \item the reliability of each source can be modified
+    \item the noisyness of each source can be modified
+    \item extra meaningless dimensions can be added to each source
+\end{itemize}
+
+In order to add $K_{noise}$ dimensions to a source, all of the other dimensions
+of that source must not be non-essential.
+
 
 
 \end{document}
