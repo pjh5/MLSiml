@@ -3,6 +3,7 @@
 \renewcommand{\ttdefault}{pcr}
 \usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
 \usepackage{enumerate}
+\usepackage{enumitem}
 \usepackage{setspace}
 \usepackage{amsmath}
 \usepackage{fancyhdr}
@@ -40,34 +41,70 @@ data.
 
 \section{Data Generation}
 
-\subsection{Desirable Properties of Simulation Data}
+\subsection{Criteria of Good Simulated Data}
+
+In order to understand the behavior of the data integration techniques, we
+systematically created data that was:
+
+\begin{enumerate}
+    \item the decision boundary between the two classes was known and calculable
+    \item the two classes are completely separable (or can be specified to
+        overlap with percentage $p$, where $p=0$ leads to no overlap and
+        $p=50$\% leads to complete overlap)
+    \item the decision boundary's complexity can be parametrized and controlled
+    \item the reliability of each source can be specified exactly
+    \item the noisyness of each source can be specified exactly
+    \item \label{criteria:noise_dims} extra meaningless dimensions can be added
+        to each source
+\end{enumerate}
+
+\subsection{Data Generation Models}
+
+\subsubsection{Random Coefficient Linear Model}
+
+A simple, common way to simulate data is to use a linear model with random
+coefficients. This model generates data by:
+\begin{enumerate}
+    \item Specify the number of true latent variables $K$ along with the number
+        of visible variables $N$
+    \item Specify two distribution $D_j^0$ and $D_j^1$ of each latent variable
+        $z_j$, $1 \leq j \leq K$, where $D_j^0$ is the distribution of $z_j$
+        for negative classes and $D_j^1$ is the distribution of $z_j$ for
+        positive classes
+    \item Specify how each visible variable $x_j$ is generated from the latent
+        variables $z_i$ with a formula of the form
+        $$x_l = \sum_{i=1}^K \beta_i z_i + \sum_{i=1}^K\sum_{j=i}^K \beta_{i,j} z_i z_k + \text{higher-order-interactions}$$
+        of linear combinations of arbitrary functions of the latent variables
+    \item Specify the distribution of every $\beta$ in the above formula
+    \item For every datapoint
+    \begin{enumerate}
+        \item Pick which class the datapoint belongs to
+        \item Sample each $z_j$ from its respective distribution for this class
+        \item Sample each $\beta$ from their respective distributions
+        \item Generate each visible variable $x_j$ from its formula
+    \end{enumerate}
+\end{enumerate}
+
+It is common to simulate "realistic" data by randomly picking coefficients of a
+linear model. This model has notable shortcomings, mainly that it is not
+possible to know if the 2 classes of the generated data are 1) separated by a
+complex decision boundary or 2) are overlapping and unseparable. Classification
+techniques can only be accurately compared to each other on non-overlapping
+data. If the two classes of generated data overlap and are not separable, then
+there is no theoretical classifier that can correctly the overlapped part.
+
+\subsubsection{Feed-forward Network Model}
+
 We simulated data with a feed-forward fully connected conditional network
 (figure \ref{fig:data_generation_model.png}).
 
-The data was not generated with a linear model. It is common to simulate
-"realistic" data by randomly picking coefficients of a linear model. This model
-has notable shortcomings, mainly that it is not possible to know if the 2
-classes of the generated data are 1) separated by a complex decision boundary
-or 2) are overlapping and unseparable. Classification techniques can only be
-accurately compared to each other on non-overlapping data. If the two classes
-of generated data overlap and are not separable, then there is no theoretical
-classifier that can correctly the overlapped part.
 
-
-We used this data generation model to generate 2 class, 2 source data. This
-model allowed us to make data where:
-\begin{itemize}
-    \item the decision boundary between the two classes is known and calculable
-    \item the two classes are completely separable
-    \item the decision boundary's complexity can be parametrized
-    \item the reliability of each source can be modified
-    \item the noisyness of each source can be modified
-    \item extra meaningless dimensions can be added to each source
-\end{itemize}
-
-In order to add $K_{noise}$ dimensions to a source, all of the other dimensions
-of that source must not be non-essential.
-
+Criteria \ref{criteria:noise_dims} is more difficult than it at first seems. In
+order to create a source with $N_{useful}$ useful dimensions and $N_{noisy}$
+meaningless dimensions, we needed to both 1) make $N_{noisy}$ dimensions of pure
+noise and 2) make $N_{useful}$ dimensions, all of which are always useful. With a
+random coefficient linear model, it is impossible to verify that all $N_{useful}$
+dimensions are actually useful.
 
 
 \end{document}
