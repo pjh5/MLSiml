@@ -46,17 +46,40 @@ data.
 In order to understand the behavior of the data integration techniques, we
 systematically created data that was:
 
+\begin{centering}
 \begin{enumerate}
-    \item the decision boundary between the two classes was known and calculable
-    \item the two classes are completely separable (or can be specified to
-        overlap with percentage $p$, where $p=0$ leads to no overlap and
-        $p=50$\% leads to complete overlap)
+    \item \label{criteria:separable} the two classes are separated by a true
+        decision boundary that is known and calculable
+    \begin{enumerate}
+        \item or the two classes can be specified to overlap with percentage
+            $p$, where $p=0$ leads to no overlap and $p=50$\% leads to complete
+            overlap
+    \end{enumerate}
     \item the decision boundary's complexity can be parametrized and controlled
     \item the reliability of each source can be specified exactly
     \item the noisyness of each source can be specified exactly
     \item \label{criteria:noise_dims} extra meaningless dimensions can be added
         to each source
 \end{enumerate}
+\end{centering}
+
+Suppose that a classifier $C$ only obtains 60\% classification accuracy on a
+dataset $D$ (with datapoints evenly split amongst 2 classes). This could be
+attributable to either:
+\begin{itemize}
+    \item The classifier is not well suited to certain properties of dataset $D$
+    \item 80\% of both classes overlap with each other. The best possible
+        strategy in this area of overlap is to guess the class with 50\%
+        accuracy. An optimal classifier will then guess 40\% of the datapoints
+        correctly and also classify the 20\% of non-overlapping datapoints
+        perfectly
+\end{itemize}
+Criterion \ref{criteria:separable} ensures that the latter case does not occur,
+so that classifier performance is attributable solely to its efficacy on
+certain types of data.
+
+
+
 
 \subsection{Data Generation Models}
 
@@ -85,6 +108,13 @@ coefficients. This model generates data by:
     \end{enumerate}
 \end{enumerate}
 
+This model has significant shortcomings
+\begin{itemize}
+    \item It is not known how to systematically make the classification problem more or less difficult
+    \item It is hard to know if the generated data overlaps
+    \item It is hard to pick the $\beta$s to ensure that all of the criteria in \ref{list:data_critera} are satisfied
+    \item There are many distributions and formulas to specify arbitrarily
+\end{itemize}
 It is common to simulate "realistic" data by randomly picking coefficients of a
 linear model. This model has notable shortcomings, mainly that it is not
 possible to know if the 2 classes of the generated data are 1) separated by a
