@@ -137,5 +137,61 @@ random coefficient linear model, it is impossible to verify that all $N_{useful}
 dimensions are actually useful.
 
 
+\section{Experiments}
+
+
+
+
+
+
+
+
+
+\subsection{Experiemnt 2: Corrupted Sources}
+
+One variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiement is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
+
+In order to corrupt the sources, a Bernoulli experiemnt is performed for each source with a certain probability that the binomial indicator is flipped to 0 or 1 (whichever number it is currently not). A probability p_1 is assigned to the first source and a probability p_2 is assigned to the second source. These probabilities rnage from 0, meaning no corruption, to .5, meaning complete corruption. For example, say the true value of y is 0, p_1 is 0, and p_2 is 0.5. Then the data that stems from the first source accurately represents the value of y which is 0. The data that stems from the second source will accurately represent the value of y in 50 percent of the samples, but the other 50 percent of the samples it flips to represent 1. This means that all of the information is coming from the first source while the second source tells us nothing about the true value of y.
+
+In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiement performed on five dimensional XOR are displayed in the table below. See the appendix for the results from the three dimensional and seven dimensional experiements.
+
+*insert table here *
+*insert heatmaps here*
+
+We see that the results of Experiment 2 are consistent with the results of Experiment 1 in that GMKL consistenetly outperforms concatenated GMKL which consistenly outperforms the standard classifiers. We also see that GMKL is the least affected by one of the two sources becoming corrupted. This is evidence that GMKL effectively identifies which sources are useful and relies primarily on those sources. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \end{document}
 
