@@ -203,5 +203,114 @@ The model generates data with the following process
         return min_score
 \end{lstlisting}
 
+\section{Experiments}
+
+\subsection{Experiment 1: Data Dimension Scaling}
+With the prevalence of high dimensional data sets, we first would like to see if our data integration methods scale well as the dimension of the data sources increases. To this end, we generated several data sets of varying number of $N_{useful}$ dimensions from a double-XOR feed-forward network. The network is structured such that each data source receives the parity signal without corruption from the true source, y. Then it creates an arbitrary n-dimensional XOR of correct parity, which then becomes a 2n dimensional data vector.  A full set of paramters for this expierment can be seen in table 4.1. This network was chosen as it has no corruption of data sources, thus ensuring criteria 1. Second, as the dimensional of the XOR increases, the decision boundary becomes increasingly complicated. Once the data generation process is complete, classification was done by GMKL, Concatenate + GMKL, SVM, KNN, and Random Forest.
+\begin{table}[h!]
+\centering
+ \begin{tabular}{|c c|} 
+ \hline
+Parameter & Value \\ 
+\hline
+Type of Data from each Data Source & [XOR, XOR]\\
+$N_{useful}$ (For each data source) & [2,3,4,5,6,7] \\
+$N_{noisey}$& 0\\
+Number of Total Data points & 5000\\
+Ratio of Training to Testing Data & 1:2\\
+Probability of Data Source Signal Corruption & [0,0]\\
+I must be missing some more parameters\\
+\hline
+ \end{tabular}
+\end{table}
+\textbf{These paramters values should be replaced with the correct variable names once section 2.2.2 is completed. }\\\
+\textbf{Should the parameters for the classifiers be described here? or in an appendix? Or in the methods section? }
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.4]{experimentpic1.png}
+\end{center}
+\end{figure}
+
+
+From figure \textbf{FIGURE NUMBER HERE}  we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at at 5 dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at 2n dimensions seems to be performing about as well as the classical SVM at n dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems. 
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{|c| c| c| c| c| }
+\hline
+GMKL Dimension & Accuracy & SVM Dimension & Accuracy & Difference\\
+\hline
+2 & a & 4 & a\\
+\hline
+3 & a & 6 &a
+\end{tabular}
+\end{center}
+\end{figure}
+
+\begin{figure}[h]
+\includegraphics[scale=0.6]{experimentpic2.png}
+\includegraphics[scale=0.6]{experimentpic3.png}
+\caption{test}
+\end{figure}
+
+
+
+
+
+
+
+
+
+\subsection{Experiemnt 2: Corrupted Sources}
+
+One variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiement is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
+
+In order to corrupt the sources, a Bernoulli experiemnt is performed for each source with a certain probability that the binomial indicator is flipped to 0 or 1 (whichever number it is currently not). A probability $p_1$ is assigned to the first source and a probability$ p_2$ is assigned to the second source. These probabilities rnage from 0, meaning no corruption, to .5, meaning complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and $p_2$ is 0.5. Then the data that stems from the first source accurately represents the value of y which is 0. The data that stems from the second source will accurately represent the value of y in 50 percent of the samples, but the other 50 percent of the samples it flips to represent 1. This means that all of the information is coming from the first source while the second source tells us nothing about the true value of y.
+
+In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiement performed on five dimensional XOR are displayed in the table below. See the appendix for the results from the three dimensional and seven dimensional experiements.
+
+*insert table here *
+*insert heatmaps here*
+
+We see that the results of Experiment 2 are consistent with the results of Experiment 1 in that GMKL consistenetly outperforms concatenated GMKL which consistenly outperforms the standard classifiers. We also see that GMKL is the least affected by one of the two sources becoming corrupted. This is evidence that GMKL effectively identifies which sources are useful and relies primarily on those sources.
+
+
+\section{Conclusion}
+From these experiment we have seen not only the usefulness of GMKL, but also with the issues that traditional classifiers face in data integration. Higher dimensional data, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and random forest. Not only does this illustrate the usefulness of GMKL as tool for classification and data integration, but the way in which GMKL generates kernels separately seems to indicate the important of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought. 
+
+
+\section{Future Work}
+For future work, first, we would like to see GMKL used on an real life data analysis problem too see if it shows the same utility that we saw previously. Second, since GMKL, and the creation of kernels is a fairly expensive operation to begin with, it would be nice to create a computationally less expensive version so that this could be run on larger datasets. Third, to show that GMKL is indeed up to the performance of other cutting edge algorithm, further comparison with other methods such as Neural Networks is necessary. And finally, if an investigation could be done of the theoretical properties of the GMKL and its relative performance compared to SVM would be appreciated to cement the useful GMKL as a data integration technique.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 \end{document}
 
