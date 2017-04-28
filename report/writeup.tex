@@ -2,13 +2,30 @@
 \usepackage{courier}
 \renewcommand{\ttdefault}{pcr}
 \usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+\usepackage{caption}
 \usepackage{enumerate}
-\usepackage{enumitem}
 \usepackage{setspace}
 \usepackage{amsmath}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
 \usepackage{listings}
+\lstset{
+    frame=tb,
+    aboveskip=3mm,
+    belowskip=3mm,
+    showstringspaces=false,
+    mathescape=true,
+    columns=flexible,
+    basicstyle={\ttfamily},
+    numbers=left,
+    numbersep=-10pt,
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    keywordstyle=\bfseries,
+    keywords={foreach, do, while, if, then, else, return, def, :, Input,
+        Output, function, not}
+}
 \usepackage{booktabs}
 \setlength{\parindent}{0cm}
 
@@ -18,50 +35,70 @@
 \maketitle
 
 
-\section{Overview and Motivation}
+\section{Abstract}
+
+
+\section{Introduction}
 For many fields, especially in medicine and the social sciences, it is
 increasingly common for data to come from multiple disparate data sources. For
-example, a sociologist might be interested in predicting future income with two
-datasets, family environment and school environment. For the best analysis, all
-data sources should be utilized.
+example, a sociologist might be interested in predicting future income using
+two different sources, one on family environment and one on school environment
+(we will use "source" to refer to a single dataset). For the best analysis, all
+data sources should be taken into account. However, most current machine
+learning techniques have been adapted for only a single dataset, and it is not
+obvious how to best adapt these techniques to multi-source data.
 
 
 A naive approach is to concatenate the sources together into one large feature
-matrix. Although simple and computationally efficient, this method throws away
-information about the separate sources and forces downstream processing to
-treat all of the sources in the same way. Various data integration techniques
-have been proposed to more cleverly and effectively combine multiple sources.
-Unfortunately, most of these techniques are poorly understood or poorly tested,
-and there has been no systematic evaluation of their effectiveness.
+matrix, essentially treating all of the data as a single dataset. Although
+simple and computationally efficient, this method throws away information about
+the separate sources and forces downstream processing to treat all of the
+sources in the same way. Various data integration techniques have been proposed
+to more cleverly and effectively combine multiple sources. Unfortunately, these
+techniques have been poorly tested, and there has been no systematic evaluation
+of their effectiveness.
 
 
-This paper evaluates Generalized Metric Kernel Learning (GMKL) over simulated
-data.
+This paper evaluates one such specialized data integration techniques,
+Generalized Metric Kernel Learning (GMKL), against traditional classifiers that
+use concatenated data. We simulate many multi-source datasets with a variety of
+properties for these comparative tests. We will use the term "classifier" to
+refer to both specialized data integration techniques and naive workflows that
+concatenate sources together.
 
 
 \section{Data Generation}
 
 \subsection{Criteria of Good Simulated Data}
 
-In order to understand the behavior of the data integration techniques, we
-systematically created data that was:
+In order to understand the behavior of the classifiers, we systematically
+created data to satisfy all of the criteria in \ref{tab:criteria}.
+These criteria allow us to test all the classifiers fairly against each other.
 
-\begin{centering}
+\begin{minipage}{\textwidth}
+\centering
 \begin{enumerate}
-    \item \label{criteria:separable} the two classes are separated by a true
+    \item \label{itm:separable} the two classes are separated by a true
         decision boundary that is known and calculable
-    \begin{enumerate}
+    \begin{itemize}
         \item or the two classes can be specified to overlap with percentage
             $p$, where $p=0$ leads to no overlap and $p=50$\% leads to complete
             overlap
-    \end{enumerate}
-    \item the decision boundary's complexity can be parametrized and controlled
+    \end{itemize}
+    \item the decision boundary's complexity (and thus difficulty) can be
+        parametrized and controlled
     \item the reliability of each source can be specified exactly
     \item the noisyness of each source can be specified exactly
-    \item \label{criteria:noise_dims} extra meaningless dimensions can be added
-        to each source
+    \begin{itemize}
+        \item \label{itm:noise_dims} extra meaningless dimensions can be
+            added to each source
+    \end{itemize}
 \end{enumerate}
-\end{centering}
+\captionof{table}{Criteria of Simulated Data}
+\label{tab:criteria}
+\end{minipage}
+
+\subsubsection{Explanation for Data Criteria}
 
 Suppose that a classifier $C$ only obtains 60\% classification accuracy on a
 dataset $D$ (with datapoints evenly split amongst 2 classes). This could be
@@ -74,10 +111,16 @@ attributable to either:
         correctly and also classify the 20\% of non-overlapping datapoints
         perfectly
 \end{itemize}
-Criterion \ref{criteria:separable} ensures that the latter case does not occur,
+Criterion \ref{itm:separable} ensures that the latter case does not occur,
 so that classifier performance is attributable solely to its efficacy on
 certain types of data.
 
+Criteria \ref{itm:noisey} is more difficult than it at first seems. In
+order to create a source with $N_{useful}$ useful dimensions and $N_{noisy}$
+meaningless dimensions, we needed to both 1) make $N_{noisy}$ dimensions of
+pure noise and 2) make $N_{useful}$ dimensions, all of which are always useful.
+With a random coefficient linear model, it is impossible to verify that all
+$N_{useful}$ dimensions are actually useful.
 
 
 
@@ -87,6 +130,21 @@ certain types of data.
 
 A simple, common way to simulate data is to use a linear model with random
 coefficients. This model generates data by:
+\begin{lstlisting}[]
+    K = desired number of true latent variables
+    N = desitred number of observable variables
+    function P2Min(s):
+        if s is a leaf:
+            return value of s
+        best_choice = null
+        min_score = $\infty$
+        for s2 in children(s):
+            s2_score = avg(P2Min(s3) for s3 in children(s2))
+            if s2_score < min_score:
+                min_score = s2_score
+                best_choice = s2
+        return min_score
+\end{lstlisting}
 \begin{enumerate}
     \item Specify the number of true latent variables $K$ along with the number
         of visible variables $N$
@@ -96,46 +154,54 @@ coefficients. This model generates data by:
         positive classes
     \item Specify how each visible variable $x_j$ is generated from the latent
         variables $z_i$ with a formula of the form
-        $$x_l = \sum_{i=1}^K \beta_i z_i + \sum_{i=1}^K\sum_{j=i}^K \beta_{i,j} z_i z_k + \text{higher-order-interactions}$$
+        $$
+        x_l
+        = \sum_{i=1}^K \beta_i z_i
+        + \sum_{i=1}^K\sum_{j=i}^K \beta_{i,j} z_i z_k
+        + \text{higher-order-interactions}
+        $$
         of linear combinations of arbitrary functions of the latent variables
-    \item Specify the distribution of every $\beta$ in the above formula
+    \item Specify every $\beta$ in the above formula
     \item For every datapoint
     \begin{enumerate}
         \item Pick which class the datapoint belongs to
         \item Sample each $z_j$ from its respective distribution for this class
-        \item Sample each $\beta$ from their respective distributions
         \item Generate each visible variable $x_j$ from its formula
     \end{enumerate}
 \end{enumerate}
 
 This model has significant shortcomings
 \begin{itemize}
-    \item It is not known how to systematically make the classification problem more or less difficult
+    \item It is not known how to systematically make the classification problem
+        more or less difficult
     \item It is hard to know if the generated data overlaps
-    \item It is hard to pick the $\beta$s to ensure that all of the criteria in \ref{list:data_critera} are satisfied
+    \item It is hard to pick the $\beta$s to ensure that all of the criteria in
+        \ref{table:critera} are satisfied
     \item There are many distributions and formulas to specify arbitrarily
+    \item It is hard to know how many of the generated dimensions are useful
 \end{itemize}
-It is common to simulate "realistic" data by randomly picking coefficients of a
-linear model. This model has notable shortcomings, mainly that it is not
-possible to know if the 2 classes of the generated data are 1) separated by a
-complex decision boundary or 2) are overlapping and unseparable. Classification
-techniques can only be accurately compared to each other on non-overlapping
-data. If the two classes of generated data overlap and are not separable, then
-there is no theoretical classifier that can correctly the overlapped part.
+
 
 \subsubsection{Feed-forward Network Model}
 
-We simulated data with a feed-forward fully connected conditional network
-(figure \ref{fig:data_generation_model.png}).
+In order to satisfy all of the critera in \ref{tab:criteria}, we created a
+feed-forward conditional network (figure \ref{fig:data_generation_model.png}).
 
+The model generates data with the following process
 
-Criteria \ref{criteria:noise_dims} is more difficult than it at first seems. In
-order to create a source with $N_{useful}$ useful dimensions and $N_{noisy}$
-meaningless dimensions, we needed to both 1) make $N_{noisy}$ dimensions of pure
-noise and 2) make $N_{useful}$ dimensions, all of which are always useful. With a
-random coefficient linear model, it is impossible to verify that all $N_{useful}$
-dimensions are actually useful.
-
+\begin{lstlisting}[]
+    function P2Min(s):
+        if s is a leaf:
+            return value of s
+        best_choice = null
+        min_score = $\infty$
+        for s2 in children(s):
+            s2_score = avg(P2Min(s3) for s3 in children(s2))
+            if s2_score < min_score:
+                min_score = s2_score
+                best_choice = s2
+        return min_score
+\end{lstlisting}
 
 \end{document}
 
