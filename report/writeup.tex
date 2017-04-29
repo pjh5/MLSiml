@@ -162,23 +162,13 @@ This model has significant shortcomings
 
 In order to satisfy all of the critera in \ref{tab:criteria}, we created a
 feed-forward conditional network (figure \ref{fig:data_generation_model.png}).
-This network would generate data with
-
-\begin{enumerate}
-    \item $y$ is sampled from a Bernoulli distribution with parameter $p$
-    \item Sample the top $z$ for source 1
-    \begin{itemize}
-        \item If $y$ is 1, then sample from the $n$-dimensional binary vectors
-            of even parity
-        \item If $y$ is 0, then sample from the $n$-dimensional binary vectors
-            of odd parity
-    \end{itemize}
-    \item Sample the bottom $z$ for source 2
-\end{enumerate}
+This network's process is given in Algorithm \ref{alg:network_model}.
 
 \begin{algorithm}
 \centering
 \begin{algorithmic}[1]
+    \label{alg:network_model}
+    \caption{The network model}
     \LCOMMENT{Sample the $y$ layer}
     \STATE $y \leftarrow$ Bernoulli($p$)
     \LCOMMENT{Sample the $z$ layer}
@@ -201,8 +191,6 @@ This network would generate data with
     \STATE $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
     \STATE $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sine(x^{(2)}_1) + mz_2$
 \end{algorithmic}
-\label{alg:network_model}
-\caption{The network model}
 \end{algorithm}
 
 The above model creates two sources of data with very different types of
@@ -321,7 +309,7 @@ GMKL Dimension & Accuracy & SVM Dimension & Accuracy & Difference\\
 
 
 
-\subsection{Experiemnt 2: Corrupted Sources}
+\subsection{Experiment 2: Corrupted Sources}
 
 One variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiement is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
 
@@ -336,7 +324,7 @@ We see that the results of Experiment 2 are consistent with the results of Exper
 
 
 \section{Conclusion}
-From these experiment we have seen not only the usefulness of GMKL, but also with the issues that traditional classifiers face in data integration. Higher dimensional data, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and random forest. Not only does this illustrate the usefulness of GMKL as tool for classification and data integration, but the way in which GMKL generates kernels separately seems to indicate the important of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought. 
+From these experiment we have seen not only the usefulness of GMKL, but also with the issues that traditional classifiers face in data integration. Higher dimensional data, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and random forest. Not only does this illustrate the usefulness of GMKL as tool for classification and data integration, but the way in which GMKL generates kernels separately seems to indicate the important of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought.
 
 
 \section{Future Work}
