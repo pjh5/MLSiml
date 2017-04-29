@@ -1,0 +1,114 @@
+\reversemarginpar% Keep \marginpar in left margin
+\usepackage{amssymb}
+\usepackage{amsmath}
+\newcounter{parnum}
+\newlength{\parnumwidth}
+\setlength{\parnumwidth}{3em}
+\newcommand{\N}{%
+  \noindent\refstepcounter{parnum}%
+  \makebox[0pt][r]{\makebox[\parnumwidth][l]{\textbf{\arabic{parnum}}}}%
+  \hspace*{\parindent}\ignorespaces}
+\setlength{\parindent}{0em}
+\newcommand{\reset}{
+	\setcounter{parnum}{0}}
+\newcommand{\resetto}[1]{
+	\setcounter{parnum}{#1}}
+
+\newcommand{\transpose}[1]{$#1^T$}
+
+\newcommand{\rn}{$\mathbb{R}^n$}
+\newcommand{\Rm}{$\mathbb{R}^m$}
+\newcommand{\rk}{$\mathbb{R}^k$}
+\newcommand{\rsup}[1]{$\mathbb{R}^{#1}$}
+\newcommand{\putcenter}[1]{$$ \text{#1} $$}
+\newcommand{\xm}{$x^1, x^2, x^3 ... x^m$}
+\newcommand{\xsu}[1]{$x^{#1}$}
+\newcommand{\xud}[1]{$x_{#1}$}
+\newcommand{\ysu}[1]{$y^{#1}$}
+\newcommand{\musu}[1]{$\mu^{#1}$}
+\newcommand{\s}[1]{$\sum_{i=1}^{#1}$}
+\newcommand{\eps}{$\epsilon$}
+\newcommand{\bran}[1]{\[  \text{#1} \]}
+\newcommand{\anglebra}[1]{$ \left \langle \text{#1} \right \rangle$}
+\newcommand{\anglebrat}[2]{
+					$
+					\left \langle
+					  \begin{tabular}{c}
+					  #1\\
+					  #2\\
+					  \end{tabular}
+					\right \rangle
+					$
+		}
+
+\newcommand{\anglebrathree}[3]{
+					$
+					\left \langle
+					  \begin{tabular}{c}
+					  \text{#1}\\
+					  \text{#2}\\
+					  \text{#3}\\
+					  \end{tabular}
+					\right \rangle
+					$
+		}
+\newcommand{\evalat}[1]{$|_{\text{#1}}$}
+
+\newcommand{\irange}[1]{ 1 \leq i \leq #1}
+\newcommand{\range}[3]{ #1 \leq #2 \leq #3}
+\newcommand{\rarrow}{$\Rightarrow$}
+\newcommand{\inter}[1]{$\bigcap_{#1}$}
+\newcommand{\uni}[1]{$\bigcup_{#1}$}
+\newcommand{\Ga}{\Gamma}
+\newcommand{\tran}[2]{$#1^T #2$}
+\newcommand{\Lam}{\Lambda}
+\newcommand{\Lamx}{$\Lambda_x$}
+\newcommand{\lam}{\lambda}
+\newcommand{\lamh}{$\hat{\lambda}$}
+\newcommand{\vh}{$\hat{v}$}
+\newcommand{\norm}[1]{$\|\text{#1}\|$}
+\makeatletter
+\newcommand*{\rom}[1]{\expandafter\@slowromancap\romannumeral #1@}
+\makeatother
+\newcommand{\Lagr}{$\mathcal{L}$}
+\newcommand{\xb}{$\bar{x}$}
+%\newcommand{\rb}{$\bar{r}$}
+\newcommand{\xh}{$\hat{x}$}
+\newcommand{\muh}{$\hat{\mu}$}
+\newcommand{\minover}[1]{$\underset{#1}{\text{minimize}}$}
+\newcommand{\maxover}[1]{$\underset{#1}{\text{maximize}}$}
+\newcommand{\minx}{\minover{x \in X}}
+\newcommand{\maxy}{\maxover{(x, \mu) \in Y}}
+\newcommand{\curbra}[1]{\{ #1 \}}
+\newcommand{\mub}{$\bar{\mu}$}
+\newcommand{\nullset}{$\emptyset$}
+\newcommand{\stl}{$<$}
+\newcommand{\stg}{$>$}
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand{\gradx}{$\underset{x}{\nabla}$}
+\newcommand{\grad}[1]{$\underset{\text{#1}}{\nabla}$}
+\newcommand{\half}{$\frac{1}{2}$}
+\newcommand{\prim}{$^{\prime}$}
+\newcommand{\mmin}{$\in$}
+
+\newcommand{\mas}[1]{\sum_{i=1}^{#1}}
+\newcommand{\malam}[1]{\lambda_{#1}}
+\newcommand{\matranspose}[1]{#1^T}
+\newcommand{\marn}{\mathbb{R}^n}
+\newcommand{\matran}[2]{#1^T #2}
+\newcommand{\maLagr}{\mathcal{L}}
+\newcommand{\mabrat}[2]{
+					\[
+					\left \langle
+					  \begin{tabular}{c}
+					  #1\\
+					  #2\\
+					  \end{tabular}
+					\right \rangle
+					\]
+		}
+\newcommand{\mabra}[1]{\[ #1 \]}
+\newcommand{\magradx}{\underset{x}{\nabla}}
+\newcommand{\mamat}[1]{$\begin{bmatrix}
+                            #1
+                          \end{bmatrix}$}

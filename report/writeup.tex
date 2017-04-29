@@ -2,6 +2,7 @@
 \usepackage{courier}
 \renewcommand{\ttdefault}{pcr}
 \usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+\usepackage{amsmath}
 \usepackage{caption}
 \usepackage{enumerate}
 \usepackage{setspace}
@@ -9,7 +10,8 @@
 \usepackage{fancyhdr}
 \usepackage{parskip}
 \usepackage{graphicx}
-\usepackage{algorithm,algorithmic}
+\usepackage[]{algorithm2e}
+\input{jimmy_commands}
 \newcounter{ALC@tempcntr}% Temporary counter for storage
 \newcommand{\LCOMMENT}[1]{%
     \setcounter{ALC@tempcntr}{\arabic{ALC@rem}}% Store old counter
@@ -56,7 +58,20 @@ refer to both specialized data integration techniques such as GMKL as well as
 naive methods that first concatenate all sources together.
 
 
+
+
+
+
+
+
+
+
+
+
+
 \section*{Data Generation}
+
+
 
 \subsection*{Criteria of Good Simulated Data}
 
@@ -88,6 +103,8 @@ the classifiers fairly against each other on consistent benchmarks.
 \captionof{table}{Criteria of Simulated Data}
 \label{tab:criteria}
 \end{minipage}
+
+o
 
 \subsubsection*{Explanation for Data Criteria}
 
@@ -158,6 +175,9 @@ This model has significant shortcomings
 \end{itemize}
 
 
+
+
+
 \subsubsection*{Feed-forward Network Model}
 
 In order to satisfy all of the critera in \ref{tab:criteria}, we created a
@@ -171,6 +191,7 @@ This network's process is given in Algorithm \ref{alg:network_model}.
     \label{fig:network_model}
 \end{figure}
 
+\iffalse
 \begin{algorithm}
 \centering
 \begin{algorithmic}[1]
@@ -199,15 +220,31 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \label{alg:network_model}
 \caption{The network model}
 \end{algorithm}
+\fi
+
+\begin{algorithm}
+ \textbf{Parameter}:Suboptimality tolerance, $\epsilon$
+
+ \textbf{Initialization:} Let t = 0 and $\theta$ be uniformly initilaized subject to the elastic net contraint\\
+ \Repeat{difference between the unpper bound and lower bound is less than \eps}{
+  1) Solve dual problem $\alpha^{t} = \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$ \;
+  2) Construct a cutting plane model, $h^t(\theta) = \underset{1 \leq i \leq t}{max} D(\theta, \alpha^i)$ \;
+  3) Calculate a lower bound and an unpper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set L = \{$\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}$\}\;
+  4) Project $\theta^{t-1}$ to L to obtain $\theta^t$
+}
+ \caption{Level method for the MKL[1]}
+\end{algorithm}
+
+
 
 The above model creates two sources of data with very different types of
 decision boundaries.
 
-The first source consists of clusters of points at every
-corner of an $N$-dimensional hypercube, where each corner belongs to a
-different class than all of its $N-1$ closest neighboring corners (figure
-\ref{fig:xor}). The complexity of the decision boundary is proportional to the
-dimension.
+The first source is a $N$-dimensional XOR, which consists of clusters of points
+at every corner of an $N$-dimensional hypercube, where each corner belongs to a
+different class than all of its $N-1$ closest neighboring corners. Figure
+\ref{fig:xor} shows a 3D example. The complexity of the decision boundary is
+proportional to the dimension.
 
 The second source is a sine wave in 3D space (figure \ref{fig:sine_wave}); the
 complexity of this decision boundary is directly proportional to the period of
@@ -225,7 +262,9 @@ the wave and inversely proportional to the margin $m$ between the two classes.
     \includegraphics[width=\textwidth]{sine_wave_square.png}
     \caption{The 3 period sine wave created as the second source by the network
         example in \ref{fig:network}, with $\sigma=0$ noise and a margin of
-        $m=10$}
+        $m=10$. The equation of this wave in xyz coordinates is $z =
+        (x+y)sine(x) + mc$, where $m$ is the margin and $c$ is the 1 or 0 class
+        label.}
     \label{fig:sine_wave}
 \end{minipage}
 \end{figure}
@@ -240,6 +279,133 @@ This model has several nice properties:
         compromising the separability of the two classes.
     \item Extra meaningless dimensions can easily be added to either source.
 \end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Statistical Methods}
+
+To access the potential gain from intelligent data integration, we decided to compare the classification accuracy of kernel based integration technique with commonly used vector concatenation benchmarks. 
+
+\subsection{Notation}
+In describing different classification techniques, the following convention will be used:\\
+\begin{itemize}
+\setlength\itemsep{0em}
+\item (x, y) pair denotes a feature vector x \mmin \rsup{m} and its corresponding target value $\in \{0, 1\}$ .\\
+\item \xud{j} denotes the jth feature in x.\\
+\item there are N training examples and ith training pair is represented by (\xsu{i}, \ysu{i} ).
+\end{itemize}
+
+
+\subsection{Vector Concatenation Benchmarks}
+
+\subsubsection*{Gaussian Naive Bayes}
+\underline{\textbf{Model:}}\\
+The model assumes that conditioned on the value of y, every feature \xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In addition it also assumes that each $P(x_j|y) \sim \bold{N(\mu_{j,y}, \sigma_y)}$ . To make x, the model would compute its posterior probability $P(y|x)$ and pick the more likely case.\\
+
+\underline{\textbf{Properties:}}\\
+The formulation is clean and simple. It is fast to train and is quite resistant to extra noise dimensions. 
+However, the excessively strong assumption of independence means that we could only fit 2nd degree decision boundaries, so it is expected to perform poorly on our highly complex XOR dataset.\\
+
+\underline{\textbf{Implementation:}}\\
+We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is required. \\
+
+\subsubsection*{Random Forest}
+\underline{\textbf{Model:}}\\
+The model uses a group of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.\\
+
+\underline{\textbf{Properties:}}\\
+Random forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree. \\
+
+\underline{\textbf{Implementation:}}\\
+We used cross validation to select the best number of trees $\bar{t} \in \{10, 100\}$.\\
+
+\subsubsection*{K-Nearest Neighbors}
+\underline{\textbf{Model:}}\\
+KNN makes a prediction on an unknown data-point by the majority voting of the K-closest points i.e. $$f(x) = sign(\sum_{x^i \in \text{K closest points}} y^i) $$ \\
+
+\underline{\textbf{Properties:}}\\
+KNN is able to fit extremely complex decision boundaries. However, it often suffers from the curse of high dimensionality i.e. when the training data only occupies a tiny fraction of the high dimensional feature space. Moreover, it could not discriminate against noise dimensions since they are incorporated as part of the Euclidean distance. \\
+
+\underline{\textbf{Implementation:}}\\
+We used cross validation to select the best number of neighbors $\bar{k} \in \{1, 10\}$ \\
+
+\subsubsection*{RBF Support Vector Machine}
+\underline{\textbf{Model:}}\\
+Similar to KNN, support vector machine makes recommendation by considering the weighted voting of a set of similar data points\\
+$$f(x) = sign(\sum_{i=1}^{N} y^i d^i K(x, x^i))\ \text{where K(x, $x^i$)} = exp(-\gamma|x - x^i|^2)$$
+where $d^i$ is learned from data by finding the largest margin separating hyperplane in the projected space.\\
+
+\underline{\textbf{Properties:}}\\
+SVM can fit complex decision boundaries. Moreover, it does not suffer for the curse high dimensionality as much as KNN. Those two reasons has makes SVM the go-to algorithm for classification. However, just like KNN, it is unable to discriminate against extra noise dimensions.\\
+
+\underline{\textbf{Implementation:}}\\
+Cross-validation is performed to search for the best regularization parameter $\bar{C} \in \{0.1, 1, 10, 100\}$ and $\bar{\gamma} \in \{.01, .1, 1, 10\}$\\
+
+\subsection{Generalized Multiple Kernel Learning}
+Kernel methods allows the client to design custom kernels to incorporate prior knowledge about the dataset. In our case, we used multiple kernels to incorporate our knowledge of the data coming separate sources.\\
+
+\underline{\textbf{Model:}}\\
+The final trained model is almost the same as those from SVM, expect that the final kernel function is actually learned from data. More specifically, the final kernel is a convex combination of a set of predefined kernel functions: $$K(x, x^i) = \sum_{q=1}^{Q} \theta_q * K_q(x, x^i) \text{where }\theta_q \text{is learned from data}.$$
+
+\underline{\textbf{Formulation as Optimization Problem}}
+\begin{align*}
+&\text{\minover{\theta, v, b}} & &C  \frac{1}{N} \sum_{i=1}^{N} L(f_{\theta, w, b}(x^i), y^i) + 1/2 \sum_{q=1}^{Q}|\frac{v_q|^2}{\theta_q} \\
+&\text{subject to} & &\beta|\theta|_2^2 + (1-\beta){|\theta|_1} \leq 1\\
+\end{align*}
+Where C is the regularization parameter, $\beta$ is the elastic net parameter, L is the hinge loss function and $$f_{\theta, w, b}(x^i) = \sum_{q=1}^{Q} w_q \phi_q(x^i) \sqrt{\theta_q} + b $$
+Now if we define v by $v_q := \frac{w_q}{\sqrt{\theta_q}}$, then we have a convex optimization problem:
+\begin{align*}
+&\text{\minover{\theta, v, b}} & &C  \frac{1}{N} \sum_{i=1}^{N} L(f_{\theta, w, b}(x^i), y^i) + 1/2 |w|^2 \\
+&\text{subject to} & &\beta|\theta|_2^2 + (1-\beta){|\theta|_1} \leq 1\\
+&\text{Where}  & &f_{\theta, v, b}(x^i) = \sum_{q=1}^{Q} v_q \phi_q(x^i)  + b
+\end{align*}
+
+Observe that the elastic net constrain ensures sparsity and grouping effect for the set of kernels chosen for the final model.\\
+
+\underline{\textbf{Optimization Algorithm}}
+
+\begin{algorithm}[H]
+ \textbf{Parameter}:Suboptimality tolerance, $\epsilon$
+
+ \textbf{Initialization:} Let t = 0 and $\theta$ be uniformly initilaized subject to the elastic net contraint\\
+ \Repeat{difference between the unpper bound and lower bound is less than \eps}{
+  1) Solve dual problem $\alpha^{t} = \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$ \;
+  2) Construct a cutting plane model, $h^t(\theta) = \underset{1 \leq i \leq t}{max} D(\theta, \alpha^i)$ \;
+  3) Calculate a lower bound and an unpper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set L = \{$\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}$\}\;
+  4) Project $\theta^{t-1}$ to L to obtain $\theta^t$
+}
+ \caption{Level method for the MKL[1]}
+\end{algorithm}
+
+\vspace{10 mm}
+\underline{\textbf{Implementation}}\\
+For each `independent' data source, we constructed 10 RBF kernels with $\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$. Then we trained our model with C fixed to 100. \\
+
+\begin{minipage}{\linewidth}
+\begin{center}
+\includegraphics[scale=.4]{implementation_flowchart.png}
+\captionof{figure}{Flow Chart of Our Model}
+\end{center}
+\end{minipage}
+
+
+
+
+
+
+
+
+
+
 
 
 
