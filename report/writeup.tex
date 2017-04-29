@@ -309,13 +309,13 @@ GMKL Dimension & Accuracy & SVM Dimension & Accuracy & Difference\\
 
 
 
-\subsection{Experiemnt 2: Corrupted XOR Sources}
+\subsection{Experiment 2: Corrupted XOR Sources}
 
-One variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiement is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
+One variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiment is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
 
-In order to corrupt the sources, a Bernoulli experiemnt is performed for each source with a certain probability that the binomial indicator is flipped to 0 or 1 (whichever number it is currently not). A probability $p_1$ is assigned to the first source and a probability$ p_2$ is assigned to the second source. These probabilities rnage from 0, meaning no corruption, to .5, meaning complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and $p_2$ is 0.5. Then the data that stems from the first source accurately represents the value of y which is 0. The data that stems from the second source will accurately represent the value of y in 50 percent of the samples, but the other 50 percent of the samples it flips to represent 1. This means that all of the information is coming from the first source while the second source tells us nothing about the true value of y.
+In order to corrupt the sources, a Bernoulli experiment is performed for each source with a certain probability that the binomial indicator is flipped to 0 or 1 (whichever number it is currently not). A probability $p_1$ is assigned to the first source and a probability$ p_2$ is assigned to the second source. These probabilities rnage from 0, meaning no corruption, to .5, meaning complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and $p_2$ is 0.5. Then the data that stems from the first source accurately represents the value of y which is 0. The data that stems from the second source will accurately represent the value of y in 50 percent of the samples, but the other 50 percent of the samples it flips to represent 1. This means that all of the information is coming from the first source while the second source tells us nothing about the true value of y.
 
-In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiement performed on five dimensional XOR are displayed in the table below. See the appendix for the results from the three dimensional and seven dimensional experiements.
+In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiment performed on five dimensional XOR are displayed in the table below. See the appendix for the results from the three dimensional and seven dimensional experiments.
 
 *insert table here*
 *insert heatmaps here*
@@ -327,7 +327,7 @@ We see that the results of Experiment 2 are consistent with the results of Exper
 \section{Conclusion}
 From these experiment we have seen not only the usefulness of GMKL, but also with the issues that traditional classifiers face in data integration. Higher dimensional data, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and random forest. Not only does this illustrate the usefulness of GMKL as tool for classification and data integration, but the way in which GMKL generates kernels separately seems to indicate the important of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought.
 
-\subsection{Experiement 3: Corrupted Sine and XOR Sources}
+\subsection{Experiment 3: Corrupted Sine and XOR Sources}
 
 This experiment follows the same structure as Experiment 2 in terms of varying the corruption probabilities to each source. The difference in that instead of using two sources with the XOR structure, one XOR source was used and one Sine sources was used. We also varied the corruption probabilities in different increments. The corruption probability on each source ranged from 0 to 0.45 in increments of 0.15. We executed this experiment on three dimensional XOR and Sine data with a period of two. The results are displayed below.
 
@@ -338,11 +338,11 @@ Again we can see that GMKL outperforms Concatenated GMKL overall. From the heat 
 
 
 
-\subsection{Experiemnt 4: Noise Dimensions}
+\subsection{Experiment 4: Noise Dimensions}
 
-Another variable to explore is the number of noisy dimensions. This experiement explores how each classifier is able to handle additional dimensions that do not provide useful information regarding the class each point belongs to. Ideally, the classifiers are able to identify them as noise dimensions and ignores these dimension in their predictive model. 
+Another variable to explore is the number of noisy dimensions. This experiment explores how each classifier is able to handle additional dimensions that do not provide useful information regarding the class each point belongs to. Ideally, the classifiers are able to identify them as noise dimensions and ignores these dimension in their predictive model. 
 
-For this experiment, we added the same number of noise dimensions to each XOR source. We performed this experiement three times, when there were three, five, and seven XOR dimensions. We varied the proportion of dimensions that were noise dimensions. The proportion varied from no noise dimensions, to a quarter, third, half, and then fianlly two thirds noise dimensions. The purpose of measuring the proportion of noise variables as opposed to the number of noise variables is so that the three experiements over different XOR dimensions can be accurately compared. 
+For this experiment, we added the same number of noise dimensions to each XOR source. We performed this experiment three times, when there were three, five, and seven XOR dimensions. We varied the proportion of dimensions that were noise dimensions. The proportion varied from no noise dimensions, to a quarter, third, half, and then fianlly two thirds noise dimensions. The purpose of measuring the proportion of noise variables as opposed to the number of noise variables is so that the three experiments over different XOR dimensions can be accurately compared. 
 
 The results from the three dimensional Double XOR experiment are represented in the plot below. The results from the five dimenional and seven dimensional XOR can be found in the appendix. 
 
