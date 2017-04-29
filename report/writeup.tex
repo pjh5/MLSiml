@@ -194,8 +194,6 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \begin{algorithm}
 \centering
 \begin{algorithmic}[1]
-    \label{alg:network_model}
-%    \caption{The network model}
     \LCOMMENT{Sample the $y$ layer}
     \STATE $y \leftarrow$ Bernoulli($p$)
     \LCOMMENT{Sample the $z$ layer}
@@ -222,16 +220,24 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \fi
 
 \begin{algorithm}
- \textbf{Parameter}:Suboptimality tolerance, $\epsilon$
+    \textbf{Parameter}:Suboptimality tolerance, $\epsilon$
 
- \textbf{Initialization:} Let t = 0 and $\theta$ be uniformly initilaized subject to the elastic net contraint\\
- \Repeat{difference between the unpper bound and lower bound is less than \eps}{
-  1) Solve dual problem $\alpha^{t} = \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$ \;
-  2) Construct a cutting plane model, $h^t(\theta) = \underset{1 \leq i \leq t}{max} D(\theta, \alpha^i)$ \;
-  3) Calculate a lower bound and an unpper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set L = \{$\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}$\}\;
-  4) Project $\theta^{t-1}$ to L to obtain $\theta^t$
-}
- \caption{Level method for the MKL[1]}
+    \textbf{Initialization:} Let t = 0 and $\theta$ be uniformly initilaized
+    subject to the elastic net contraint\\
+    \Repeat{difference between the unpper bound and lower bound is less than
+        \eps}{
+            1) Solve dual problem $\alpha^{t} =
+            \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$ \;
+            2) Construct a cutting plane model, $h^t(\theta) = \underset{1 \leq i
+                \leq t}{max} D(\theta, \alpha^i)$ \;
+            3) Calculate a lower bound and an unpper bound for the optimal solution
+            $\overline{D_t}, \underline{D_t}$ and an improvement set level set L =
+            \{$\theta: h^t(\theta) \leq \text{some convex combination of
+            }\overline{D_t}, \underline{D_t}$\}\;
+            4) Project $\theta^{t-1}$ to L to obtain $\theta^t$
+        }
+\caption{Level method for the MKL[1]}
+\label{alg:network_model}
 \end{algorithm}
 
 
