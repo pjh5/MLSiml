@@ -48,7 +48,7 @@ data integration techniques have been proposed to more cleverly and effectively
 combine multiple sources. Unfortunately, these techniques have been poorly
 tested, and there has been no systematic evaluation of their effectiveness.
 
-This paper evaluates one such specialized data integration techniques,
+This paper evaluates one such specialized data integration technique,
 Generalized Metric Kernel Learning (GMKL), against traditional classifiers that
 use concatenated data. We simulate many multi-source datasets with a variety of
 properties for these comparative tests. We will use the term ``classifier" to
@@ -69,17 +69,17 @@ the classifiers fairly against each other on consistent benchmarks.
 \centering
 \begin{enumerate}
     \item The dataset consists of two separate sources.
-    \item \label{itm:separable} the two classes are separated by a true
+    \item \label{itm:separable} The two classes are separated by a true
         decision boundary that is known and calculable
     \begin{itemize}
         \item or the two classes can be specified to overlap with percentage
-            $p$, where $p=0$ leads to no overlap and $p=50$\% leads to complete
+            $p$, where $p=0$ leads to no overlap and $p=50$ leads to complete
             overlap
     \end{itemize}
-    \item the decision boundary's complexity (and thus difficulty) can be
+    \item The decision boundary's complexity (and thus difficulty) can be
         parametrized and controlled
-    \item the reliability of each source can be specified exactly
-    \item the noisyness of each source can be specified exactly
+    \item The reliability of each source can be specified
+    \item The noisyness of each source can be specified
     \begin{itemize}
         \item \label{itm:noise_dims} extra meaningless dimensions can be
             added to each source
