@@ -27,10 +27,10 @@
 \maketitle
 
 
-\section{Abstract}
+\section*{Abstract}
 
 
-\section{Introduction}
+\section*{Introduction}
 For classification tasks in many fields, especially in medicine and the social
 sciences, it is increasingly common for data to come from multiple disparate
 data sources. For example, a sociologist might be interested in predicting
@@ -131,9 +131,9 @@ $N_{useful}$ dimensions are actually useful.
 
 
 
-\subsection{Data Generation Models}
+\subsection*{Data Generation Models}
 
-\subsubsection{Random Coefficient Linear Model}
+\subsubsection*{Random Coefficient Linear Model}
 
 A simple, common way to simulate data is to use a linear model with random
 coefficients. This model generates data by:
@@ -295,11 +295,11 @@ This model has several nice properties:
 
 
 
-\section{Statistical Methods}
+\section*{Statistical Methods}
 
 To access the potential gain from intelligent data integration, we decided to compare the classification accuracy of kernel based integration technique with commonly used vector concatenation benchmarks. 
 
-\subsection{Notation}
+\subsection*{Notation}
 In describing different classification techniques, the following convention will be used:\\
 \begin{itemize}
 \setlength\itemsep{0em}
@@ -309,7 +309,7 @@ In describing different classification techniques, the following convention will
 \end{itemize}
 
 
-\subsection{Vector Concatenation Benchmarks}
+\subsection*{Vector Concatenation Benchmarks}
 
 \subsubsection*{Gaussian Naive Bayes}
 \underline{\textbf{Model:}}\\
@@ -354,7 +354,7 @@ SVM can fit complex decision boundaries. Moreover, it does not suffer for the cu
 \underline{\textbf{Implementation:}}\\
 Cross-validation is performed to search for the best regularization parameter $\bar{C} \in \{0.1, 1, 10, 100\}$ and $\bar{\gamma} \in \{.01, .1, 1, 10\}$\\
 
-\subsection{Generalized Multiple Kernel Learning}
+\subsection*{Generalized Multiple Kernel Learning}
 Kernel methods allows the client to design custom kernels to incorporate prior knowledge about the dataset. In our case, we used multiple kernels to incorporate our knowledge of the data coming separate sources.\\
 
 \underline{\textbf{Model:}}\\
@@ -418,7 +418,7 @@ For each `independent' data source, we constructed 10 RBF kernels with $\gamma \
 
 
 
-\subsection{Experiment 1: Data Dimension Scaling}
+\subsection*{Experiment 1: Data Dimension Scaling}
 With the prevalence of high dimensional data sets, we first would like to see
 if our data integration methods scale well as the dimension of the data sources
 increases. To this end, we generated several data sets of varying number of
@@ -503,7 +503,7 @@ GMKL Dimension & Accuracy & SVM Dimension & Accuracy & Difference\\
 
 
 
-\subsection{Experiment 2: Corrupted XOR Sources}
+\subsection*{Experiment 2: Corrupted XOR Sources}
 
 <<<<<<< HEAD
 In order to corrupt the sources, a Bernoulli experiment is performed for each
@@ -532,7 +532,7 @@ We see that the results of Experiment 2 are consistent with the results of Exper
 
 
 
-\subsection{Experiment 3: Noise Dimensions}
+\subsection*{Experiment 3: Noise Dimensions}
 
 Another variable to explore is the number of noisy dimensions. This experiment explores how each classifier is able to handle additional dimensions that do not provide useful information regarding the class each point belongs to. Ideally, the classifiers are able to identify them as noise dimensions and ignores these dimension in their predictive model. 
 
@@ -548,7 +548,7 @@ The purple line in the plot above shows how noise averse GMKL is while the accur
 
 
 
-\subsection{Experiment 4: Corrupted Sine and XOR Sources}
+\subsection*{Experiment 4: Corrupted Sine and XOR Sources}
 
 This experiment follows the same structure as Experiment 2 in terms of varying the corruption probabilities to each source. The difference in that instead of using two sources with the XOR structure, one XOR source was used and one Sine sources was used. We also varied the corruption probabilities in different increments. The corruption probability on each source ranged from 0 to 0.45 in increments of 0.15. We executed this experiment on three dimensional XOR and Sine data with a period of two. The results are displayed below.
 
@@ -569,11 +569,11 @@ This experiment follows the same structure as Experiment 2 in terms of varying t
 
 Again we can see that GMKL outperforms Concatenated GMKL overall. From the heat maps above, we can observe that GMKL does not handle Sine data well. When the XOR source is heavily corrupted, the prediction accuracy of GMKL falls to barely better than a coin flip. On the opposite end of the heat map, we can note that GMKL performs very well when the Sine source is heavily corrupted as long as the XOR source remains intact. This means that GMKL is insensistive to unreliable data. GMKL is successfully able to identify the source that does not contribute to classification accuracy and ignore it. 
 
-\section{Conclusion}
+\section*{Conclusion}
 From these experiment we have seen not only the usefulness of GMKL, but also with the issues that traditional classifiers face in data integration. Higher dimensional data, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and random forest. Not only does this illustrate the usefulness of GMKL as tool for classification and data integration, but the way in which GMKL generates kernels separately seems to indicate the important of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought.
 
 
-\section{Future Work}
+\section*{Future Work}
 For future work, first, we would like to see GMKL used on an real life data analysis problem too see if it shows the same utility that we saw previously. Second, since GMKL, and the creation of kernels is a fairly expensive operation to begin with, it would be nice to create a computationally less expensive version so that this could be run on larger datasets. Third, to show that GMKL is indeed up to the performance of other cutting edge algorithm, further comparison with other methods such as Neural Networks is necessary. And finally, if an investigation could be done of the theoretical properties of the GMKL and its relative performance compared to SVM would be appreciated to cement the useful GMKL as a data integration technique.
 
 
