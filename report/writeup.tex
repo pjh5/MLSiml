@@ -247,9 +247,9 @@ $N_{useful}$ dimensions from a double-XOR feed-forward network. The network is
 structured such that each data source receives the parity signal without
 corruption from the true source, y. Then it creates an arbitrary n-dimensional
 XOR of correct parity, which then becomes a 2n dimensional data vector.  A full
-set of paramters for this expierment can be seen in table 4.1. This network was
+set of parameters for this experiment can be seen in table 4.1. This network was
 chosen as it has no corruption of data sources, thus ensuring criteria 1.
-Second, as the dimensional of the XOR increases, the decision boundary becomes
+Second, as the dimension of the XOR sources increase, the decision boundary becomes
 increasingly complicated. Once the data generation process is complete,
 classification was done by GMKL, Concatenate + GMKL, SVM, KNN, and Random
 Forest.
@@ -270,7 +270,7 @@ I must be missing some more parameters\\
 \hline
  \end{tabular}
 \end{table}
-\textbf{These paramters values should be replaced with the correct variable
+\textbf{These parameter values should be replaced with the correct variable
     names once section 2.2.2 is completed. }\\\
 \textbf{Should the parameters for the classifiers be described here? or in an
     appendix? Or in the methods section? }
@@ -288,7 +288,7 @@ without a corresponding increase in the number of data points, making the
 classifiers suffer from the curse of dimensionality. However, while all
 classifiers have decreasing accuracy, we can see that GMKL performs much better
 than the other classifiers with nearly a 35 percent better classification
-accuracy compared to the classical SVM at at 5 dimensions. In fact, there is a
+accuracy compared to the classical SVM at five dimensions. In fact, there is a
 very intriguing pattern on display here as the the GMKL at 2n dimensions seems
 to be performing about as well as the classical SVM at n dimensions. This seems
 to indicate that maybe doing classification on the data sources as separate
@@ -326,8 +326,8 @@ sources/features.
 In order to corrupt the sources, a Bernoulli experiment is performed for each
 source with a certain probability that the binomial indicator is flipped to 0
 or 1 (whichever number it is currently not). A probability $p_1$ is assigned to
-the first source and a probability$ p_2$ is assigned to the second source.
-These probabilities rnage from 0, meaning no corruption, to .5, meaning
+the first source and a probability $p_2$ is assigned to the second source.
+These probabilities range from 0, meaning no corruption, to 0.5, meaning
 complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and
 $p_2$ is 0.5. Then the data that stems from the first source accurately
 represents the value of y which is 0. The data that stems from the second
