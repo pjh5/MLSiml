@@ -7,27 +7,17 @@
 \usepackage{setspace}
 \usepackage{amsmath}
 \usepackage{fancyhdr}
+\usepackage{parskip}
 \usepackage{graphicx}
-\usepackage{listings}
-\lstset{
-    frame=tb,
-    aboveskip=3mm,
-    belowskip=3mm,
-    showstringspaces=false,
-    mathescape=true,
-    columns=flexible,
-    basicstyle={\ttfamily},
-    numbers=left,
-    numbersep=-10pt,
-    breaklines=true,
-    breakatwhitespace=true,
-    tabsize=4,
-    keywordstyle=\bfseries,
-    keywords={foreach, do, while, if, then, else, return, def, :, Input,
-        Output, function, not}
-}
+\usepackage{algorithm,algorithmic}
+\newcounter{ALC@tempcntr}% Temporary counter for storage
+\newcommand{\LCOMMENT}[1]{%
+    \setcounter{ALC@tempcntr}{\arabic{ALC@rem}}% Store old counter
+    \setcounter{ALC@rem}{1}% To avoid printing line number
+    \item \{#1\}% Display comment + does not increment list item counter
+    \setcounter{ALC@rem}{\arabic{ALC@tempcntr}}% Restore old counter
+}%
 \usepackage{booktabs}
-\setlength{\parindent}{0cm}
 
 \begin{document}
 \title{Data Integration on High-Difficulty Binary Classification}
@@ -39,45 +29,46 @@
 
 
 \section{Introduction}
-For many fields, especially in medicine and the social sciences, it is
-increasingly common for data to come from multiple disparate data sources. For
-example, a sociologist might be interested in predicting future income using
-two different sources, one on family environment and one on school environment
-(we will use "source" to refer to a single dataset). For the best analysis, all
-data sources should be taken into account. However, most current machine
-learning techniques have been adapted for only a single dataset, and it is not
-obvious how to best adapt these techniques to multi-source data.
-
+For classification tasks in many fields, especially in medicine and the social
+sciences, it is increasingly common for data to come from multiple disparate
+data sources. For example, a sociologist might be interested in predicting
+future income using two different sources, one on family environment and one on
+school environment (we will use "source" to refer to a single coherent
+dataset). For the best analysis and classification results, all data sources
+should be taken into account. However, most current machine learning
+classification techniques have been developed for only single dataset inputs,
+and it is not obvious how to best adapt these techniques to multi-source data.
 
 A naive approach is to concatenate the sources together into one large feature
-matrix, essentially treating all of the data as a single dataset. Although
-simple and computationally efficient, this method throws away information about
-the separate sources and forces downstream processing to treat all of the
-sources in the same way. Various data integration techniques have been proposed
-to more cleverly and effectively combine multiple sources. Unfortunately, these
-techniques have been poorly tested, and there has been no systematic evaluation
-of their effectiveness.
-
+matrix, essentially treating all of the data as a single incoherent source.
+Although simple and computationally efficient, this method throws away
+information about the separate sources and forces data analysis and
+classification techniques to treat all of the sources in the same way. Various
+data integration techniques have been proposed to more cleverly and effectively
+combine multiple sources. Unfortunately, these techniques have been poorly
+tested, and there has been no systematic evaluation of their effectiveness.
 
 This paper evaluates one such specialized data integration techniques,
 Generalized Metric Kernel Learning (GMKL), against traditional classifiers that
 use concatenated data. We simulate many multi-source datasets with a variety of
 properties for these comparative tests. We will use the term "classifier" to
-refer to both specialized data integration techniques and naive workflows that
-concatenate sources together.
+refer to both specialized data integration techniques such as GMKL as well as
+naive methods that first concatenate all sources together.
 
 
 \section{Data Generation}
 
 \subsection{Criteria of Good Simulated Data}
 
-In order to understand the behavior of the classifiers, we systematically
-created data to satisfy all of the criteria in \ref{tab:criteria}.
-These criteria allow us to test all the classifiers fairly against each other.
+In order to understand the behavior of the classifiers as properties of
+multi-source data are varied, we systematically created data to satisfy all of
+the criteria in \ref{tab:criteria}.  These criteria allow us to test all the
+classifiers fairly against each other on consistent benchmarks.
 
 \begin{minipage}{\textwidth}
 \centering
 \begin{enumerate}
+    \item The dataset consists of two separate sources.
     \item \label{itm:separable} the two classes are separated by a true
         decision boundary that is known and calculable
     \begin{itemize}
@@ -130,21 +121,6 @@ $N_{useful}$ dimensions are actually useful.
 
 A simple, common way to simulate data is to use a linear model with random
 coefficients. This model generates data by:
-\begin{lstlisting}[]
-    K = desired number of true latent variables
-    N = desitred number of observable variables
-    function P2Min(s):
-        if s is a leaf:
-            return value of s
-        best_choice = null
-        min_score = $\infty$
-        for s2 in children(s):
-            s2_score = avg(P2Min(s3) for s3 in children(s2))
-            if s2_score < min_score:
-                min_score = s2_score
-                best_choice = s2
-        return min_score
-\end{lstlisting}
 \begin{enumerate}
     \item Specify the number of true latent variables $K$ along with the number
         of visible variables $N$
@@ -186,27 +162,111 @@ This model has significant shortcomings
 
 In order to satisfy all of the critera in \ref{tab:criteria}, we created a
 feed-forward conditional network (figure \ref{fig:data_generation_model.png}).
+This network would generate data with
 
-The model generates data with the following process
+\begin{enumerate}
+    \item $y$ is sampled from a Bernoulli distribution with parameter $p$
+    \item Sample the top $z$ for source 1
+    \begin{itemize}
+        \item If $y$ is 1, then sample from the $n$-dimensional binary vectors
+            of even parity
+        \item If $y$ is 0, then sample from the $n$-dimensional binary vectors
+            of odd parity
+    \end{itemize}
+    \item Sample the bottom $z$ for source 2
+\end{enumerate}
 
-\begin{lstlisting}[]
-    function P2Min(s):
-        if s is a leaf:
-            return value of s
-        best_choice = null
-        min_score = $\infty$
-        for s2 in children(s):
-            s2_score = avg(P2Min(s3) for s3 in children(s2))
-            if s2_score < min_score:
-                min_score = s2_score
-                best_choice = s2
-        return min_score
-\end{lstlisting}
+\begin{algorithm}
+\centering
+\begin{algorithmic}[1]
+    \LCOMMENT{Sample the $y$ layer}
+    \STATE $y \leftarrow$ Bernoulli($p$)
+    \LCOMMENT{Sample the $z$ layer}
+    \FORALL{$z_i \in \{z_1, z_2\}$}
+        \STATE $c \leftarrow$ Bernoulli($p_i$) \COMMENT{$p_i$ chance to corrupt
+            source $i$}
+        \STATE $z_i \leftarrow c * (1-y) + (1-c) * y$ \COMMENT{If corrupting,
+            $z_i$ will be 0 if $y$ is 1 and 1 if $y$ is 0}
+    \ENDFOR
+    \LCOMMENT{Sample the $x$ layer of source 1, an $N_1$-dimensional XOR}
+    \IF{$z_1$ is even}
+        \STATE $x^{(1)}_1 ... x^{(1)}_{N_1} \leftarrow N_1$-dimensional binary
+        vector of even parity
+    \ELSE
+        \STATE $x^{(1)}_1 ... x^{(1)}_{N_1} \leftarrow N_1$-dimensional binary
+        vector of odd parity
+    \ENDIF
+    \LCOMMENT{Sample the $x$ layer of source 2, a $k_2$-period sine wave}
+    \STATE $x^{(2)}_1 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
+    \STATE $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
+    \STATE $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sine(x^{(2)}_1) + mz_2$
+\end{algorithmic}
+\label{alg:network_model}
+\caption{The network model}
+\end{algorithm}
+
+The above model creates two sources of data with very different types of
+decision boundaries.
+
+The first source consists of clusters of points at every
+corner of an $N$-dimensional hypercube, where each corner belongs to a
+different class than all of its $N-1$ closest neighboring corners (figure
+\ref{fig:xor}). The complexity of the decision boundary is proportional to the
+dimension.
+
+The second source is a sine wave in 3D space (figure \ref{fig:sine_wave}); the
+complexity of this decision boundary is directly proportional to the period of
+the wave and inversely proportional to the margin $m$ between the two classes.
+
+\begin{figure}
+\begin{minipage}{.5\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{xor_3d_square.png}
+    \caption{A 3D-XOR with equal class size and $\sigma=0.2$ noise.}
+    \label{fig:xor}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{sine_wave_square.png}
+    \caption{The 3 period sine wave created as the second source by the network
+        example in \ref{fig:network}, with $\sigma=0$ noise and a margin of
+        $m=10$}
+    \label{fig:sine_wave}
+\end{minipage}
+\end{figure}
+
+This model has several nice properties:
+\begin{itemize}
+    \item For both the $N$-dimensional XOR and the sine wave (with small enough
+        margin $m$), every dimension is necessary for perfect classification.
+    \item The reliability of each source can be varied independently of the
+        other.
+    \item The data can be made more noisy (to an extent) without
+        compromising the separability of the two classes.
+    \item Extra meaningless dimensions can easily be added to either source.
+\end{itemize}
+
+
+
+
+
 
 \section{Experiments}
 
 \subsection{Experiment 1: Data Dimension Scaling}
-With the prevalence of high dimensional data sets, we first would like to see if our data integration methods scale well as the dimension of the data sources increases. To this end, we generated several data sets of varying number of $N_{useful}$ dimensions from a double-XOR feed-forward network. The network is structured such that each data source receives the parity signal without corruption from the true source, y. Then it creates an arbitrary n-dimensional XOR of correct parity, which then becomes a 2n dimensional data vector.  A full set of paramters for this expierment can be seen in table 4.1. This network was chosen as it has no corruption of data sources, thus ensuring criteria 1. Second, as the dimensional of the XOR increases, the decision boundary becomes increasingly complicated. Once the data generation process is complete, classification was done by GMKL, Concatenate + GMKL, SVM, KNN, and Random Forest.
+With the prevalence of high dimensional data sets, we first would like to see
+if our data integration methods scale well as the dimension of the data sources
+increases. To this end, we generated several data sets of varying number of
+$N_{useful}$ dimensions from a double-XOR feed-forward network. The network is
+structured such that each data source receives the parity signal without
+corruption from the true source, y. Then it creates an arbitrary n-dimensional
+XOR of correct parity, which then becomes a 2n dimensional data vector.  A full
+set of paramters for this expierment can be seen in table 4.1. This network was
+chosen as it has no corruption of data sources, thus ensuring criteria 1.
+Second, as the dimensional of the XOR increases, the decision boundary becomes
+increasingly complicated. Once the data generation process is complete,
+classification was done by GMKL, Concatenate + GMKL, SVM, KNN, and Random
+Forest.
 \begin{table}[h!]
 \centering
  \begin{tabular}{|c c|} 
