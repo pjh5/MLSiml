@@ -10,7 +10,7 @@
 \usepackage{fancyhdr}
 \usepackage{parskip}
 \usepackage{graphicx}
-\usepackage[]{algorithm2e}
+\usepackage{algorithm,algorithmic}
 \input{jimmy_commands}
 \newcounter{ALC@tempcntr}% Temporary counter for storage
 \newcommand{\LCOMMENT}[1]{%
@@ -190,10 +190,10 @@ This network's process is given in Algorithm \ref{alg:network_model}.
     \label{fig:network_model}
 \end{figure}
 
-\iffalse
 \begin{algorithm}
 \centering
 \begin{algorithmic}[1]
+    \caption{Network Model Data Generation Process}
     \LCOMMENT{Sample the $y$ layer}
     \STATE $y \leftarrow$ Bernoulli($p$)
     \LCOMMENT{Sample the $z$ layer}
@@ -216,28 +216,6 @@ This network's process is given in Algorithm \ref{alg:network_model}.
     \STATE $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
     \STATE $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sine(x^{(2)}_1) + mz_2$
 \end{algorithmic}
-\end{algorithm}
-\fi
-
-\begin{algorithm}
-    \textbf{Parameter}:Suboptimality tolerance, $\epsilon$
-
-    \textbf{Initialization:} Let t = 0 and $\theta$ be uniformly initilaized
-    subject to the elastic net contraint
-    \Repeat{difference between the unpper bound and lower bound is less than
-        \eps}{
-            1) Solve dual problem $\alpha^{t} =
-            \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$ \;
-            2) Construct a cutting plane model, $h^t(\theta) = \underset{1 \leq i
-                \leq t}{max} D(\theta, \alpha^i)$ \;
-            3) Calculate a lower bound and an unpper bound for the optimal solution
-            $\overline{D_t}, \underline{D_t}$ and an improvement set level set L =
-            \{$\theta: h^t(\theta) \leq \text{some convex combination of
-            }\overline{D_t}, \underline{D_t}$\}\;
-            4) Project $\theta^{t-1}$ to L to obtain $\theta^t$
-        }
-\caption{Level method for the MKL[1]}
-\label{alg:network_model}
 \end{algorithm}
 
 
@@ -380,7 +358,8 @@ Observe that the elastic net constrain ensures sparsity and grouping effect for 
 
 \textbf{Optimization Algorithm}
 
-\begin{algorithm}[H]
+\iffalse
+\begin{algorithm}
  \textbf{Parameter}:Suboptimality tolerance, $\epsilon$
 
  \textbf{Initialization:} Let t = 0 and $\theta$ be uniformly initilaized subject to the elastic net contraint
@@ -392,6 +371,7 @@ Observe that the elastic net constrain ensures sparsity and grouping effect for 
 }
  \caption{Level method for the MKL[1]}
 \end{algorithm}
+\fi
 
 \vspace{10 mm}
 \textbf{Implementation}
@@ -455,14 +435,16 @@ I must be missing some more parameters\\
 
 \textbf{These paramters values should be replaced with the correct variable names once section 2.2.2 is completed. }\
 \textbf{Should the parameters for the classifiers be described here? or in an appendix? Or in the methods section? }
-\begin{figure}[h]
-\begin{center}
+
+\begin{figure}
+\centering
 \includegraphics[scale=0.4]{experimentpic1.png}
-\end{center}
+\caption{\textbf{PUT A CAPTION OR PARAMS OR SOMETHING HERE}}
+\label{fig:exp_1.png}
 \end{figure}
 
 
-From figure \textbf{FIGURE NUMBER HERE}  we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at at 5 dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at 2n dimensions seems to be performing about as well as the classical SVM at n dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems.
+From figure \ref{fig:exp_1} we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at at 5 dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at 2n dimensions seems to be performing about as well as the classical SVM at n dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems.
 
 \begin{figure}
 \begin{center}
@@ -565,36 +547,6 @@ From these experiment we have seen not only the usefulness of GMKL, but also wit
 
 \section*{Future Work}
 For future work, first, we would like to see GMKL used on an real life data analysis problem too see if it shows the same utility that we saw previously. Second, since GMKL, and the creation of kernels is a fairly expensive operation to begin with, it would be nice to create a computationally less expensive version so that this could be run on larger datasets. Third, to show that GMKL is indeed up to the performance of other cutting edge algorithm, further comparison with other methods such as Neural Networks is necessary. And finally, if an investigation could be done of the theoretical properties of the GMKL and its relative performance compared to SVM would be appreciated to cement the useful GMKL as a data integration technique.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 \end{document}
 
