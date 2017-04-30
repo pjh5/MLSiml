@@ -105,12 +105,12 @@ Suppose that a classifier $C$ only obtains 60\% classification accuracy on a
 dataset $D$ (with datapoints evenly split amongst 2 classes). This could be
 attributable to either:
 \begin{itemize}
-    \item The classifier is not well suited to certain properties of dataset $D$
-    \item 80\% of both classes overlap with each other. The best possible
+    \item The classifier is not well suited to certain properties of dataset $D$.
+    \item Eighty percent of both classes overlap with each other. The best possible
         strategy in this area of overlap is to guess the class with 50\%
         accuracy. An optimal classifier will then guess 40\% of the datapoints
         correctly and also classify the 20\% of non-overlapping datapoints
-        perfectly
+        perfectly.
 \end{itemize}
 Criterion \ref{itm:separable} ensures that the latter case does not occur,
 so that classifier performance is attributable solely to its efficacy on
@@ -180,7 +180,7 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[scale=0.4]{network_model.png}
-    \captionof{figure}{Caption for this network model}
+    \captionof{figure}{This feed-forward network model allows complete control over how many useful and noisy dimensions there are, the relative reliability of each source, and how complex the decision bounary between classes is.}
     \label{fig:network_model}
 \end{minipage}
 
@@ -268,7 +268,7 @@ This model has several nice properties:
     \item Extra meaningless dimensions can easily be added to either source.
 \end{itemize}
 
-The first experiments in this paper use a similar model to the one above, except with another XOR as the second source instead of the sinewave. The last experiments use the exact model above.
+The first experiments in this paper use a similar model to the one above, except with another XOR as the second source instead of the sinewave. We refer to this model as ``Double XOR." The final experiment uses the exact model above.
 
 
 
@@ -282,10 +282,10 @@ The first experiments in this paper use a similar model to the one above, except
 
 \section*{Machine Learning Classifiers}
 
-To access the potential gain from intelligent data integration, we decided to compare the classification accuracy of a kernel based integration technique with commonly used vector concatenation benchmark algorithms.
+To evaluate the potential gain from intelligent data integration, we decided to compare the classification accuracy of a kernel based integration technique with commonly used vector concatenation benchmark algorithms.
 
 \subsection*{Notation}
-In describing different classification techniques, the following convention will be used:
+In describing different classification techniques, the following notation will be used:
 \begin{itemize}
 \setlength\itemsep{0em}
 \item (x, y) pair denotes a feature vector x \mmin \rsup{m} and its corresponding target value $\in \{0, 1\}$ .
@@ -298,7 +298,7 @@ In describing different classification techniques, the following convention will
 
 \subsubsection*{Gaussian Naive Bayes}
 \textbf{Model:}
-The model assumes that conditioned on the value of y, every feature \xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In addition it also assumes that each $P(x_j|y) \sim \mathbf{N(\mu_{j,y}, \sigma_y)}$ . To make x, the model would compute its posterior probability $P(y|x)$ and pick the more likely case.
+Gaussian Naive Bayes assumes that conditioned on the value of y, every feature \xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In addition it also assumes that each $P(x_j|y) \sim \mathbf{N(\mu_{j,y}, \sigma_y)}$ . To make x, the model would compute its posterior probability $P(y|x)$ and pick the more likely case.
 
 \textbf{Properties:}
 The formulation is clean and simple. It is fast to train and is quite resistant to extra noise dimensions.
@@ -309,7 +309,7 @@ We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is 
 
 \subsubsection*{Random Forest}
 \textbf{Model:}
-The model uses an ensemble of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
+Random Forest uses an ensemble of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
 
 \textbf{Properties:}
 Random Forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree.
@@ -337,7 +337,7 @@ $$f(x) = sign(\sum_{i=1}^{N} y^i d^i K(x, x^i))\ \text{where K(x, $x^i$)} = exp(
 where $d^i$ is learned from data by finding the largest margin separating hyperplane in the projected space.
 
 \textbf{Properties:}
-SVM can fit complex decision boundaries. Moreover, it does not suffer for the curse high dimensionality as much as KNN. Those two reasons has makes SVM the go-to algorithm for classification. However, just like KNN, it is unable to discriminate against extra noise dimensions.
+SVM can fit complex decision boundaries. Moreover, it does not suffer from the curse high dimensionality to the extent that KNN does. These two characteristics make SVM the go-to algorithm for classification. However, just like KNN, it is unable to effectively discriminate against extra noise dimensions.
 
 \textbf{Implementation:}
 Cross-validation is performed to search for the best regularization parameter $\bar{C} \in \{0.1, 1, 10, 100\}$ and $\bar{\gamma} \in \{.01, .1, 1, 10\}$
@@ -375,7 +375,7 @@ Now if we define v by $v_q := \frac{w_q}{\sqrt{\theta_q}}$, then we have a conve
 &\text{Where}  & &f_{\theta, v, b}(x^i) = \sum_{q=1}^{Q} v_q \phi_q(x^i)  + b
 \end{align*}
 
-Observe that the elastic net constrain ensures sparsity and grouping effect for the set of kernels chosen for the final model.
+Observe that the elastic net constraint ensures sparsity and grouping effect for the set of kernels chosen for the final model.
 
 \textbf{Optimization Algorithm}
 
@@ -386,15 +386,15 @@ Observe that the elastic net constrain ensures sparsity and grouping effect for 
 
     \item[] \LeftComment{Initialization}
     \State $t \leftarrow 0$
-    \State Let $\theta$ be uniformly initialized subject to teh elastic net constraint
+    \State Let $\theta$ be uniformly initialized subject to the elastic net constraint
 
     \item[]
-    \While{difference between the unpper bound and lower bound is less than \eps}
+    \While{difference between the upper bound and lower bound is less than \eps}
         \State $\alpha^{t} = \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$
             \Comment Solve dual problem
         \State $h^t(\theta) = \underset{1 \leq i \leq t}{max} D(\theta, \alpha^i)$
             \Comment Construct a cutting plane model
-        \State Calculate a lower bound and an unpper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set $L = \{\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}\}$
+        \State Calculate a lower bound and an upper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set $L = \{\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}\}$
         \State Project $\theta^{t-1}$ to L to obtain $\theta^t$
     \EndWhile
 \end{algorithmic}
@@ -446,30 +446,23 @@ increasingly complicated. Once the data generation process is complete,
 classification was done by GMKL, Concatenate + GMKL, SVM, KNN, and Random
 Forest.
 
-\begin{table}
-\centering
-\begin{tabular}{|c c|}
+\subsection*{Experiment 1 Parameters}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
-Parameter & Value \\
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
 \hline
-Type of Data from each Data Source & [XOR, XOR]\\
-$N_{useful}$ (For each data source) & [2,3,4,5,6,7] \\
-$N_{noisy}$& 0\\
-Number of Total Data points & 5000\\
-Ratio of Training to Testing Data & 1:2\\
-Probability of Data Source Signal Corruption & [0,0]\\
-I must be missing some more parameters\\
+[2,3,4,5,6,7] & 0 & 5000 & 1:2 & 0,0 & 0.2 & 1:1 & NA  \\
 \hline
 \end{tabular}
-\end{table}
+\end{center}
 
-\textbf{These paramters values should be replaced with the correct variable names once section 2.2.2 is completed. }\
-\textbf{Should the parameters for the classifiers be described here? or in an appendix? Or in the methods section? }
 
 \begin{minipage}{\textwidth}
 \centering
 \includegraphics[scale=0.4]{experimentpic1.png}
-\captionof{figure}{\textbf{PUT A CAPTION OR PARAMS OR SOMETHING HERE}}
+\captionof{figure}{\textbf{The purple line in this figure illustrates the resistance of GMKL to the affect of 
+high dimensions.}}
 \label{fig:exp_1}
 \end{minipage}
 
@@ -623,7 +616,7 @@ $M_{i,useful}$ & Number of useful Data Dimensions for Data Source i\\
 \hline
 $M_{i, noisy}$ & Number of Noisy Dimensions for Data Source i\\
 \hline
-$N$ & Number of Data points Generated (training and testing)\\
+$N$ & Number of Data Points Generated (training and testing)\\
 \hline
 T & Ratio of Training to Testing \\
 \hline
@@ -638,16 +631,6 @@ k & Period of Sine Curve\\
 \end{tabular}
 \end{center}
 
-\subsection*{Experiment 1 Parameters}
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|c|c|c|}
-\hline
-$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
-\hline
-0& 0 & 0 &0 & 0,0 & 0 & 0 & 0  \\
-\hline
-\end{tabular}
-\end{center}
 
 \subsection*{Experiment 2 Parameters}
 \begin{center}
