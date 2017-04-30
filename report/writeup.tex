@@ -19,7 +19,6 @@
     \item \{#1\}% Display comment + does not increment list item counter
     \setcounter{ALC@rem}{\arabic{ALC@tempcntr}}% Restore old counter
 }%
-
 \begin{document}
 \title{Data Integration on High-Difficulty Binary Classification}
 \author{Julia Finch, Jesse Hellemn, Kentaro Hoffman, Zhe Zhang}
@@ -216,6 +215,7 @@ This network's process is given in Algorithm \ref{alg:network_model}.
     \STATE $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
     \STATE $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sin(x^{(2)}_1) + mz_2$
 \end{algorithmic}
+\caption{Data generation process for the network model}
 \label{alg:network_model}
 \end{algorithm}
 
