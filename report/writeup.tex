@@ -298,7 +298,7 @@ In describing different classification techniques, the following notation will b
 
 \subsubsection*{Gaussian Naive Bayes}
 \textbf{Model:}
-The model assumes that conditioned on the value of y, every feature \xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In addition it also assumes that each $P(x_j|y) \sim \mathbf{N(\mu_{j,y}, \sigma_y)}$ . To make x, the model would compute its posterior probability $P(y|x)$ and pick the more likely case.
+Gaussian Naive Bayes assumes that conditioned on the value of y, every feature \xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In addition it also assumes that each $P(x_j|y) \sim \mathbf{N(\mu_{j,y}, \sigma_y)}$ . To make x, the model would compute its posterior probability $P(y|x)$ and pick the more likely case.
 
 \textbf{Properties:}
 The formulation is clean and simple. It is fast to train and is quite resistant to extra noise dimensions.
@@ -309,7 +309,7 @@ We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is 
 
 \subsubsection*{Random Forest}
 \textbf{Model:}
-The model uses an ensemble of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
+Random Forest uses an ensemble of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
 
 \textbf{Properties:}
 Random Forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree.
@@ -337,7 +337,7 @@ $$f(x) = sign(\sum_{i=1}^{N} y^i d^i K(x, x^i))\ \text{where K(x, $x^i$)} = exp(
 where $d^i$ is learned from data by finding the largest margin separating hyperplane in the projected space.
 
 \textbf{Properties:}
-SVM can fit complex decision boundaries. Moreover, it does not suffer for the curse high dimensionality as much as KNN. Those two reasons has makes SVM the go-to algorithm for classification. However, just like KNN, it is unable to discriminate against extra noise dimensions.
+SVM can fit complex decision boundaries. Moreover, it does not suffer from the curse high dimensionality to the extent that KNN does. These two characteristics make SVM the go-to algorithm for classification. However, just like KNN, it is unable to effectively discriminate against extra noise dimensions.
 
 \textbf{Implementation:}
 Cross-validation is performed to search for the best regularization parameter $\bar{C} \in \{0.1, 1, 10, 100\}$ and $\bar{\gamma} \in \{.01, .1, 1, 10\}$
