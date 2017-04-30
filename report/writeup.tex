@@ -105,12 +105,12 @@ Suppose that a classifier $C$ only obtains 60\% classification accuracy on a
 dataset $D$ (with datapoints evenly split amongst 2 classes). This could be
 attributable to either:
 \begin{itemize}
-    \item The classifier is not well suited to certain properties of dataset $D$
-    \item 80\% of both classes overlap with each other. The best possible
+    \item The classifier is not well suited to certain properties of dataset $D$.
+    \item Eighty percent of both classes overlap with each other. The best possible
         strategy in this area of overlap is to guess the class with 50\%
         accuracy. An optimal classifier will then guess 40\% of the datapoints
         correctly and also classify the 20\% of non-overlapping datapoints
-        perfectly
+        perfectly.
 \end{itemize}
 Criterion \ref{itm:separable} ensures that the latter case does not occur,
 so that classifier performance is attributable solely to its efficacy on
@@ -180,7 +180,7 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[scale=0.4]{network_model.png}
-    \captionof{figure}{Caption for this network model}
+    \captionof{figure}{This feed-forward network model allows complete control over how many useful and noisy dimensions there are, the relative reliability of each source, and how complex the decision bounary between classes is.}
     \label{fig:network_model}
 \end{minipage}
 
