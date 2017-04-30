@@ -278,9 +278,9 @@ The first experiments in this paper use a similar model to the one above, except
 
 
 
-\section*{Statistical Methods}
+\section*{Machine Learning Classifiers}
 
-To access the potential gain from intelligent data integration, we decided to compare the classification accuracy of kernel based integration technique with commonly used vector concatenation benchmarks.
+To access the potential gain from intelligent data integration, we decided to compare the classification accuracy of a kernel based integration technique with commonly used vector concatenation benchmark algorithms.
 
 \subsection*{Notation}
 In describing different classification techniques, the following convention will be used:
@@ -300,20 +300,20 @@ The model assumes that conditioned on the value of y, every feature \xud{j} is g
 
 \textbf{Properties:}
 The formulation is clean and simple. It is fast to train and is quite resistant to extra noise dimensions.
-However, the excessively strong assumption of independence means that we could only fit 2nd degree decision boundaries, so it is expected to perform poorly on our highly complex XOR dataset.
+However, the excessively strong assumption of independence means that we could only fit 2nd degree decision boundaries, so it is expected to perform poorly on our highly complex Double XOR dataset.
 
 \textbf{Implementation:}
 We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is required.
 
 \subsubsection*{Random Forest}
 \textbf{Model:}
-The model uses a group of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
+The model uses an ensemble of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
 
 \textbf{Properties:}
-Random forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree.
+Random Forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree.
 
 \textbf{Implementation:}
-We used cross validation to select the best number of trees $\bar{t} \in \{10, 100\}$.
+We used cross validation to select the optimal number of trees $\bar{t} \in \{10, 100\}$.
 
 \subsubsection*{K-Nearest Neighbors}
 \textbf{Model:}
@@ -330,7 +330,7 @@ We used cross validation to select the best number of neighbors $\bar{k} \in \{1
 
 \subsubsection*{RBF Support Vector Machine}
 \textbf{Model:}
-Similar to KNN, support vector machine makes recommendation by considering the weighted voting of a set of similar data points
+Similar to KNN, Support Vector Machine makes recommendation by considering the weighted voting of a set of similar data points
 $$f(x) = sign(\sum_{i=1}^{N} y^i d^i K(x, x^i))\ \text{where K(x, $x^i$)} = exp(-\gamma|x - x^i|^2)$$
 where $d^i$ is learned from data by finding the largest margin separating hyperplane in the projected space.
 
@@ -344,7 +344,7 @@ Cross-validation is performed to search for the best regularization parameter $\
 
 
 \subsection*{Generalized Multiple Kernel Learning}
-Kernel methods allows the client to design custom kernels to incorporate prior knowledge about the dataset. In our case, we used multiple kernels to incorporate our knowledge of the data coming separate sources. This method involves several steps, and a general flowchart of the process is shown in figure \ref{fig:implementation_flowchart}.
+Kernel methods allow custom kernels to be incorporated into prior knowledge about the dataset. In our case, we used multiple kernels to incorporate our knowledge of the data coming from separate sources. This method involves several steps, and a general flowchart of the process is shown in figure \ref{fig:implementation_flowchart}.
 
 \textbf{Model:}
 The final trained model is almost the same as those from SVM, expect that the final kernel function is actually learned from data. More specifically, the final kernel is a convex combination of a set of predefined kernel functions: $$K(x, x^i) = \sum_{q=1}^{Q} \theta_q * K_q(x, x^i) \text{where }\theta_q \text{is learned from data}.$$
