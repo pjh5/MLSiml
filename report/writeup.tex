@@ -22,7 +22,7 @@
 
 \section*{Abstract}
 
-This paper explores the effectiveness of the data integration technique Generalized Multiple Kernel Learning (GMKL) on high-difficuly binary classification data. GMKL that integrates learned kernels from two disparate data sources is systematically compared to performing GMKL on the two sources naively concatenated as well as standard classification algorithms that are performed on the concatenated sources. The variables that are systematically varied are the number of informative dimensions in each source, the relative information provided by each source, and the number of useless noise dimensions added to each source. It is found that GMKL consistenly outperforms its competitors. This paper provides evidence that data integration techniques, specifically GMKL, have the ability to drastically improve upon the performance of naive concatenation.
+This paper explores the effectiveness of the data integration technique Generalized Multiple Kernel Learning (GMKL) on high-difficuly binary classification data. GMKL that integrates learned kernels from two disparate data sources is systematically compared to performing GMKL on the two sources naively concatenated as well as standard classification algorithms that are performed on the concatenated sources. The variables that are systematically varied are the number of informative dimensions in each source, the relative information provided by each source, and the number of useless noise dimensions added to each source. It is found that GMKL consistently outperforms its competitors. This paper provides evidence that data integration techniques, specifically GMKL, have the ability to drastically improve upon the performance of naive concatenation.
 
 \section*{Introduction}
 For classification tasks in many fields, especially in medicine and the social
@@ -175,14 +175,14 @@ This model has significant shortcomings
 
 \subsubsection*{Feed-forward Network Model}
 
-In order to satisfy all of the critera in \ref{tab:criteria}, we created a
+In order to satisfy all of the criteria in \ref{tab:criteria}, we created a
 feed-forward conditional network (Figure \ref{fig:network_model}).
 This network's process is given in Algorithm \ref{alg:network_model}.
 
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[scale=0.4]{network_model.png}
-    \captionof{figure}{This feed-forward network model allows complete control over how many useful and noisy dimensions there are, the relative reliability of each source, and how complex the decision bounary between classes is.}
+    \captionof{figure}{This feed-forward network model allows complete control over how many useful and noisy dimensions there are, the relative reliability of each source, and how complex the decision boundary between classes is.}
     \label{fig:network_model}
 \end{minipage}
 
@@ -291,7 +291,7 @@ In describing different classification techniques, the following notation will b
 \begin{itemize}
 \setlength\itemsep{0em}
 \item (x, y) pair denotes a feature vector x \mmin \rsup{m} and its corresponding target value $\in \{0, 1\}$ .
-\item \xud{j} denotes the jth feature in x.
+\item \xud{j} denotes the $j$th feature in x.
 \item there are N training examples and $i$th training pair is represented by (\xsu{i}, \ysu{i} ).
 \end{itemize}
 
@@ -471,26 +471,6 @@ high dimensions.}
 
 From Figure \ref{fig:exp_1} we can see that as the number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. As the XOR dimension increases, the decision boundary becomes more complex causing classification to become more difficult. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at five dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at $2n$ dimensions seems to be performing about as well as the classical SVM at $n$ dimensions. This seems to indicate that doing classification on the data sources as separate entities is highly desirable for complicated classification problems.
 
-\begin{minipage}{\textwidth}
-\centering
-\begin{tabular}{|c| c| c| c| c| c|}
-\hline
-XOR Dimensions (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
-\hline
-2 & 99.0 & 96.6 & 99.0 & 99.9 & 99.9 \\
-\hline
-3 & 86.2 & 79.7 & 83.6 & 97.5 & 99.8 \\
-\hline
-4 & 70.1 & 68.7 & 68.9 & 78.6 & 97.5 \\
-\hline
-5 & 60.8 & 58.1 & 61.4 & 66.2 & 96.4 \\
-\hline
-6 & 57.8 & 55.0 & 60.2 & 64.6 & 83.7 \\
-\hline
-7 & 58.1 & 54.8 & 57.2 & 63.5 & 74.9 \\
-\hline
-\end{tabular}
-\end{minipage}
 
 
 
@@ -503,7 +483,7 @@ XOR Dimensions (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & G
 
 \subsection*{Experiment 2: Corrupted XOR Sources}
 
-Another variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiment is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
+Another variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiment is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifiers are able to identify the important sources/features.
 
 \subsubsection*{Experiment 2 Parameters}
 \begin{center}
@@ -544,11 +524,11 @@ We see that the results of Experiment 2 are consistent with the results of Exper
 
 \subsection*{Experiment 3: Noise Dimensions}
 
-Another variable to explore is the number of noisy dimensions. This experiment explores how each classifier is able to handle additional dimensions that do not provide useful information regarding the class each point belongs to. Ideally, the classifiers are able to identify them as noise dimensions and ignores these dimension in their predictive model.
+Another variable to explore is the number of noisy dimensions. This experiment explores how each classifier is able to handle additional dimensions that do not provide useful information regarding the class each datapoint belongs to. Ideally, the classifiers would be able to identify them as noise dimensions and ignore these dimensions in their predictive model.
 
 For this experiment, we added the same number of noise dimensions to each XOR source. We performed this experiment three times, when there were three, five, and seven XOR dimensions. We varied the proportion of dimensions that were noise dimensions. The proportion varied from no noise dimensions, to a quarter, third, half, and then finally two thirds noise dimensions. The purpose of measuring the proportion of noise variables as opposed to the number of noise variables is so that the three experiments over different XOR dimensions can be accurately compared.
 
-The results from the three dimensional Double XOR experiment are represented in Figure \ref{fig:noise_dim_line}. The results from the five dimenional and seven dimensional XOR can be found in the appendix.
+The results from the three dimensional Double XOR experiment are represented in Figure \ref{fig:noise_dim_line}. The results from the five dimensional and seven dimensional XOR can be found in the appendix.
 
 \begin{minipage}{\textwidth}
     \centering
@@ -592,7 +572,7 @@ Data integration, data simulation, and benchmarking of machine learning techniqu
         both sources, but it would be very interesting to investigate if
         and how this property of the data affected the performance of
         classifiers.
-    \item \textbf{Neural Networks:} Artifical neural networks are very powerful
+    \item \textbf{Neural Networks:} Artificial neural networks are very powerful
         classifiers that are growing in popularity. They are an extremely
         extensible and flexible framework, with specialized versions existing
         for specific problems within the machine learning. They were not
@@ -601,7 +581,7 @@ Data integration, data simulation, and benchmarking of machine learning techniqu
         was not known how to pick an appropriate network architecture and
         topology for comparison against the other classifiers.
     \item \textbf{Theoretical Framework of Decision Boundaries:} We saw in
-        Experiement 4 that GMKL performed well on the XOR dataset and not well
+        Experiment 4 that GMKL performed well on the XOR dataset and not well
         on the Sine dataset. We would like to develop a theoretical framework
         that characterizes the aspects of decision boundaries that enable or
         disable a particular data integration technique from performing well on
@@ -631,6 +611,7 @@ Data integration, data simulation, and benchmarking of machine learning techniqu
 
 \newpage
 \section*{Appendix}
+
 
 \begin{center}
 \begin{tabular}{|c|c|}
@@ -680,7 +661,30 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 \end{tabular}
 \end{center}
 
+\subsection*{Experiment 1: Data Dimension Scaling}
 
+\begin{minipage}{\textwidth}
+\centering
+\begin{tabular}{|c| c| c| c| c| c|}
+\hline
+XOR Dimensions (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
+\hline
+2 & 99.0 & 96.6 & 99.0 & 99.9 & 99.9 \\
+\hline
+3 & 86.2 & 79.7 & 83.6 & 97.5 & 99.8 \\
+\hline
+4 & 70.1 & 68.7 & 68.9 & 78.6 & 97.5 \\
+\hline
+5 & 60.8 & 58.1 & 61.4 & 66.2 & 96.4 \\
+\hline
+6 & 57.8 & 55.0 & 60.2 & 64.6 & 83.7 \\
+\hline
+7 & 58.1 & 54.8 & 57.2 & 63.5 & 74.9 \\
+\hline
+\end{tabular}
+\end{minipage}
+
+\subsection*{Experiment 2: Corrupted XOR Sources}
 
 \begin{minipage}{\textwidth}
 \centering
