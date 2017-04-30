@@ -404,6 +404,8 @@ For each `independent' data source, we constructed 10 RBF kernels with the width
     \label{fig:implementation_flowchart}
 \end{minipage}
 
+\textbf{Concatenated GMKL}
+To isolate the effect of data integration, we also applied GMKL to concatenated data for comparison. More specifically, we constructed only 10 RBF kernels with $\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$ for the concatenated dataset and then trained GMKL algorithm with C fixed at 100.\\
 
 
 
