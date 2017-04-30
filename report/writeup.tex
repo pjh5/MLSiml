@@ -216,6 +216,7 @@ This network's process is given in Algorithm \ref{alg:network_model}.
     \STATE $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
     \STATE $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sin(x^{(2)}_1) + mz_2$
 \end{algorithmic}
+\label{alg:network_model}
 \end{algorithm}
 
 
@@ -310,7 +311,7 @@ We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is 
 The model uses a group of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
 
 \textbf{Properties:}
-Random forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree.
+Random Forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree.
 
 \textbf{Implementation:}
 We used cross validation to select the best number of trees $\bar{t} \in \{10, 100\}$.
@@ -451,7 +452,7 @@ I must be missing some more parameters\\
 \centering
 \includegraphics[scale=0.4]{experimentpic1.png}
 \captionof{figure}{\textbf{PUT A CAPTION OR PARAMS OR SOMETHING HERE}}
-\label{fig:exp_1.png}
+\label{fig:exp_1}
 \end{minipage}
 
 
