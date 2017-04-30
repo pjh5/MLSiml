@@ -545,5 +545,102 @@ From these experiment we have seen not only the usefulness of GMKL, but also wit
 \section*{Future Work}
 For future work, first, we would like to see GMKL used on an real life data analysis problem too see if it shows the same utility that we saw previously. Second, since GMKL, and the creation of kernels is a fairly expensive operation to begin with, it would be nice to create a computationally less expensive version so that this could be run on larger datasets. Third, to show that GMKL is indeed up to the performance of other cutting edge algorithm, further comparison with other methods such as Neural Networks is necessary. And finally, if an investigation could be done of the theoretical properties of the GMKL and its relative performance compared to SVM would be appreciated to cement the useful GMKL as a data integration technique.
 
+\begin{itemize}
+    \item \textbf{Shared Information Across Sources:} An important component of
+        real world multi-source datasets is that information is shared across
+        sources. That is, the sources aren't completely independent of each
+        other, but both give insights into similar underlying hidden variables.
+        The current data generation network model presented above does not have
+        a way to systematically vary the information that is shared between
+        both sources, but it would be very interesting to see investigate if
+        and how this property of the data affected the performance of
+        classifiers.
+    \item \textbf{Neural Networks:} Artifical neural networks are very powerful
+        classifiers that are growing in popularity. They are an extremely
+        extensible and flexible framework, with specialized versions existing
+        for specific problems within the machine learning. They were not
+        included in these experiments because they are too flexible. Neural
+        networks have many more parameters than most popular classifiers, so it
+        was not known how to pick an appropriate network architecture and
+        topology for comparison against the other classifiers.
+    \item \textbf{Theoretical Framework of Decision Boundaries:}
+\end{itemize}
+
+
+
+
+
+
+\newpage
+\section*{Appendix}
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Variable} &\textbf{ Description}\\
+\hline
+\hline
+$M_{i,useful}$ & Number of useful Data Dimensions for Data Source i\\
+\hline
+$M_{i, noisy}$ & Number of Noisy Dimensions for Data Source i\\
+\hline
+$N$ & Number of Data points Generated (training and testing)\\
+\hline
+T & Ratio of Training to Testing \\
+\hline
+$p_1, p_2$ & Probability of Data Source Corruption\\
+\hline
+$\sigma_i$ & Variance of Gaussian Noise \\
+\hline
+C & Proportion of Data points in each class \\
+\hline
+k & Period of Sine Curve\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{Experiment 1 Parameters}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
+\hline
+0& 0 & 0 &0 & 0,0 & 0 & 0 & 0  \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection*{Experiment 2 Parameters}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
+\hline
+0& 0 & 0 &0 & 0,0 & 0 & 0 & 0  \\
+\hline
+\end{tabular}
+\end{center}
+\subsection*{Experiment 3 Parameters}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
+\hline
+0& 0 & 0 &0 & 0,0 & 0 & 0 & 0  \\
+\hline
+\end{tabular}
+\end{center}
+\subsection*{Experiment 4 Parameters}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
+\hline
+0& 0 & 0 &0 & 0,0 & 0 & 0 & 0  \\
+\hline
+\end{tabular}
+\end{center}
+
+
 \end{document}
 
