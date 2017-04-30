@@ -29,14 +29,14 @@
 
 \section*{Abstract}
 
-This paper explores the effectiveness of the data integration technique Multiple Generalized Kernel Learning on high-difficuly binary classification data. Generalized Multiple Kernel Learning that integrates learned kernels from two disparate data sources is systematically compared to performing Generalized Multiple Kernel Learning on the two sources naively concatenated as well as standard classification algorithms that are performed on the concatenated sources. The variables that are systematically varied are the number of informative dimensions in each source, the relative information provided by each source, and the number of useless noise dimensions added to each source. It is found that Generalized Multiple Kernel Learning consistenly outperforms its competitors. This paper provides evidence that data integration techniques, specifically Generalized Multiple Kernel Learning, have the ability to drastically improve upon the performace of of naive concatenation. 
+This paper explores the effectiveness of the data integration technique Multiple Generalized Kernel Learning on high-difficuly binary classification data. Generalized Multiple Kernel Learning that integrates learned kernels from two disparate data sources is systematically compared to performing Generalized Multiple Kernel Learning on the two sources naively concatenated as well as standard classification algorithms that are performed on the concatenated sources. The variables that are systematically varied are the number of informative dimensions in each source, the relative information provided by each source, and the number of useless noise dimensions added to each source. It is found that Generalized Multiple Kernel Learning consistenly outperforms its competitors. This paper provides evidence that data integration techniques, specifically Generalized Multiple Kernel Learning, have the ability to drastically improve upon the performace of of naive concatenation.
 
 \section*{Introduction}
 For classification tasks in many fields, especially in medicine and the social
 sciences, it is increasingly common for data to come from multiple disparate
 data sources. For example, a sociologist might be interested in predicting
 future income using two different sources, one on family environment and one on
-school environment (we will use "source" to refer to a single coherent
+school environment (we will use ``source" to refer to a single coherent
 dataset). For the best analysis and classification results, all data sources
 should be taken into account. However, most current machine learning
 classification techniques have been developed for only single dataset inputs,
@@ -54,7 +54,7 @@ tested, and there has been no systematic evaluation of their effectiveness.
 This paper evaluates one such specialized data integration techniques,
 Generalized Metric Kernel Learning (GMKL), against traditional classifiers that
 use concatenated data. We simulate many 2-source datasets with a variety of
-properties for these comparative tests. We will use the term "classifier" to
+properties for these comparative tests. We will use the term ``classifier" to
 refer to both specialized data integration techniques such as GMKL as well as
 naive methods that first concatenate all sources together.
 
@@ -76,10 +76,10 @@ naive methods that first concatenate all sources together.
 
 \subsection*{Criteria of Good Simulated Data}
 
-In order to understand the behavior of the classifiers as properties of
-multi-source data are varied, we systematically created data to satisfy all of
-the criteria in \ref{tab:criteria}.  These criteria allow us to test all the
-classifiers fairly against each other on consistent benchmarks.
+In order to understand the behavior of the classifiers on 2-source data as
+properties of the data are varied, we systematically created data to satisfy
+all of the criteria in \ref{tab:criteria}. These criteria allow us to test all
+the classifiers fairly against each other on consistent benchmarks.
 
 \begin{minipage}{\textwidth}
 \centering
