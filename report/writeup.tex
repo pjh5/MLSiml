@@ -469,17 +469,26 @@ high dimensions.}
 \end{minipage}
 
 
-From Figure \ref{fig:exp_1} we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at five dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at $2n$ dimensions seems to be performing about as well as the classical SVM at $n$ dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems.
+From Figure \ref{fig:exp_1} we can see that as the number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. As the XOR dimension increases, the decision boundary becomes more complex causing classification to become more difficult. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at five dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at $2n$ dimensions seems to be performing about as well as the classical SVM at $n$ dimensions. This seems to indicate that doing classification on the data sources as separate entities is highly desirable for complicated classification problems.
 
 \begin{minipage}{\textwidth}
 \centering
-\begin{tabular}{|c| c| c| c| c| }
+\begin{tabular}{|c| c| c| c| c| c|}
 \hline
-GMKL Dimension & Accuracy & SVM Dimension & Accuracy & Difference \\
+XOR Dimensions (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
 \hline
-2 & a & 4 & a \\
+2 & 99.0 & 96.6 & 99.0 & 99.9 & 99.9 \\
 \hline
-3 & a & 6 &a
+3 & 86.2 & 79.7 & 83.6 & 97.5 & 99.8 \\
+\hline
+4 & 70.1 & 68.7 & 68.9 & 78.6 & 97.5 \\
+\hline
+5 & 60.8 & 58.1 & 61.4 & 66.2 & 96.4 \\
+\hline
+6 & 57.8 & 55.0 & 60.2 & 64.6 & 83.7 \\
+\hline
+7 & 58.1 & 54.8 & 57.2 & 63.5 & 74.9 \\
+\hline
 \end{tabular}
 \end{minipage}
 
