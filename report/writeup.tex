@@ -543,7 +543,7 @@ From these experiments we have seen not only the usefulness of GMKL, but also th
 
 
 \section*{Future Work}
-For future work, first, we would like to see GMKL used on an real life data analysis problem too see if it shows the same utility that we saw previously. Second, since GMKL, and the creation of kernels is a fairly expensive operation to begin with, it would be nice to create a computationally less expensive version so that this could be run on larger datasets. Third, to show that GMKL is indeed up to the performance of other cutting edge algorithm, further comparison with other methods such as Neural Networks is necessary. And finally, if an investigation could be done of the theoretical properties of the GMKL and its relative performance compared to SVM would be appreciated to cement the useful GMKL as a data integration technique.
+For future work, first, we would like to see GMKL used on an real life data analysis problem to see if it shows the same utility that we saw previously. Second, since GMKL, and the creation of kernels is a fairly expensive operation to begin with, it would be nice to create a computationally less expensive version so that this could be run on larger datasets. Third, to show that GMKL is indeed up to the performance of other cutting edge algorithms, further comparison with other methods such as Neural Networks is necessary. And finally, if an investigation could be done of the theoretical properties of the GMKL and its relative performance compared to SVM would be appreciated to cement the useful GMKL as a data integration technique.
 
 \begin{itemize}
     \item \textbf{Shared Information Across Sources:} An important component of
@@ -552,7 +552,7 @@ For future work, first, we would like to see GMKL used on an real life data anal
         other, but both give insights into similar underlying hidden variables.
         The current data generation network model presented above does not have
         a way to systematically vary the information that is shared between
-        both sources, but it would be very interesting to see investigate if
+        both sources, but it would be very interesting to investigate if
         and how this property of the data affected the performance of
         classifiers.
     \item \textbf{Neural Networks:} Artifical neural networks are very powerful
@@ -563,7 +563,7 @@ For future work, first, we would like to see GMKL used on an real life data anal
         networks have many more parameters than most popular classifiers, so it
         was not known how to pick an appropriate network architecture and
         topology for comparison against the other classifiers.
-    \item \textbf{Theoretical Framework of Decision Boundaries:}
+    \item \textbf{Theoretical Framework of Decision Boundaries:} We saw in Experiement 4 that GMKL performed well on the XOR dataset and not well on the Sine dataset. We would like to develop a theoretical framework that characterizes the aspects of decision boundaries that enable or disable a particular data integration technique from performing well on a dataset. We would like to come up with a concrete method for determining the best choice of data integration technique for a specific decision boundary. 
 \end{itemize}
 
 
