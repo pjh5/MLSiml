@@ -5,6 +5,7 @@
 \usepackage{amsmath}
 \usepackage{caption}
 \usepackage{enumerate}
+\usepackage{enumitem}
 \usepackage{setspace}
 \usepackage{amsmath}
 \usepackage{parskip}
@@ -184,7 +185,7 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 
 \begin{minipage}{\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{network_model.png}
+    \includegraphics[scale=0.4]{network_model.png}
     \captionof{figure}{Caption for this network model}
     \label{fig:network_model}
 \end{minipage}
@@ -232,18 +233,20 @@ complexity of this decision boundary is directly proportional to the period of
 the wave and inversely proportional to the margin $m$ between the two classes.
 
 \begin{minipage}{\textwidth}
-\begin{minipage}{.5\textwidth}
+\begin{minipage}{.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{xor_3d_square.png}
-    \captionof{figure}{A 3D-XOR with equal class size and $\sigma=0.2$ noise.}
+    \captionof{figure}{A 3D-XOR with equal class size and $\sigma=0.2$ noise.
+        The noise for the XORs created by this model are independent $Normal(0,
+        \sigma)$ added to every dimension.}
     \label{fig:xor}
 \end{minipage}
-\begin{minipage}{.5\textwidth}
+\hspace{.04\textwidth}
+\begin{minipage}{.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{sine_wave_square.png}
-    \captionof{figure}{The 3 period sine wave created as the second source by the network
-        example in \ref{fig:network_model}, with $\sigma=0$ noise and a margin of
-        $m=10$. The equation of this wave in xyz coordinates is $z =
+    \captionof{figure}{A 3 period sine wave with $\sigma=0$ noise and a margin
+        of $m=10$. The equation of this wave in xyz coordinates is $z =
         (x+y)sine(x) + mc$, where $m$ is the margin and $c$ is the 1 or 0 class
         label.}
     \label{fig:sine_wave}
