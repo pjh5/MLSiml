@@ -415,8 +415,8 @@ if our data integration methods scale well as the dimension of the data sources
 increases. To this end, we generated several data sets of varying number of
 $N_{useful}$ dimensions from a double-XOR feed-forward network. The network is
 structured such that each data source receives the parity signal without
-corruption from the true source, y. Then it creates an arbitrary n-dimensional
-XOR of correct parity, which then becomes a 2n dimensional data vector.  A full
+corruption from the true source, $y$. Then it creates an arbitrary n-dimensional
+XOR of correct parity, which then becomes a $2n$ dimensional data vector.  A full
 set of parameters for this experiment can be seen in table 4.1. This network was
 chosen as it has no corruption of data sources, thus ensuring criteria 1.
 Second, as the dimension of the XOR sources increase, the decision boundary becomes
@@ -452,7 +452,7 @@ I must be missing some more parameters\\
 \end{minipage}
 
 
-From figure \ref{fig:exp_1} we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at at 5 dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at 2n dimensions seems to be performing about as well as the classical SVM at n dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems.
+From figure \ref{fig:exp_1} we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at five dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at $2n$ dimensions seems to be performing about as well as the classical SVM at $n$ dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems.
 
 \begin{minipage}{\textwidth}
 \centering
