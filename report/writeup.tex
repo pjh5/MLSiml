@@ -10,15 +10,10 @@
 \usepackage{amsmath}
 \usepackage{parskip}
 \usepackage{graphicx}
-\usepackage{algorithm,algorithmic}
+\usepackage{algorithm,algpseudocode}
 \input{jimmy_commands}
 \newcounter{ALC@tempcntr}% Temporary counter for storage
-\newcommand{\LCOMMENT}[1]{%
-    \setcounter{ALC@tempcntr}{\arabic{ALC@rem}}% Store old counter
-    \setcounter{ALC@rem}{1}% To avoid printing line number
-    \item \{#1\}% Display comment + does not increment list item counter
-    \setcounter{ALC@rem}{\arabic{ALC@tempcntr}}% Restore old counter
-}%
+\algnewcommand{\LeftComment}[1]{\Statex \(\triangleright\) #1}
 \begin{document}
 \title{Data Integration on High-Difficulty Binary Classification}
 \author{Julia Finch, Jesse Hellemn, Kentaro Hoffman, Zhe Zhang}
@@ -193,27 +188,33 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \centering
 \begin{algorithmic}[1]
     \caption{Network Model Data Generation Process}
-    \LCOMMENT{Sample the $y$ layer}
-    \STATE $y \leftarrow$ Bernoulli($p$)
-    \LCOMMENT{Sample the $z$ layer}
-    \FORALL{$z_i \in \{z_1, z_2\}$}
-        \STATE $c \leftarrow$ Bernoulli($p_i$) \COMMENT{$p_i$ chance to corrupt
+    \item[] \LeftComment{Sample the $y$ layer}
+    \State $y \leftarrow$ Bernoulli($p$)
+
+    \item[]
+    \item[] \LeftComment{Sample the $z$ layer}
+    \ForAll{$z_i \in \{z_1, z_2\}$}
+        \State $c \leftarrow$ Bernoulli($p_i$) \Comment{$p_i$ chance to corrupt
             source $i$}
-        \STATE $z_i \leftarrow c * (1-y) + (1-c) * y$ \COMMENT{If corrupting,
+        \State $z_i \leftarrow c * (1-y) + (1-c) * y$ \Comment{If corrupting,
             $z_i$ will be 0 if $y$ is 1 and 1 if $y$ is 0}
-    \ENDFOR
-    \LCOMMENT{Sample the $x$ layer of source 1, an $N_1$-dimensional XOR}
-    \IF{$z_1$ is even}
-        \STATE $x^{(1)}_1 ... x^{(1)}_{N_1} \leftarrow N_1$-dimensional binary
+    \EndFor
+
+    \item[]
+    \item[] \LeftComment{Sample the $x$ layer of source 1, an $N_1$-dimensional XOR}
+    \If{$z_1$ is even}
+        \State $x^{(1)}_1 ... x^{(1)}_{N_1} \leftarrow N_1$-dimensional binary
         vector of even parity
-    \ELSE
-        \STATE $x^{(1)}_1 ... x^{(1)}_{N_1} \leftarrow N_1$-dimensional binary
+    \Else
+        \State $x^{(1)}_1 ... x^{(1)}_{N_1} \leftarrow N_1$-dimensional binary
         vector of odd parity
-    \ENDIF
-    \LCOMMENT{Sample the $x$ layer of source 2, a $k_2$-period sine wave}
-    \STATE $x^{(2)}_1 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
-    \STATE $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
-    \STATE $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sin(x^{(2)}_1) + mz_2$
+    \EndIf
+
+    \item[]
+    \item[] \LeftComment{Sample the $x$ layer of source 2, a $k_2$-period sine wave}
+    \State $x^{(2)}_1 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
+    \State $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
+    \State $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sin(x^{(2)}_1) + mz_2$
 \end{algorithmic}
 \caption{Data generation process for the network model}
 \label{alg:network_model}
@@ -370,22 +371,29 @@ Observe that the elastic net constrain ensures sparsity and grouping effect for 
 
 \textbf{Optimization Algorithm}
 
-\iffalse
 \begin{algorithm}
- \textbf{Parameter}:Suboptimality tolerance, $\epsilon$
+\centering
+\begin{algorithmic}[1]
+    \caption{Level method for the MKL[1]}
 
- \textbf{Initialization:} Let t = 0 and $\theta$ be uniformly initilaized subject to the elastic net contraint
- \Repeat{difference between the unpper bound and lower bound is less than \eps}{
-  1) Solve dual problem $\alpha^{t} = \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$ \;
-  2) Construct a cutting plane model, $h^t(\theta) = \underset{1 \leq i \leq t}{max} D(\theta, \alpha^i)$ \;
-  3) Calculate a lower bound and an unpper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set L = \{$\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}$\}\;
-  4) Project $\theta^{t-1}$ to L to obtain $\theta^t$
-}
- \caption{Level method for the MKL[1]}
+    \item[] \LeftComment{Initialization}
+    \State $t \leftarrow 0$
+    \State Let $\theta$ be uniformly initialized subject to teh elastic net constraint
+
+    \item[]
+    \While{difference between the unpper bound and lower bound is less than \eps}
+        \State $\alpha^{t} = \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$
+            \Comment Solve dual problem
+        \State $h^t(\theta) = \underset{1 \leq i \leq t}{max} D(\theta, \alpha^i)$
+            \Comment Construct a cutting plane model
+        \State Calculate a lower bound and an unpper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set $L = \{\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}\}$
+        \State Project $\theta^{t-1}$ to L to obtain $\theta^t$
+    \EndWhile
+\end{algorithmic}
+\caption{Data generation process for the network model}
+\label{alg:network_model}
 \end{algorithm}
-\fi
 
-\vspace{10 mm}
 \textbf{Implementation}
 For each `independent' data source, we constructed 10 RBF kernels with the width $\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$. Then we trained our model with the regularization parameter $C$ fixed to 100.
 
@@ -442,7 +450,7 @@ Ratio of Training to Testing Data & 1:2\\
 Probability of Data Source Signal Corruption & [0,0]\\
 I must be missing some more parameters\\
 \hline
- \end{tabular}
+\end{tabular}
 \end{table}
 
 \textbf{These paramters values should be replaced with the correct variable names once section 2.2.2 is completed. }\
@@ -563,13 +571,28 @@ Data integration, data simulation, and benchmarking of machine learning techniqu
         networks have many more parameters than most popular classifiers, so it
         was not known how to pick an appropriate network architecture and
         topology for comparison against the other classifiers.
-    \item \textbf{Theoretical Framework of Decision Boundaries:} We saw in Experiement 4 that GMKL performed well on the XOR dataset and not well on the Sine dataset. We would like to develop a theoretical framework that characterizes the aspects of decision boundaries that enable or disable a particular data integration technique from performing well on a dataset. We would like to come up with a concrete method for determining the best choice of data integration technique for a specific decision boundary. 
-    \item \textbf{More Computationally Expensive Testing} All of the
+    \item \textbf{Theoretical Framework of Decision Boundaries:} We saw in
+        Experiement 4 that GMKL performed well on the XOR dataset and not well
+        on the Sine dataset. We would like to develop a theoretical framework
+        that characterizes the aspects of decision boundaries that enable or
+        disable a particular data integration technique from performing well on
+        a dataset. We would like to come up with a concrete method for
+        determining the best choice of data integration technique for a
+        specific decision boundary.
+    \item \textbf{More Computationally Expensive Testing:} All of the
         experiments in this paper ran with $N=5000$ data points. For really
         thorough results, it'd be better to run these experiments for several
         values of $N \in \{1000, 5000, 1000, 2000, 50000, 10000\}$ as well as
         for more values of noise, more dimensions, more corruption levels, more
         width $\gamma$ and regularization $C$ of the SVMs, etc.
+    \item \textbf{More varied simulated data:} This paper only used two types
+        of decision boundaries, that of the sine wave and that of the
+        $N$-dimensional XOR. There are many types of decision boundaries that
+        are not represented here and many possible properties of data that
+        aren't present here. Possible unimplemented ideas were to create
+        separable data in $m < N$ dimensions and then to use (mostly) monotonic
+        transformations to map the $m$ dimensions into $N$-dimensional space,
+        to create $N$ dimensional separable data.
 \end{itemize}
 
 
