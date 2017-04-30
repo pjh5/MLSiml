@@ -180,7 +180,7 @@ This model has significant shortcomings
 \subsubsection*{Feed-forward Network Model}
 
 In order to satisfy all of the critera in \ref{tab:criteria}, we created a
-feed-forward conditional network (figure \ref{fig:network_model}).
+feed-forward conditional network (Figure \ref{fig:network_model}).
 This network's process is given in Algorithm \ref{alg:network_model}.
 
 \begin{minipage}{\textwidth}
@@ -228,7 +228,7 @@ different class than all of its $N-1$ closest neighboring corners. Figure
 \ref{fig:xor} shows a 3D example. The complexity of the decision boundary is
 proportional to the dimension.
 
-The second source is a sine wave in 3D space (figure \ref{fig:sine_wave}); the
+The second source is a sine wave in 3D space (Figure \ref{fig:sine_wave}); the
 complexity of this decision boundary is directly proportional to the period of
 the wave and inversely proportional to the margin $m$ between the two classes.
 
@@ -344,7 +344,7 @@ Cross-validation is performed to search for the best regularization parameter $\
 
 
 \subsection*{Generalized Multiple Kernel Learning}
-Kernel methods allows the client to design custom kernels to incorporate prior knowledge about the dataset. In our case, we used multiple kernels to incorporate our knowledge of the data coming separate sources. This method involves several steps, and a general flowchart of the process is shown in figure \ref{fig:implementation_flowchart}.
+Kernel methods allows the client to design custom kernels to incorporate prior knowledge about the dataset. In our case, we used multiple kernels to incorporate our knowledge of the data coming separate sources. This method involves several steps, and a general flowchart of the process is shown in Figure \ref{fig:implementation_flowchart}.
 
 \textbf{Model:}
 The final trained model is almost the same as those from SVM, expect that the final kernel function is actually learned from data. More specifically, the final kernel is a convex combination of a set of predefined kernel functions: $$K(x, x^i) = \sum_{q=1}^{Q} \theta_q * K_q(x, x^i) \text{where }\theta_q \text{is learned from data}.$$
@@ -455,7 +455,7 @@ I must be missing some more parameters\\
 \end{minipage}
 
 
-From figure \ref{fig:exp_1} we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at five dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at $2n$ dimensions seems to be performing about as well as the classical SVM at $n$ dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems.
+From Figure \ref{fig:exp_1} we can see that as number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at five dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at $2n$ dimensions seems to be performing about as well as the classical SVM at $n$ dimensions. This seems to indicate that maybe doing classification on the data sources as separate entities is highly desirabel for complicated classification problems.
 
 \begin{minipage}{\textwidth}
 \centering
@@ -510,7 +510,7 @@ Another variable to explore is the number of noisy dimensions. This experiment e
 
 For this experiment, we added the same number of noise dimensions to each XOR source. We performed this experiment three times, when there were three, five, and seven XOR dimensions. We varied the proportion of dimensions that were noise dimensions. The proportion varied from no noise dimensions, to a quarter, third, half, and then fianlly two thirds noise dimensions. The purpose of measuring the proportion of noise variables as opposed to the number of noise variables is so that the three experiments over different XOR dimensions can be accurately compared.
 
-The results from the three dimensional Double XOR experiment are represented in figure \ref{fig:noise_dim_line}. The results from the five dimenional and seven dimensional XOR can be found in the appendix.
+The results from the three dimensional Double XOR experiment are represented in Figure \ref{fig:noise_dim_line}. The results from the five dimenional and seven dimensional XOR can be found in the appendix.
 
 \begin{minipage}{\textwidth}
     \centering
@@ -538,7 +538,7 @@ This experiment follows the same structure as Experiment 2 in terms of varying t
 Again we can see that GMKL outperforms Concatenated GMKL overall. From the heat maps above, we can observe that GMKL does not handle Sine data well. When the XOR source is heavily corrupted, the prediction accuracy of GMKL falls to barely better than a coin flip. On the opposite end of the heat map, we can note that GMKL performs very well when the Sine source is heavily corrupted as long as the XOR source remains intact. This means that GMKL is insensistive to unreliable data. GMKL is successfully able to identify the source that does not contribute to classification accuracy and ignore it.
 
 \section*{Conclusion}
-From these experiment we have seen not only the usefulness of GMKL, but also with the issues that traditional classifiers face in data integration. Higher dimensional data, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and random forest. Not only does this illustrate the usefulness of GMKL as tool for classification and data integration, but the way in which GMKL generates kernels separately seems to indicate the important of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought.
+From these experiment we have seen not only the usefulness of GMKL, but also with the issues that traditional classifiers face in data integration. Higher dimensional data, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and Random Forest. Not only does this illustrate the usefulness of GMKL as tool for classification and data integration, but the way in which GMKL generates kernels separately seems to indicate the important of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought.
 
 
 \section*{Future Work}
