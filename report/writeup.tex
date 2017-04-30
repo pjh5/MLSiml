@@ -367,7 +367,7 @@ Now if we define v by $v_q := \frac{w_q}{\sqrt{\theta_q}}$, then we have a conve
 &\text{Where}  & &f_{\theta, v, b}(x^i) = \sum_{q=1}^{Q} v_q \phi_q(x^i)  + b
 \end{align*}
 
-Observe that the elastic net constrain ensures sparsity and grouping effect for the set of kernels chosen for the final model.
+Observe that the elastic net constraint ensures sparsity and grouping effect for the set of kernels chosen for the final model.
 
 \textbf{Optimization Algorithm}
 
@@ -378,15 +378,15 @@ Observe that the elastic net constrain ensures sparsity and grouping effect for 
 
     \item[] \LeftComment{Initialization}
     \State $t \leftarrow 0$
-    \State Let $\theta$ be uniformly initialized subject to teh elastic net constraint
+    \State Let $\theta$ be uniformly initialized subject to the elastic net constraint
 
     \item[]
-    \While{difference between the unpper bound and lower bound is less than \eps}
+    \While{difference between the upper bound and lower bound is less than \eps}
         \State $\alpha^{t} = \underset{\alpha}{argmax}D(\theta^{t-1}, \alpha)$
             \Comment Solve dual problem
         \State $h^t(\theta) = \underset{1 \leq i \leq t}{max} D(\theta, \alpha^i)$
             \Comment Construct a cutting plane model
-        \State Calculate a lower bound and an unpper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set $L = \{\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}\}$
+        \State Calculate a lower bound and an upper bound for the optimal solution $\overline{D_t}, \underline{D_t}$ and an improvement set level set $L = \{\theta: h^t(\theta) \leq \text{some convex combination of }\overline{D_t}, \underline{D_t}\}$
         \State Project $\theta^{t-1}$ to L to obtain $\theta^t$
     \EndWhile
 \end{algorithmic}
@@ -438,30 +438,23 @@ increasingly complicated. Once the data generation process is complete,
 classification was done by GMKL, Concatenate + GMKL, SVM, KNN, and Random
 Forest.
 
-\begin{table}
-\centering
-\begin{tabular}{|c c|}
+\subsection*{Experiment 1 Parameters}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
-Parameter & Value \\
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
 \hline
-Type of Data from each Data Source & [XOR, XOR]\\
-$N_{useful}$ (For each data source) & [2,3,4,5,6,7] \\
-$N_{noisy}$& 0\\
-Number of Total Data points & 5000\\
-Ratio of Training to Testing Data & 1:2\\
-Probability of Data Source Signal Corruption & [0,0]\\
-I must be missing some more parameters\\
+[2,3,4,5,6,7] & 0 & 5000 & 1:2 & 0,0 & 0.2 & 1:1 & NA  \\
 \hline
 \end{tabular}
-\end{table}
+\end{center}
 
-\textbf{These paramters values should be replaced with the correct variable names once section 2.2.2 is completed. }\
-\textbf{Should the parameters for the classifiers be described here? or in an appendix? Or in the methods section? }
 
 \begin{minipage}{\textwidth}
 \centering
 \includegraphics[scale=0.4]{experimentpic1.png}
-\captionof{figure}{\textbf{PUT A CAPTION OR PARAMS OR SOMETHING HERE}}
+\captionof{figure}{\textbf{The purple line in this figure illustrates the resistance of GMKL to the affect of 
+high dimensions.}}
 \label{fig:exp_1}
 \end{minipage}
 
@@ -615,7 +608,7 @@ $M_{i,useful}$ & Number of useful Data Dimensions for Data Source i\\
 \hline
 $M_{i, noisy}$ & Number of Noisy Dimensions for Data Source i\\
 \hline
-$N$ & Number of Data points Generated (training and testing)\\
+$N$ & Number of Data Points Generated (training and testing)\\
 \hline
 T & Ratio of Training to Testing \\
 \hline
@@ -630,16 +623,6 @@ k & Period of Sine Curve\\
 \end{tabular}
 \end{center}
 
-\subsection*{Experiment 1 Parameters}
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|c|c|c|}
-\hline
-$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
-\hline
-0& 0 & 0 &0 & 0,0 & 0 & 0 & 0  \\
-\hline
-\end{tabular}
-\end{center}
 
 \subsection*{Experiment 2 Parameters}
 \begin{center}
