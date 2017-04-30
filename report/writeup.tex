@@ -503,9 +503,21 @@ XOR Dimensions (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & G
 
 \subsection*{Experiment 2: Corrupted XOR Sources}
 
-One variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiment is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
+Another variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiment is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
 
-In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiment performed on five dimensional XOR are displayed in the table below. See the appendix for the results from the three dimensional and seven dimensional experiments.
+\subsubsection*{Experiment 2 Parameters}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
+\hline
+[3,5,7] & 0 & 5000 & 1:2 & [0.0,0.1,0.2,0.3,0.4,0.5],[0.0,0.1,0.2,0.3,0.4,0.5] & 0.2 & 1:1 & NA  \\
+\hline
+\end{tabular}
+\end{center}
+
+
+In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiment for GMKL and Concatenate + GMKL performed on five dimensional XOR are displayed in the figures below. See the appendix for the results from all classifiers tested.
 
 
 \begin{minipage}{\textwidth}
@@ -522,6 +534,9 @@ In order to test how the classifiers perform with different level of corruption 
         \label{fig:dxor_heat_conc}
     \end{minipage}
 \end{minipage}
+
+
+
 
 We see that the results of Experiment 2 are consistent with the results of Experiment 1 in that GMKL consistently outperforms concatenated GMKL which consistently outperforms the standard classifiers. We also see that GMKL is the least affected by one of the two sources becoming corrupted. This is evidence that GMKL effectively identifies which sources are useful and relies primarily on those sources.
 
@@ -643,16 +658,7 @@ k & Period of Sine Curve\\
 \end{center}
 
 
-\subsection*{Experiment 2 Parameters}
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|c|c|c|}
-\hline
-$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
-\hline
-0& 0 & 0 &0 & 0,0 & 0 & 0 & 0  \\
-\hline
-\end{tabular}
-\end{center}
+
 \subsection*{Experiment 3 Parameters}
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
@@ -673,6 +679,70 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 \hline
 \end{tabular}
 \end{center}
+
+
+
+\begin{minipage}{\textwidth}
+\centering
+\begin{tabular}{|c| c| c| c| c| c|}
+\hline
+$p_1$ & & $p_2$ & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
+\hline
+0.0 & 0.0 & 61.5 & 58.6 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.0 & 0.1 & 61.2 & 56.8 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.0 & 0.2 & 57.6 & 58.3 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.0 & 0.3 & 55.2 & 54.9 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.0 & 0.4 & 57.3 & 56.7 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.0 & 0.5 & 57.3 & 57.4 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.1 & 0.1 & 58.2 & 55.7 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.1 & 0.2 & 54.7 & 53.2 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.1 & 0.3 & 54.3 & 53.9 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.1 & 0.4 & 54.8 & 53.5 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.1 & 0.5 & 54.9 & 54.3 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.2 & 0.2 & 55.3 & 50.8 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.2 & 0.3 & 54.2 & 51.6 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.2 & 0.4 & 50.9 & 51.5 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.2 & 0.5 & 50.4 & 50.7 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.3 & 0.3 & 52.4 & 48.1 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.3 & 0.4 & 52.2 & 51.7 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.3 & 0.5 & 53.3 & 50.0 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.4 & 0.4 & 51.0 & 52.4 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.4 & 0.5 & 50.7 & 48.4 & 99.9 & 99.9 & 99.9 \\
+\hline
+0.5 & 0.5 & 49.1 & 49.7 & 99.9 & 99.9 & 99.9 \\
+\hline
+\end{tabular}
+\end{minipage}
+
+
+
+
+
+
+
+
+
+
+
 
 % \cite{gmkl}
 \bibliographystyle{alpha}
