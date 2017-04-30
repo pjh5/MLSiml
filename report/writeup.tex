@@ -43,7 +43,7 @@ and it is not obvious how to best adapt these techniques to multi-source data.
 
 A naive approach is to concatenate the sources together into one large feature
 matrix, essentially treating all of the data as a single incoherent source.
-Although simple and computationally efficient, this method throws away
+Although simple, this method throws away
 information about the separate sources and forces data analysis and
 classification techniques to treat all of the sources in the same way. Various
 data integration techniques have been proposed to more cleverly and effectively
@@ -52,7 +52,7 @@ tested, and there has been no systematic evaluation of their effectiveness.
 
 This paper evaluates one such specialized data integration techniques,
 Generalized Metric Kernel Learning (GMKL), against traditional classifiers that
-use concatenated data. We simulate many multi-source datasets with a variety of
+use concatenated data. We simulate many 2-source datasets with a variety of
 properties for these comparative tests. We will use the term "classifier" to
 refer to both specialized data integration techniques such as GMKL as well as
 naive methods that first concatenate all sources together.
