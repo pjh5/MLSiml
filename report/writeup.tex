@@ -345,8 +345,16 @@ Cross-validation is performed to search for the best regularization parameter $\
 
 
 
-\subsection*{Generalized Multiple Kernel Learning}
-Kernel methods allow custom kernels to be incorporated into prior knowledge about the dataset. In our case, we used multiple kernels to incorporate our knowledge of the data coming from separate sources. This method involves several steps, and a general flowchart of the process is shown in figure \ref{fig:implementation_flowchart}.
+\subsection*{Generalized Multiple Kernel Learning (GMKL)}
+GMKL learns separate kernels for each data source before integrating the
+separate kernels in an optimization step that's based on a global error
+measure; the resulting combined kernel is then fed into an SVM. Although this
+method uses a SVM for actual classification, the separate kernels allow each
+source to have its own representation. A brief description of the algorithm is
+described below, with a general flowchart of the process shown in Figure
+\ref{fig:implementation_flowchart} and a more detailed explanation of the
+optimization part in Algorithm \ref{alg:gmkl}. A full explanation of the GMKL
+algorithm can be found in \cite{gmkl}.
 
 \textbf{Model:}
 The final trained model is almost the same as those from SVM, expect that the final kernel function is actually learned from data. More specifically, the final kernel is a convex combination of a set of predefined kernel functions: $$K(x, x^i) = \sum_{q=1}^{Q} \theta_q * K_q(x, x^i) \text{where }\theta_q \text{is learned from data}.$$
@@ -672,6 +680,9 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 \end{tabular}
 \end{center}
 
+% \cite{gmkl}
+\bibliographystyle{alpha}
+\bibliography{mlsiml}
 
 \end{document}
 
