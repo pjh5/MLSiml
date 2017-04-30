@@ -75,7 +75,7 @@ naive methods that first concatenate all sources together.
 
 In order to understand the behavior of the classifiers on 2-source data as
 properties of the data are varied, we systematically created data to satisfy
-all of the criteria in \ref{tab:criteria}. These criteria allow us to test all
+all of the criteria detailed below. These criteria allow us to test all
 the classifiers fairly against each other on consistent benchmarks.
 \newline
 
@@ -96,7 +96,7 @@ the classifiers fairly against each other on consistent benchmarks.
     \item The reliability of each source can be specified.
     \item The noisiness of each source can be specified.
     \begin{itemize}
-        \item \label{itm:noise_dims} extra meaningless dimensions can be
+        \item \label{itm:noisy} extra meaningless dimensions can be
             added to each source
     \end{itemize}
 \end{enumerate}
@@ -121,7 +121,7 @@ Criterion \ref{itm:separable} ensures that the latter case does not occur,
 so that classifier performance is attributable solely to its efficacy on
 certain types of data.
 
-Criteria \ref{itm:noisey} is more difficult than it at first seems. In
+Criteria \ref{itm:noisy} is more difficult than it at first seems. In
 order to create a source with $N_{useful}$ useful dimensions and $N_{noisy}$
 meaningless dimensions, we needed to both 1) make $N_{noisy}$ dimensions of
 pure noise and 2) make $N_{useful}$ dimensions, all of which are always useful.
@@ -249,6 +249,8 @@ the wave and inversely proportional to the margin $m$ between the two classes.
     \label{fig:sine_wave}
 \end{minipage}
 \end{minipage}
+
+In order to corrupt the sources, a Bernoulli experiment is performed for each source with a certain probability that the binomial indicator is flipped to 0 or 1 (whichever number it is currently not). A probability $p_1$ is assigned to the first source and a probability $p_2$ is assigned to the second source.  These probabilities range from 0, meaning no corruption, to 0.5, meaning complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and $p_2$ is 0.5. Then the data that stems from the first source accurately represents the value of y which is 0. The data that stems from the second source will accurately represent the value of y in 50 percent of the samples, but the other 50 percent of the samples it flips to represent 1. This means that all of the information is coming from the first source while the second source tells us nothing about the true value of y.
 
 This model has several nice properties:
 \begin{itemize}
@@ -430,7 +432,7 @@ Parameter & Value \\
 \hline
 Type of Data from each Data Source & [XOR, XOR]\\
 $N_{useful}$ (For each data source) & [2,3,4,5,6,7] \\
-$N_{noisey}$& 0\\
+$N_{noisy}$& 0\\
 Number of Total Data points & 5000\\
 Ratio of Training to Testing Data & 1:2\\
 Probability of Data Source Signal Corruption & [0,0]\\
@@ -475,44 +477,27 @@ GMKL Dimension & Accuracy & SVM Dimension & Accuracy & Difference \\
 
 \subsection*{Experiment 2: Corrupted XOR Sources}
 
-In order to corrupt the sources, a Bernoulli experiment is performed for each
-source with a certain probability that the binomial indicator is flipped to 0
-or 1 (whichever number it is currently not). A probability $p_1$ is assigned to
-the first source and a probability $p_2$ is assigned to the second source.
-These probabilities range from 0, meaning no corruption, to 0.5, meaning
-complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and
-$p_2$ is 0.5. Then the data that stems from the first source accurately
-represents the value of y which is 0. The data that stems from the second
-source will accurately represent the value of y in 50 percent of the samples,
-but the other 50 percent of the samples it flips to represent 1. This means
-that all of the information is coming from the first source while the second
-source tells us nothing about the true value of y.
-
 One variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiment is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifers are able to identify the important sources/features.
-
-In order to corrupt the sources, a Bernoulli experiment is performed for each source with a certain probability that the binomial indicator is flipped to 0 or 1 (whichever number it is currently not). A probability $p_1$ is assigned to the first source and a probability$ p_2$ is assigned to the second source. These probabilities rnage from 0, meaning no corruption, to .5, meaning complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and $p_2$ is 0.5. Then the data that stems from the first source accurately represents the value of y which is 0. The data that stems from the second source will accurately represent the value of y in 50 percent of the samples, but the other 50 percent of the samples it flips to represent 1. This means that all of the information is coming from the first source while the second source tells us nothing about the true value of y.
 
 In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiment performed on five dimensional XOR are displayed in the table below. See the appendix for the results from the three dimensional and seven dimensional experiments.
 
 
 \begin{minipage}{\textwidth}
-\begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{dxor_heat_gmkl.png}
-    \captionof{figure}{Put a caption here}
-    \label{fig:dxor_heat_gmkl}
-\end{minipage}
-\begin{minipage}{.5\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{dxor_heat_conc.png}
-    \captionof{figure}{Put a caption here}
-    \label{fig:dxor_heat_conc}
-\end{minipage}
+    \begin{minipage}{.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{dxor_heat_gmkl.png}
+        \captionof{figure}{Put a caption here}
+        \label{fig:dxor_heat_gmkl}
+    \end{minipage}
+    \begin{minipage}{.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{dxor_heat_conc.png}
+        \captionof{figure}{Put a caption here}
+        \label{fig:dxor_heat_conc}
+    \end{minipage}
 \end{minipage}
 
-We see that the results of Experiment 2 are consistent with the results of Experiment 1 in that GMKL consistenetly outperforms concatenated GMKL which consistenly outperforms the standard classifiers. We also see that the accuracy of GMKL is the least affected by one of the two sources becoming corrupted. This is evidence that GMKL effectively identifies which sources are useful and relies primarily on those sources.
-
-We see that the results of Experiment 2 are consistent with the results of Experiment 1 in that GMKL consistenetly outperforms concatenated GMKL which consistenly outperforms the standard classifiers. We also see that GMKL is the least affected by one of the two sources becoming corrupted. This is evidence that GMKL effectively identifies which sources are useful and relies primarily on those sources.
+We see that the results of Experiment 2 are consistent with the results of Experiment 1 in that GMKL consistently outperforms concatenated GMKL which consistently outperforms the standard classifiers. We also see that GMKL is the least affected by one of the two sources becoming corrupted. This is evidenced that GMKL effectively identifies which sources are useful and relies primarily on those sources.
 
 
 
@@ -522,11 +507,14 @@ Another variable to explore is the number of noisy dimensions. This experiment e
 
 For this experiment, we added the same number of noise dimensions to each XOR source. We performed this experiment three times, when there were three, five, and seven XOR dimensions. We varied the proportion of dimensions that were noise dimensions. The proportion varied from no noise dimensions, to a quarter, third, half, and then fianlly two thirds noise dimensions. The purpose of measuring the proportion of noise variables as opposed to the number of noise variables is so that the three experiments over different XOR dimensions can be accurately compared.
 
-The results from the three dimensional Double XOR experiment are represented in the plot below. The results from the five dimenional and seven dimensional XOR can be found in the appendix.
+The results from the three dimensional Double XOR experiment are represented in figure \ref{fig:noise_dim_line}. The results from the five dimenional and seven dimensional XOR can be found in the appendix.
 
-\begin{center}
-\includegraphics[scale=0.7]{Noise_Dim_line.png}
-\end{center}
+\begin{minipage}{\textwidth}
+    \centering
+    \includegraphics[scale=0.7]{Noise_Dim_line.png}
+    \captionof{figure}{Put a caption here}
+    \label{fig:noise_dim_line}
+\end{minipage}
 
 The purple line in the plot above shows how noise averse GMKL is while the accuracy of Concatenated GMKL falls when only a single noise dimension is added. When there are the same number of noise dimensions as there are useful dimensions, the accuracy of GMKL is still greater than 95 percent. This tells us that GMKL effectively ignores noise dimensions. It is worthy to note the Random Forest classifier is considered noise averse and is even less affected by noise than GMKL. However, GMKL is initially so much more accurate than Random Forest, that as far as we tested, the accuracy of GMKL remains superior to the Random Forest classifier.
 
