@@ -543,7 +543,7 @@ From these experiments we have seen not only the usefulness of GMKL, but also th
 
 
 \section*{Future Work}
-For future work, first, we would like to see GMKL used on an real life data analysis problem too see if it shows the same utility that we saw previously. Second, since GMKL, and the creation of kernels is a fairly expensive operation to begin with, it would be nice to create a computationally less expensive version so that this could be run on larger datasets. Third, to show that GMKL is indeed up to the performance of other cutting edge algorithm, further comparison with other methods such as Neural Networks is necessary. And finally, if an investigation could be done of the theoretical properties of the GMKL and its relative performance compared to SVM would be appreciated to cement the useful GMKL as a data integration technique.
+Data integration, data simulation, and benchmarking of machine learning techniques are all fields in need of further investigation. In particular, the behavior of machine learning and data integration techniques as functions of properties of the data and its decision boundaries is very poorly understood. Some fruitful further questions for research include:
 
 \begin{itemize}
     \item \textbf{Shared Information Across Sources:} An important component of
@@ -564,6 +564,12 @@ For future work, first, we would like to see GMKL used on an real life data anal
         was not known how to pick an appropriate network architecture and
         topology for comparison against the other classifiers.
     \item \textbf{Theoretical Framework of Decision Boundaries:}
+    \item \textbf{More Computationally Expensive Testing} All of the
+        experiments in this paper ran with $N=5000$ data points. For really
+        thorough results, it'd be better to run these experiments for several
+        values of $N \in \{1000, 5000, 1000, 2000, 50000, 10000\}$ as well as
+        for more values of noise, more dimensions, more corruption levels, more
+        width $\gamma$ and regularization $C$ of the SVMs, etc.
 \end{itemize}
 
 
