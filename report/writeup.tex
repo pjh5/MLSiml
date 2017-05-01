@@ -437,11 +437,11 @@ To isolate the effect of data integration, we also applied GMKL to concatenated 
 With the prevalence of high dimensional data sets, we first would like to see
 if our data integration methods scale well as the dimension of the data sources
 increases. To this end, we generated several data sets of varying number of
-$N_{useful}$ dimensions from a double-XOR feed-forward network. The network is
+$N_{useful}$ dimensions from a Double XOR network. The network is
 structured such that each data source receives the parity signal without
 corruption from the true source, $y$. Then it creates an arbitrary n-dimensional
 XOR of correct parity, which then becomes a $2n$ dimensional data vector.  A full
-set of parameters for this experiment can be seen in table 4.1. This network was
+set of parameters for this experiment can be seen in the table below. This network was
 chosen as it has no corruption of data sources, thus ensuring criteria 1.
 Second, as the dimension of the XOR sources increase, the decision boundary becomes
 increasingly complicated. Once the data generation process is complete,
@@ -464,8 +464,7 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 \begin{minipage}{\textwidth}
 \centering
 \includegraphics[scale=0.4]{experimentpic1.png}
-\captionof{figure}{The purple line in this figure illustrates the resistance of GMKL to the affect of 
-high dimensions.}
+\captionof{figure}{An illustration of how resistant GMKL is to the affect of an increasingly complex XOR decision boundary compared to the standard classifiers.}
 \label{fig:exp_1}
 \end{minipage}
 
@@ -506,13 +505,13 @@ In order to test how the classifiers perform with different level of corruption 
     \begin{minipage}{.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{dxor_heat_gmkl.png}
-        \captionof{figure}{Put a caption here}
+        \captionof{figure}{An illustration of the ability of GMKL to ignore useless data sources.}
         \label{fig:dxor_heat_gmkl}
     \end{minipage}
     \begin{minipage}{.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{dxor_heat_conc.png}
-        \captionof{figure}{Put a caption here}
+        \captionof{figure}{An illustration that demonstrates Concatenate + GMKL is vulnerable to unimportant sources.}
         \label{fig:dxor_heat_conc}
     \end{minipage}
 \end{minipage}
@@ -553,7 +552,7 @@ The results from the three dimensional Double XOR experiment are represented in 
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[scale=0.7]{Noise_Dim_line.png}
-    \captionof{figure}{Put a caption here}
+    \captionof{figure}{An illustration of how resistant GMKL is to the affect of noise dimensions compared to the standard classifiers.}
     \label{fig:noise_dim_line}
 \end{minipage}
 
@@ -581,7 +580,7 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[width=\textwidth]{SineXORCorrupt.png}
-    \captionof{figure}{Put a caption here}
+    \captionof{figure}{An illustration that shows GMKL is unable to classify accurately using a Sine Wave source.}
     \label{fig:sinexor_heatmaps}
 \end{minipage}
 
