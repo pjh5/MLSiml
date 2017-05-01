@@ -137,7 +137,7 @@ attributable to either:
 Criterion \ref{itm:separable} ensures that the latter case does not occur,
 so that classifier performance is attributable solely to its efficacy on
 certain types of data. This also ensures that the attainable accuracy should
-theoretically be 100\%, providing a nice consistent benchmark across all
+theoretically be 100\%, providing a consistent benchmark across all
 experiments.
 
 Criterion \ref{itm:noisy} is more difficult than it at first seems. In
@@ -571,7 +571,7 @@ GMKL, Concatenated GMKL, SVM, KNN, and Random Forest as the dimensionality of
 the XOR (and thus the difficulty of the classification task) increased.
 
 This test increases to a maximum of 7 dimensions per source. At first glance
-this may seem like a very small problem, but recall that the XOR has a very
+this may seem like a small number of dimensions, but recall that the XOR has a very
 complex decision boundary, as evidenced by every classifier's poor performance
 at even this low XOR dimensionality.
 
@@ -802,7 +802,7 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 
 
 As can be seen by GMKL's insensitivity to corruption of the sine wave source,
-GMKl is relying on the XOR source and does not handle the sine wave data well
+GMKL is relying on the XOR source and does not handle the sine wave data well
 (this was confirmed in other experiments testing GMKL on pure sine wave data).
 Again, GMKL is able to ignore the source that is not useful to it. (It looks
 like GMKL on concatenated data is more effective when one source is a sine wave
