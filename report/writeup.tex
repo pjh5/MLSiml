@@ -14,7 +14,13 @@
 \input{jimmy_commands}
 \newcounter{ALC@tempcntr}% Temporary counter for storage
 \algnewcommand{\LeftComment}[1]{\Statex \(\triangleright\) #1}
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+
+
 \begin{document}
+
 \title{Data Integration on High-Difficulty Binary Classification}
 \author{Julia Finch, Jesse Hellemn, Kentaro Hoffman, Zhe Zhang}
 \maketitle
@@ -913,7 +919,7 @@ $p_1$ & $p_2$ & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
 \centering
 \begin{tabular}{|c| c| c| c| c| c| c|}
 \hline
-XOR Dimensions (per source) & Noise Dimensions  (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
+\specialcell{XOR Dimensions\\(per source)} & \specialcell{Noise Dimensions\\(per source)} & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
 \hline
 3 & 0 & 86.7 & 80.0 & 84.3 & 97.5 & 99.8 \\
 \hline
