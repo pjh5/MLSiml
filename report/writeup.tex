@@ -68,7 +68,7 @@ This paper evaluates one such specialized data integration technique,
 Generalized Multiple Kernel Learning (GMKL), against traditional classifiers
 that use concatenated data. We simulate many 2-source datasets with a variety
 of properties for these comparative tests. We will use the term ``classifier"
-to refer to both specialized data integration techniques such as GMKL as well
+to refer to both specialized data integration techniques, such as GMKL, as well
 as naive methods that first concatenate all sources together.
 
 
@@ -92,13 +92,12 @@ This paper follows the systematic philosophy of simulation studies advocated in
 
 In order to understand the behavior of the classifiers on 2-source data as
 properties of the data are varied, we systematically created data to satisfy
-all of the criteria detailed below. These criteria allow us to test all
-the classifiers fairly against each other on consistent benchmarks.
+all of the criteria detailed below. These criteria allow us to fairly test all
+the classifiers against each other on consistent benchmarks.
 \newline
 
 \begin{minipage}{\textwidth}
 \centering
-\textbf{Criteria of Simulated Data}
 \begin{enumerate}
     \item The dataset consists of two separate sources.
     \item \label{itm:separable} The two classes are separated by a true
@@ -137,14 +136,14 @@ attributable to either:
 \end{itemize}
 Criterion \ref{itm:separable} ensures that the latter case does not occur,
 so that classifier performance is attributable solely to its efficacy on
-certain types of data.
+certain types of data. This also ensures that the attainable accuracy should
+theoretically be 100\%, providing a nice consistent benchmark across all
+experiments.
 
-Criteria \ref{itm:noisy} is more difficult than it at first seems. In
+Criterion \ref{itm:noisy} is more difficult than it at first seems. In
 order to create a source with $N_{useful}$ useful dimensions and $N_{noisy}$
-meaningless dimensions, we needed to both 1) make $N_{noisy}$ dimensions of
+meaningless dimensions, we need to both 1) make $N_{noisy}$ dimensions of
 pure noise and 2) make $N_{useful}$ dimensions, all of which are always useful.
-With a random coefficient linear model, it is impossible to verify that all
-$N_{useful}$ dimensions are actually useful.
 
 
 
@@ -153,7 +152,7 @@ $N_{useful}$ dimensions are actually useful.
 \subsubsection*{Random Coefficient Linear Model}
 
 A simple, common way to simulate data is to use a linear model with random
-coefficients. This model generates data by:
+coefficients. This model generates data with the following process.
 \begin{enumerate}
     \item Specify the number of true latent variables $K$ along with the number
         of visible variables $N$
@@ -182,12 +181,12 @@ coefficients. This model generates data by:
 This model has significant shortcomings
 \begin{itemize}
     \item It is not known how to systematically make the classification problem
-        more or less difficult
-    \item It is hard to know if the generated data overlaps
-    \item It is hard to pick the $\beta$s to ensure that all of the criteria in
-        \ref{tab:criteria} are satisfied
-    \item There are many distributions and formulas to specify arbitrarily
-    \item It is hard to know how many of the generated dimensions are useful
+        more or less difficult.
+    \item It is hard to know if the generated data is separable or if it overlaps.
+    \item It is hard to pick the $\beta$s to ensure that all of the criteria
+        listed earlier are satisfied.
+    \item There are many distributions and formulas to specify arbitrarily.
+    \item It is hard to know how many of the generated dimensions are useful.
 \end{itemize}
 
 
@@ -329,7 +328,7 @@ since a even parity XOR in one source implies an even parity XOR in the other
 source (if neither source is corrupted). More importantly, it is no longer
 necessary to have all dimensions to know the parity of the XOR.
 
-The final experiment uses the exact model described above.
+The final experiment uses XOR and sine wave model exactly as described above.
 
 
 
@@ -578,6 +577,7 @@ at even this low XOR dimensionality.
 
 \begin{minipage}{\textwidth}
 \centering
+\subsubsection*{Experiment 1 Parameters}
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
 $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
@@ -641,13 +641,14 @@ source, the true signal is completely lost in noise.
 
 \begin{minipage}{\textwidth}
 \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|}
-    \hline
-    $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
-    \hline
-    [3,5,7] & 0 & 5000 & 1:2 & [0.0,0.1,0.2,0.3,0.4,0.5],[0.0,0.1,0.2,0.3,0.4,0.5] & 0.2 & 1:1 & NA  \\
-    \hline
-    \end{tabular}
+\subsubsection*{Experiment 2 Parameters}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
+\hline
+[3,5,7] & 0 & 5000 & 1:2 & [0.0,0.1,0.2,0.3,0.4,0.5],[0.0,0.1,0.2,0.3,0.4,0.5] & 0.2 & 1:1 & NA  \\
+\hline
+\end{tabular}
 \captionof{table}{Full data generation parameters for Experiment 2. The two
     sources still always had the same dimension as each other. Corruption
     levels of $p_1 = u, p_2 = 2$ is symmetric to $p_1 = y, p_2 = x$ since both
@@ -708,6 +709,7 @@ seven dimensional Double XOR can be found in the Appendix.
 
 \begin{minipage}{\textwidth}
 \centering
+\subsubsection*{Experiment 3 Parameters}
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
 $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
@@ -770,6 +772,7 @@ increments. Results for a 3D XOR and 2-period sine wave are presented in Figure
 
 \begin{minipage}{\textwidth}
 \centering
+\subsubsection*{Experiment 4 Parameters}
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
 $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
@@ -886,7 +889,9 @@ understood. Some fruitful further questions for research include:
 \section*{Appendix}
 
 
-\begin{center}
+\begin{minipage}{\textwidth}
+\centering
+\subsubsection*{Description of Parameters}
 \begin{tabular}{|c|c|}
 \hline
 \textbf{Variable} &\textbf{ Description}\\
@@ -909,12 +914,12 @@ C & Proportion of Data points in each class \\
 k & Period of Sine Curve\\
 \hline
 \end{tabular}
-\end{center}
+\end{minipage}
 
-\subsection*{Experiment 1: Data Dimension Scaling}
 
 \begin{minipage}{\textwidth}
 \centering
+\subsubsection*{Experiment 1: Data Dimension Scaling}
 \begin{tabular}{|c| c| c| c| c| c|}
 \hline
 XOR Dimensions (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
@@ -934,10 +939,10 @@ XOR Dimensions (per source) & KNN & Random Forest & SVM & Concatenate + GMKL & G
 \end{tabular}
 \end{minipage}
 
-\subsection*{Experiment 2: Corrupted XOR Sources}
 
 \begin{minipage}{\textwidth}
 \centering
+\subsubsection*{Experiment 2: Corrupted XOR Sources}
 \begin{tabular}{|c| c| c| c| c| c| c|}
 \hline
 $p_1$ & $p_2$ & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
@@ -987,10 +992,10 @@ $p_1$ & $p_2$ & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
 \end{tabular}
 \end{minipage}
 
-\subsection*{Experiment 3: Noise Dimensions}
 
 \begin{minipage}{\textwidth}
 \centering
+\subsubsection*{Experiment 3: Noise Dimensions}
 \begin{tabular}{|c| c| c| c| c| c| c|}
 \hline
 \specialcell{XOR Dimensions\\(per source)} & \specialcell{Noise Dimensions\\(per source)} & KNN & Random Forest & SVM & Concatenate + GMKL & GMKL \\
