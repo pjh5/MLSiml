@@ -197,8 +197,11 @@ In order to satisfy all of the criteria in \ref{tab:criteria}, we created a
 feed-forward conditional network (Figure \ref{fig:network_model}). This
 network's process is given in detail Algorithm \ref{alg:network_model}. The
 network model was inspired by Bayesian Networks; the output of each node is
-sampled conditionally after that node's inputs ahave all been calculated. Extra
-noise dimensions can be added to each source separately.
+sampled conditionally after that node's inputs ahave all been calculated. The
+model is highly extensible. For this particular network, each sources
+reliability, difficulty, noisiness, and relative amount of noise to useful
+information could all be systematically varied independently of each other.
+separately.
 
 \begin{minipage}{\textwidth}
     \centering
@@ -240,6 +243,13 @@ noise dimensions can be added to each source separately.
     \State $x^{(2)}_1 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
     \State $x^{(2)}_2 \leftarrow $ Uniform($-k_2\pi$, $k_2\pi$)
     \State $x^{(2)}_3 \leftarrow (x^{(2)}_1+x^{(2)}_2)sin(x^{(2)}_1) + mz_2$
+
+    \item[]
+    \item[] \LeftComment{Add noise}
+    \State $x^{(1)} \leftarrow x^{(1)} + $ Normal(0, $\sigma_1$)
+        \Comment{Gaussian noise added to each dimension independently for XOR sources}
+    \State $x^{(2)}_3 \leftarrow x^{(2)}_3 + $ Normal(0, $\sigma_2$)
+        \Comment{Gaussian noise only added in direction of margin for sine wave sources}
 \end{algorithmic}
 \caption{Data generation process for the network model}
 \label{alg:network_model}
@@ -257,19 +267,22 @@ the output is sampled from all binary 0-1 $N$-dimensional vectors with an even
 numbers of ones, also known as an even-parity XOR. Figure \ref{fig:xor} shows a
 3D example. The complexity of the decision boundary is increases with the
 number of clusters, and the number of clusters increases exponentially with the
-dimension of the XOR.
+dimension of the XOR. Noise is added to an XOR by adding sampling from
+Normal(0, $\sigma_1$) independently for every dimension.
 
 The second source is a sine wave in 3D space (Figure \ref{fig:sine_wave}); the
 complexity of this decision boundary is directly proportional to the period of
 the wave and inversely proportional to the margin $m$ between the two classes.
+Noise is added to the sine wave only in the direction of the margin (points can
+only be moved "up" or "down").
 
 \begin{minipage}{\textwidth}
 \begin{minipage}{.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{xor_3d_square.png}
-    \captionof{figure}{A 3D-XOR with equal class size and $\sigma=0.2$ noise.
-        The noise for the XORs created by this model are independent $Normal(0,
-        \sigma)$ added to every dimension.}
+    \captionof{figure}{A 3D-XOR with equal class size and $\sigma_1=0.2$ noise.
+        The noise for the XORs created by this model are independent Normal(0,
+        $\sigma_1)$ added to every dimension.}
     \label{fig:xor}
 \end{minipage}
 \hspace{.04\textwidth}
@@ -278,29 +291,18 @@ the wave and inversely proportional to the margin $m$ between the two classes.
     \includegraphics[width=\textwidth]{sine_wave_square.png}
     \captionof{figure}{A 3 period sine wave with $\sigma=0$ noise and a margin
         of $m=10$. The equation of this wave in $xyz$ coordinates is $z =
-        (x+y)sine(x) + mc$, where $m$ is the margin and $c$ is the 1 or 0 class
-        label.}
+        (x+y)sine(x) + mc + Normal(0, \sigma_2)$, where $m$ is the margin and
+        $c$ is the 1 or 0 class label.}
     \label{fig:sine_wave}
 \end{minipage}
 \end{minipage}
-
-In order to corrupt the sources, a Bernoulli experiment is performed for each
-source with a certain probability that the binomial indicator is flipped to 0
-or 1 (whichever number it is currently not). A probability $p_1$ is assigned to
-the first source and a probability $p_2$ is assigned to the second source.
-These probabilities range from 0, meaning no corruption, to 0.5, meaning
-complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and
-$p_2$ is 0.5. Then the data that stems from the first source accurately
-represents the value of y which is 0. The data that stems from the second
-source will accurately represent the value of y in 50 percent of the samples,
-but the other 50 percent of the samples it flips to represent 1. This means
-that all of the information is coming from the first source while the second
-source tells us nothing about the true value of y.
 
 This model has several nice properties:
 \begin{itemize}
     \item For both the $N$-dimensional XOR and the sine wave (with small enough
         margin $m$), every dimension is necessary for perfect classification.
+    \item The complexity of the decision boundary for each source can be easily
+        controlled.
     \item The reliability of each source can be varied independently of the
         other.
     \item The data can be made more noisy (to an extent) without
@@ -308,10 +310,17 @@ This model has several nice properties:
     \item Extra meaningless dimensions can easily be added to either source.
 \end{itemize}
 
+The reliability of each source is controlled by corrupting its input signal by
+a speficied percentage. For example, to decrease the reliability of source 1 to
+80\%, $p_1$ is set to 0.1. Then $z_1$ will only equal $y$ 90\% of the time, and
+will give the wrong signal 10\% of the time. Note that 0\% reliability is
+achieved when the signal is corrupted 50\% of the time, since the signal is a
+binary 0 or 1.
+
 The first experiments in this paper use a similar model to the one above,
 except with another XOR as the second source instead of the sine wave. We refer
-to this model as ``Double XOR." The final experiment uses the exact model described
-above.
+to this model as a ``Double XOR." The final experiment uses the exact model
+described above.
 
 
 
@@ -521,19 +530,15 @@ and then trained GMKL algorithm with C fixed at 100.\\
 
 
 \subsection*{Experiment 1: Data Dimension Scaling}
-With the prevalence of high dimensional data sets, we first would like to see
-if our data integration methods scale well as the dimension of the data sources
-increases. To this end, we generated several data sets of varying number of
-$N_{useful}$ dimensions from a Double XOR network. The network is
-structured such that each data source receives the parity signal without
-corruption from the true source, $y$. Then it creates an arbitrary n-dimensional
-XOR of correct parity, which then becomes a $2n$ dimensional data vector.  A full
-set of parameters for this experiment can be seen in the table below. This network was
-chosen as it has no corruption of data sources, thus ensuring criteria 1.
-Second, as the dimension of the XOR sources increase, the decision boundary becomes
-increasingly complicated. Once the data generation process is complete,
-classification was done by GMKL, Concatenated GMKL, SVM, KNN, and Random
-Forest.
+The first experiment used the network data generation model shown in Figure
+\ref{fig:network_model}, using an XOR for both sources. The two sources always
+had the same dimension as each other. This first experiment tested GMKL,
+Concatenated GMKL, SVM, KNN, and Random Forest as the dimensionality of the XOR
+(and thus the difficulty of the classification task) increased. This test
+increases to a maximum of 7 dimensions per source, and so at first glance this
+may seem like a very small problem. But recall that the XOR has a very complex
+decision boundary, as evidenced by every classifier's poor performance at even
+this low XOR dimensionality.
 
 \subsubsection*{Experiment 1 Parameters}
 \begin{center}
