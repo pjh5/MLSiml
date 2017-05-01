@@ -319,8 +319,14 @@ binary 0 or 1.
 
 The first experiments in this paper use a similar model to the one above,
 except with another XOR as the second source instead of the sine wave. We refer
-to this model as a ``Double XOR." The final experiment uses the exact model
-described above.
+to this model as a ``Double XOR." The Double XOR is not equivalent to one big
+XOR. For example, a 10-dimensional XOR has $2^{10}=1024$ clusters while a Double
+XOR with two 5-dimensional XORs only has $2^5 * \frac{2^5}{2} = 512$ clusters,
+since a even parity XOR in one source implies an even parity XOR in the other
+source (if neither source is corrupted). More importantly, it is no longer
+necessary to have all dimensions to know the parity of the XOR.
+
+The final experiment uses the exact model described above.
 
 
 
@@ -550,21 +556,25 @@ and then trained GMKL algorithm with C fixed at 100.
 
 \section*{Experiments}
 
+Several experiments were run. A full description of parameters can be found in
+the Appendix.
 
 
 \subsection*{Experiment 1: Data Dimension Scaling}
 The first experiment used the network data generation model shown in Figure
-\ref{fig:network_model}, using an XOR for both sources. The two sources always
-had the same dimension as each other. This first experiment tested GMKL,
-Concatenated GMKL, SVM, KNN, and Random Forest as the dimensionality of the XOR
-(and thus the difficulty of the classification task) increased. This test
-increases to a maximum of 7 dimensions per source. At first glance this may
-seem like a very small problem, but recall that the XOR has a very complex
-decision boundary, as evidenced by every classifier's poor performance at even
-this low XOR dimensionality.
+\ref{fig:network_model}, using an XOR for both sources. Experiment parameters
+are given in Table \ref{tab:exp_1_params} and results in Figure
+\ref{fig:exp_1}. This first experiment measured classification accuracy of
+GMKL, Concatenated GMKL, SVM, KNN, and Random Forest as the dimensionality of
+the XOR (and thus the difficulty of the classification task) increased.
 
-\subsubsection*{Experiment 1 Parameters}
-\begin{center}
+This test increases to a maximum of 7 dimensions per source. At first glance
+this may seem like a very small problem, but recall that the XOR has a very
+complex decision boundary, as evidenced by every classifier's poor performance
+at even this low XOR dimensionality.
+
+\begin{minipage}{\textwidth}
+\centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
 $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
@@ -572,35 +582,35 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 [2,3,4,5,6,7] & 0 & 5000 & 1:2 & 0,0 & 0.2 & 1:1 & NA  \\
 \hline
 \end{tabular}
-\end{center}
+\captionof{table}{Full data generation parameters for Experiment 1. The two
+    sources always had the same dimension as each other. Noise of variance
+    $\sigma_i=0.2$ corresponds to nearly touching but still separable
+    clusters.}
+\label{tab:exp_1_params}
+\end{minipage}
 
 
 
 \begin{minipage}{\textwidth}
 \centering
 \includegraphics[scale=0.4]{experimentpic1.png}
-\captionof{figure}{An illustration of how resistant GMKL is to the affect of an
-    increasingly complex XOR decision boundary compared to the standard
-    classifiers.}
+\captionof{figure}{Classifier accuracies as a function of increasing XOR
+    dimension (increasing problem complexity). GMKL using separate kernels for
+    each source outperforms all other classification methods when dimension
+    increases.}
 \label{fig:exp_1}
 \end{minipage}
 
 
-From Figure \ref{fig:exp_1} we can see that as the number of XOR dimensions
-increases, the classification accuracy of all of the classifiers decreases.
-This makes sense because as the XOR dimension increases, the
-decision boundary becomes more complex causing classification to become more
-difficult. However, while all classifiers have decreasing accuracy, we can see
-that GMKL performs much better than the other classifiers with nearly a 35
-percent better classification accuracy compared to the classical SVM at five
-dimensions. In fact, there is a very intriguing pattern on display here as the
-the GMKL at $2n$ dimensions seems to be performing about as well as the
-classical SVM at $n$ dimensions. This seems to indicate that doing
-classification on the data sources as separate entities is highly desirable for
-complicated classification problems.
-
-
-
+All classifiers performs worse as the dimension increases. At 7 dimensions
+each, there are $2^{13}$ clusters of about $\frac{5000}{2^{13}} < 1$ data
+points each, which is a very difficult classification problem. GMKL is so much
+more effective than the other classifiers because it treats each source
+sepparately, effectively cutting the dimensionality of the problem in half.
+When both sources are 7-dimensional, GMKL builds kernels on 7-dimensional
+datasets rather than on the concatenated 14-dimensional dataset. Thus, GMKL on
+$2n$-dimensional seems to perform comparably to other classifiers on
+$n$-dimensional data.
 
 
 
@@ -611,83 +621,90 @@ complicated classification problems.
 
 \subsection*{Experiment 2: Corrupted XOR Sources}
 
-Another variable that we decided to vary is the relative importance of the
-disparate sources. The purpose of this experiment is to evaluate how the
-various classifiers perform when one source is more important than the other.
-We want to see which classifiers are able to identify the important
-sources/features.
+The second experiment investigated the effect of unreliable sources on
+classification accuracy. Sources were made unreliable by corrupting their
+signal in a specified percentage of generated data. Effective data integration
+techniques should be able to rely on the more reliable source and ignore
+unreliable information.
 
-\subsubsection*{Experiment 2 Parameters}
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|c|c|c|}
-\hline
-$M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
-\hline
-[3,5,7] & 0 & 5000 & 1:2 & [0.0,0.1,0.2,0.3,0.4,0.5],[0.0,0.1,0.2,0.3,0.4,0.5] & 0.2 & 1:1 & NA  \\
-\hline
-\end{tabular}
-\end{center}
+The reliability of each source was varied from 100 to 0\% in increments of 20\%
+(by varying the corruption probabilites from 0 to 50\% in increments of 10\%).
+Classification accuracies for GMKL with separate kernels and GMKL on
+concatenated data are shown in Figure \ref{fig:dxor_heat_gmkl} and
+\ref{fig:dxor_heat_conc}. This experiment was repeated for XOR dimensions of 3,
+5, and 7. Only the results when XOR dimensions was 5 are presented here; the
+full results can be found in the Appendix. Note that at 50\% corruption of each
+source, the true signal is completely lost in noise.
 
-
-
-In order to test how the classifiers perform with different level of corruption
-on the Double XOR data, we varied the probability of corruption for each XOR
-source in increments of 0.1 from 0 to 0.5. We performed this experiment three
-times, holding the dimension of each source static at three, five, and seven.
-The results of this experiment for GMKL and Concatenated GMKL performed on
-five dimensional XOR are displayed in the figures below. See the appendix for
-the results from all classifiers tested on five dimensional XOR.
+\begin{minipage}{\textwidth}
+\centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|}
+    \hline
+    $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
+    \hline
+    [3,5,7] & 0 & 5000 & 1:2 & [0.0,0.1,0.2,0.3,0.4,0.5],[0.0,0.1,0.2,0.3,0.4,0.5] & 0.2 & 1:1 & NA  \\
+    \hline
+    \end{tabular}
+\captionof{table}{Full data generation parameters for Experiment 2. The two
+    sources still always had the same dimension as each other. Corruption
+    levels of $p_1 = u, p_2 = 2$ is symmetric to $p_1 = y, p_2 = x$ since both
+    sources are XOR, so each of these combinations was run only once.}
+\label{tab:exp_2_params}
+\end{minipage}
 
 
 \begin{minipage}{\textwidth}
 \begin{minipage}{.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{dxor_heat_gmkl.png}
-    \captionof{figure}{An illustration of the ability of GMKL to ignore useless
-        data sources.}
+    \captionof{figure}{GMKL's classification accuracy for all combinations of
+        source corruptions. GMKL's performance only drops when both sources are
+        corrupted, as it is able to rely on the more reliable source.}
     \label{fig:dxor_heat_gmkl}
 \end{minipage}
 \hspace{.04\textwidth}
 \begin{minipage}{.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{dxor_heat_conc.png}
-    \captionof{figure}{An illustration that demonstrates Concatenated GMKL is
-        vulnerable to unimportant sources.}
+    \captionof{figure}{GMKL's classification accuracy for all combinations of
+        source corruptions when fed concatenated data. Performance is noticebly
+        worse, as GMKL can no longer ignore the unreliable source and is much
+        more easily confused.}
     \label{fig:dxor_heat_conc}
 \end{minipage}
 \end{minipage}
 
-
-
-
-We see that the results of Experiment 2 are consistent with the results of
-Experiment 1 in that GMKL consistently outperforms Concatenated GMKL. This indicates that the data integration part of GMKL is extremely useful as running GMKL on the concatenated data does not provide nearly as good classification accuracy as the GMKL that treats sources separately. We also see that GMKL is the
-least affected by one of the two sources becoming corrupted. This is evidence
-that GMKL effectively identifies which sources are useful and relies primarily
-on those sources.
+GMKL performs much better when it is allowed to create separate kernels for
+each data source, since then it can easily ignore the more unreliable source.
+This is a promising result for data integration in general, and not just for
+GMKL. Treating each source separately allows for only the most useful
+information from each source to be utilized without confusion from the other
+source.
 
 
 
 \subsection*{Experiment 3: Noise Dimensions}
 
-Another variable to explore is the number of noise dimensions. This experiment
-explores how each classifier is able to handle additional dimensions that do
-not provide useful information regarding the class each datapoint belongs to.
-Ideally, the classifiers would be able to identify them as noise dimensions and
-ignore these dimensions in their predictive model.
+The third experiment investigated the effect of extra, meaningless, noisy
+dimensions on classification accuracy. Extra dimensions of pure Gaussian noise
+that provided no information on the true class label were added to each source.
+Good classifiers should be able to disregard the useless dimensions and retain
+good accuracy. Results are shown in Figure \ref{fig:noise_dim_line}.
 
-For this experiment, we added the same number of noise dimensions to each XOR
-source. We performed this experiment three times, when there were three, five,
-and seven XOR dimensions per source. We varied the proportion of dimensions that were
-noise dimensions. The proportion varied from no noise dimensions, to a quarter,
-third, half, and then finally two thirds noise dimensions. The purpose of
-measuring the proportion of noise variables as opposed to the number of noise
-variables is so that the three experiments over different XOR dimensions can be
-accurately compared.
+This experiment was repeated three times, for 3, 5, and 7 XOR dimensions per
+source. The percentage of dimensions that are uninformative is varied from none
+to a quarter, third, half, and then finally two thirds noisy uninformative
+dimensions. The purpose of measuring the proportion of noise variables as
+opposed to the number of noise variables is so that the three experiments over
+different XOR dimensions can be accurately compared.
+
+The results from the three dimensional Double XOR experiment are represented in
+Figure \ref{fig:noise_dim_line}. The results from the five dimensional and
+seven dimensional Double XOR can be found in the Appendix.
 
 
-\subsubsection*{Experiment 3 Parameters}
-\begin{center}
+\begin{minipage}{\textwidth}
+\centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
 $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
@@ -699,46 +716,57 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 7& [0,1,4,7,14] & 5000 &1:2 & 0,0 & 0.2 & 1:1 & NA  \\
 \hline
 \end{tabular}
-\end{center}
+\captionof{table}{Full data generation parameters for Experiment 3. The sources
+    always had the same number of useful dimensions and noisy dimensions as
+    each other.}
+\label{tab:exp_3_params}
+\end{minipage}
 
-
-
-The results from the three dimensional Double XOR experiment are represented in
-Figure \ref{fig:noise_dim_line}. The results from the five dimensional and
-seven dimensional Double XOR can be found in the appendix.
 
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[scale=0.7]{Noise_Dim_line.png}
-    \captionof{figure}{An illustration of how resistant GMKL is to the affect of noise dimensions compared to the standard classifiers.}
+    \captionof{figure}{Classification accuracy as a function of increasing
+        number of uninformative dimensions per source. Again, GMKL outperforms
+        all other classifiers by treating each source separately.}
     \label{fig:noise_dim_line}
 \end{minipage}
 
-The purple line in the plot above shows how noise resistant GMKL is while the
-accuracy of Concatenated GMKL falls when only a single noise dimension is
-added. When there are the same number of noise dimensions as there are useful
-dimensions, the accuracy of GMKL is still greater than 95 percent. This tells
-us that GMKL effectively ignores noise dimensions. It is worthy to note the
-Random Forest classifier is considered noise resistant and is even less
-affected by noise than GMKL. However, GMKL is initially so much more accurate
-than Random Forest, that as far as we tested, the accuracy of GMKL remains
-superior to the Random Forest classifier.
+There are a few interesting things to note of these results.
+\begin{itemize}
+    \item Random Forest is least affected by the addition of uninformative
+        dimensions.
+    \item KNN is most affected by the addition of uninformative dimensions.
+    \item GMKL is only resistant to added uninformative dimensions when it is
+        allowed to construct separate kernels for each source. When it is
+        forced to use concatenated data, it fares just as well as the other
+        classification techniques.
+\end{itemize}
+
+The only classifier that is able to both get good accuracy and stay resistant
+to added noise dimensions is GMKL using separate kernels for each source. By
+treating each source separately, it is able to ignore much of the extra noise
+introduced by the second source. Instead of building a kernel for a
+3-dimensional XOR + another 3 dimensions of a redundant XOR + 6 total
+dimensions of uninformative noise, it can build a kernel to handle just a
+3-dimensional XOR with 3 uninformative dimensions.
 
 
 
 \subsection*{Experiment 4: Corrupted Sine and XOR Sources}
 
-This experiment follows the same structure as Experiment 2 in terms of varying
-the corruption probabilities to each source. The difference is that instead of
-using two sources with the XOR structure, one XOR source was used and one Sine
-source was used. We also varied the corruption probabilities in different
-increments. The corruption probability on each source ranged from 0 to 0.45 in
-increments of 0.15. We executed this experiment on three dimensional XOR and
-Sine data with a period of two. The results are displayed below.
+This experiment did not use the Double XOR, but had a sine wave as the second
+source exactly as in Figure \ref{fig:network_model}. This experiment is thus
+much more similar to real multi-source data, as the two sources have different
+types of decision boundaries and very different properties.
+
+Corruption probabilities were varied as in Experiment 2, but in larger
+increments. Results for a 3D XOR and 2-period sine wave are presented in Figure
+\ref{fig:sinexor_heatmaps}.
 
 
-\subsection*{Experiment 4 Parameters}
-\begin{center}
+\begin{minipage}{\textwidth}
+\centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|}
 \hline
 $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \\
@@ -746,48 +774,63 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 3 & 0 & 0 & 1:2 & [0.0,0.15,0.3,0.45],[0.0,0.15,0.3,0.45] & 0.2 & 1:1 & [1,2,3]  \\
 \hline
 \end{tabular}
-\end{center}
+\captionof{table}{Full data generation parameters for Experiment 4. Corruption
+    probabilites were varied in increments of 15\% instead of 10\%, but the
+    trends are just as visible. The period of the sine wave affected
+    classification accuracies but did not affect any trends as the corruption
+    probabilites changed.}
+\label{tab:exp_4_params}
+\end{minipage}
 
 
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[width=\textwidth]{SineXORCorrupt.png}
-    \captionof{figure}{An illustration that shows GMKL is unable to classify
-        accurately using solely a Sine source.}
+    \captionof{figure}{Classification accuracies for GMKL (with both separate
+        kernels and with concatenated data) for different corruption
+        probabilites. For both cases, GMKL relies on the XOR and ignores the
+        sine wave, though the GMKL with separate kernels is more able to ignore
+        the sine wave source.}
     \label{fig:sinexor_heatmaps}
 \end{minipage}
 
 
-Again we can see that GMKL outperforms Concatenated GMKL overall. From the heat
-maps above, we can observe that GMKL does not handle Sine data well. When the
-XOR source is heavily corrupted, the prediction accuracy of GMKL falls to
-barely better than a coin flip. On the opposite end of the heat map, we can
-note that GMKL performs very well when the Sine source is heavily corrupted as
-long as the XOR source remains intact. This means that GMKL is insensitive to
-unreliable data. GMKL is successfully able to identify the source that does not
-contribute to classification accuracy and ignore it.
+As can be seen by GMKL's insensitivity to corruption of the sine wave source,
+GMKl is relying on the XOR source and does not handle the sine wave data well
+(this was confirmed in other experiments testing GMKL on pure sine wave data).
+Again, GMKL is able to ignore the source that is not useful to it. (It looks
+like GMKL on concatenated data is more effective when one source is a sine wave
+than when both are XORs as in Experiment 2, but this is because this experiment
+uses a 3D XOR rather than the 5D XOR of Experiment 2).
+
 
 \section*{Conclusion}
-From these experiments we have seen not only the usefulness of GMKL, but also
-the issues that traditional classifiers face in data integration. Highly
-complex decision boundaries, variably useful data sources, and noisy dimensions have all been shown to negatively affect the
-classification accuracy of traditional classifiers such as KNN, SVM and Random
-Forest. Although these aspects negatively affect the accuracy of GMKL as well, we saw that GMKL was much more resistant to these factors than the standard classifiers. Not only does this illustrate the usefulness of GMKL as a tool for
-classification and data integration, but the way in which GMKL generates
-kernels separately indicates the importance of treating your data sources as
-separate entities and the damage you will do to your classification accuracy if
-you concatenate it all together without any thought. The drastic improvements
-seen by using an intelligent data integration technique over naive
-concatenation illustrates that data integration is extremely useful and is
-worth developing.
+
+This paper investigated the effect of decision boundary complexity, unreliable
+sources, and uninformative dimensions on both a specialized data integration
+method as well as traditional classifiers applied to concatenated data.
+Generalized Multiple Kernel Learning (GMKL) was found to outperform all other
+classifiers on all experiments detailed here, because it was able to build
+separate representations of each source. This performance above and beyond the
+other classifiers was only present when GMKL was allowed to use separate
+kernels for each source, and not when it was forced to use concatenated data.
+This suggests that data integration techniques that take advantage of disparate
+sources in different ways have huge potential over concatenating data together.
+Treating each source separately allows for a reduced effective dimensionality,
+as well as robustness to unreliable sources and extra uninformative dimensions.
+In general, it is expected that data integration techniques will achieve better
+classification and better analysis than naive techniques that concatenate
+disparate datasets together.
+
 
 
 \section*{Future Work}
-Data integration, data simulation, and benchmarking of machine learning
-techniques are all fields in need of further investigation. In particular, the
-behavior of machine learning and data integration techniques as functions of
-properties of the data and its decision boundaries is very poorly understood.
-Some fruitful further questions for research include:
+While these experiments show lots of promise, there are still many questions to
+answer.  Data integration, data simulation, and benchmarking of machine
+learning techniques are all fields in need of further investigation. In
+particular, the behavior of machine learning and data integration techniques as
+functions of properties of the data and its decision boundaries are very poorly
+understood. Some fruitful further questions for research include:
 
 \begin{itemize}
     \item \textbf{Shared Information Across Sources:} An important component of
