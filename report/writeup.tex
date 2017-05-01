@@ -210,7 +210,6 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \begin{algorithm}
 \centering
 \begin{algorithmic}[1]
-    \caption{Network Model Data Generation Process}
     \item[] \LeftComment{Sample the $y$ layer}
     \State $y \leftarrow$ Bernoulli($p$)
 
@@ -463,8 +462,6 @@ for the set of kernels chosen for the final model.
 \begin{algorithm}
 \centering
 \begin{algorithmic}[1]
-    \caption{Level method for the MKL[1]}
-
     \item[] \LeftComment{Initialization}
     \State $t \leftarrow 0$
     \State Let $\theta$ be uniformly initialized subject to the elastic net constraint
@@ -479,8 +476,8 @@ for the set of kernels chosen for the final model.
         \State Project $\theta^{t-1}$ to L to obtain $\theta^t$
     \EndWhile
 \end{algorithmic}
-\caption{Data generation process for the network model}
-\label{alg:network_model}
+\caption{Level method for the MKL[1]}
+\label{alg:gmkl}
 \end{algorithm}
 
 \textbf{Implementation}
