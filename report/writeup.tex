@@ -28,20 +28,23 @@
 
 \section*{Abstract}
 
-This paper explores the effectiveness of the data integration technique
-Generalized Multiple Kernel Learning (GMKL) on high-difficuly binary
-classification data. GMKL that integrates learned kernels from two disparate
-data sources is systematically compared to performing GMKL on the two sources
-naively concatenated as well as standard classification algorithms that are
-performed on the concatenated sources. The variables that are systematically
-varied are the number of informative dimensions in each source, the relative
-information provided by each source, and the number of useless noise dimensions
-added to each source. It is found that GMKL consistently outperforms its
-competitors. This paper provides evidence that data integration techniques,
-specifically GMKL, have the ability to drastically improve upon the performance
-of naive concatenation.
+Many common machine learning methods are not suitable for data that comes from
+multiple disparate sources. This paper explores the effectiveness of data
+integration techniques on multi-source, high-difficulty, binary classification
+data by comparing Generalized Multiple Kernel Learning (GMKL) against several
+common machine learning techniques that first concatenate data sources
+together. The effect of complex decision boundaries, unreliable sources, and
+uninformative noisy dimensions on classifier performance is investigated. GMKL
+is found to consistently outperform other methods, but only when it treats both
+sources separately and does not concatenate them together. This provides
+evidence that data integration techniques, and specifically GMKL, can
+drastically improve performance on classification tasks over naive
+concatenation.
+
+
 
 \section*{Introduction}
+
 For classification tasks in many fields, especially in medicine and the social
 sciences, it is increasingly common for data to come from multiple disparate
 data sources. For example, a sociologist might be interested in predicting
@@ -54,19 +57,19 @@ and it is not obvious how to best adapt these techniques to multi-source data.
 
 A naive approach is to concatenate the sources together into one large feature
 matrix, essentially treating all of the data as a single incoherent source.
-Although simple, this method throws away
-information about the separate sources and forces data analysis and
-classification techniques to treat all of the sources in the same way. Various
-data integration techniques have been proposed to more cleverly and effectively
-combine multiple sources. Unfortunately, these techniques have been poorly
-tested, and there has been no systematic evaluation of their effectiveness.
+Although simple, this method throws away information about the separate sources
+and forces data analysis and classification techniques to treat all of the
+sources in the same way. Various data integration techniques have been proposed
+to more cleverly and effectively combine multiple sources. Unfortunately, these
+techniques have been poorly tested, and there has been no systematic evaluation
+of their effectiveness.
 
 This paper evaluates one such specialized data integration technique,
-Generalized Multiple Kernel Learning (GMKL), against traditional classifiers that
-use concatenated data. We simulate many 2-source datasets with a variety of
-properties for these comparative tests. We will use the term ``classifier" to
-refer to both specialized data integration techniques such as GMKL as well as
-naive methods that first concatenate all sources together.
+Generalized Multiple Kernel Learning (GMKL), against traditional classifiers
+that use concatenated data. We simulate many 2-source datasets with a variety
+of properties for these comparative tests. We will use the term ``classifier"
+to refer to both specialized data integration techniques such as GMKL as well
+as naive methods that first concatenate all sources together.
 
 
 
