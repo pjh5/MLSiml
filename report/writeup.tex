@@ -194,16 +194,19 @@ This model has significant shortcomings
 \subsubsection*{Feed-forward Network Model}
 
 In order to satisfy all of the criteria in \ref{tab:criteria}, we created a
-feed-forward conditional network (Figure \ref{fig:network_model}).
-This network's process is given in Algorithm \ref{alg:network_model}.
+feed-forward conditional network (Figure \ref{fig:network_model}). This
+network's process is given in detail Algorithm \ref{alg:network_model}. The
+network model was inspired by Bayesian Networks; the output of each node is
+sampled conditionally after that node's inputs ahave all been calculated. Extra
+noise dimensions can be added to each source separately.
 
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[scale=0.4]{network_model.png}
-    \captionof{figure}{This feed-forward network model allows complete control
-        over how many useful and noisy dimensions there are, the relative
-        reliability of each source, and how complex the decision boundary
-        between classes is.}
+    \captionof{figure}{General schematic of the network data generation model.
+        Every circle is a "node" with takes in an input from the previous layer
+        and outputs a new layer. For example, $z_1$ will produce a
+        $N$-dimensional XOR, where the parity depends on the input from $y$.}
     \label{fig:network_model}
 \end{minipage}
 
@@ -246,11 +249,15 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 The above model creates two sources of data with very different types of
 decision boundaries.
 
-The first source is a $N$-dimensional XOR, which consists of clusters of points
-at every corner of an $N$-dimensional hypercube, where each corner belongs to a
-different class than all of its $N-1$ closest neighboring corners. Figure
-\ref{fig:xor} shows a 3D example. The complexity of the decision boundary is
-proportional to the dimension.
+The first source is an $N$-dimensional XOR, which consists of clusters of
+points at every corner of an $N$-dimensional binary hypercube, where each
+corner belongs to a different class than all of its $N-1$ closest neighboring
+corners. When the input to $z_1$ is a 1 (representing a positive example), then
+the output is sampled from all binary 0-1 $N$-dimensional vectors with an even
+numbers of ones, also known as an even-parity XOR. Figure \ref{fig:xor} shows a
+3D example. The complexity of the decision boundary is increases with the
+number of clusters, and the number of clusters increases exponentially with the
+dimension of the XOR.
 
 The second source is a sine wave in 3D space (Figure \ref{fig:sine_wave}); the
 complexity of this decision boundary is directly proportional to the period of
