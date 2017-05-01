@@ -601,7 +601,7 @@ source in increments of 0.1 from 0 to 0.5. We performed this experiment three
 times, holding the dimension of each source static at three, five, and seven.
 The results of this experiment for GMKL and Concatenate + GMKL performed on
 five dimensional XOR are displayed in the figures below. See the appendix for
-the results from all classifiers tested.
+the results from all classifiers tested on five dimensional XOR.
 
 
 \begin{minipage}{\textwidth}
@@ -626,8 +626,7 @@ the results from all classifiers tested.
 
 
 We see that the results of Experiment 2 are consistent with the results of
-Experiment 1 in that GMKL consistently outperforms concatenated GMKL which
-consistently outperforms the standard classifiers. We also see that GMKL is the
+Experiment 1 in that GMKL consistently outperforms concatenated GMKL. This indicates that the data integration part of GMKL is extremely useful as running GMKL on the concatenated data does not provide nearly as good classification accuracy as the GMKL that treats sources separately. We also see that GMKL is the
 least affected by one of the two sources becoming corrupted. This is evidence
 that GMKL effectively identifies which sources are useful and relies primarily
 on those sources.
