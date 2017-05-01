@@ -3,7 +3,7 @@
 \renewcommand{\ttdefault}{pcr}
 \usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
 \usepackage{amsmath}
-\usepackage{caption}
+\usepackage[format=plain,labelfont={bf,it},textfont=it]{caption}
 \usepackage{enumerate}
 \usepackage{enumitem}
 \usepackage{setspace}
@@ -534,7 +534,7 @@ model with the regularization parameter $C$ fixed to 100.
 To isolate the effect of data integration, we also applied GMKL to concatenated
 data for comparison. More specifically, we constructed only 10 RBF kernels with
 $\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$ for the concatenated dataset
-and then trained GMKL algorithm with C fixed at 100.\\
+and then trained GMKL algorithm with C fixed at 100.
 
 
 
@@ -558,8 +558,8 @@ The first experiment used the network data generation model shown in Figure
 had the same dimension as each other. This first experiment tested GMKL,
 Concatenated GMKL, SVM, KNN, and Random Forest as the dimensionality of the XOR
 (and thus the difficulty of the classification task) increased. This test
-increases to a maximum of 7 dimensions per source, and so at first glance this
-may seem like a very small problem. But recall that the XOR has a very complex
+increases to a maximum of 7 dimensions per source. At first glance this may
+seem like a very small problem, but recall that the XOR has a very complex
 decision boundary, as evidenced by every classifier's poor performance at even
 this low XOR dimensionality.
 
