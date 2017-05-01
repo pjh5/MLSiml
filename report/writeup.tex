@@ -22,7 +22,18 @@
 
 \section*{Abstract}
 
-This paper explores the effectiveness of the data integration technique Generalized Multiple Kernel Learning (GMKL) on high-difficuly binary classification data. GMKL that integrates learned kernels from two disparate data sources is systematically compared to performing GMKL on the two sources naively concatenated as well as standard classification algorithms that are performed on the concatenated sources. The variables that are systematically varied are the number of informative dimensions in each source, the relative information provided by each source, and the number of useless noise dimensions added to each source. It is found that GMKL consistently outperforms its competitors. This paper provides evidence that data integration techniques, specifically GMKL, have the ability to drastically improve upon the performance of naive concatenation.
+This paper explores the effectiveness of the data integration technique
+Generalized Multiple Kernel Learning (GMKL) on high-difficuly binary
+classification data. GMKL that integrates learned kernels from two disparate
+data sources is systematically compared to performing GMKL on the two sources
+naively concatenated as well as standard classification algorithms that are
+performed on the concatenated sources. The variables that are systematically
+varied are the number of informative dimensions in each source, the relative
+information provided by each source, and the number of useless noise dimensions
+added to each source. It is found that GMKL consistently outperforms its
+competitors. This paper provides evidence that data integration techniques,
+specifically GMKL, have the ability to drastically improve upon the performance
+of naive concatenation.
 
 \section*{Introduction}
 For classification tasks in many fields, especially in medicine and the social
@@ -107,12 +118,13 @@ Suppose that a classifier $C$ only obtains 60\% classification accuracy on a
 dataset $D$ (with datapoints evenly split amongst 2 classes). This could be
 attributable to either:
 \begin{itemize}
-    \item The classifier is not well suited to certain properties of dataset $D$.
-    \item Eighty percent of both classes overlap with each other. The best possible
-        strategy in this area of overlap is to guess the class with 50\%
-        accuracy. An optimal classifier will then guess 40\% of the datapoints
-        correctly and also classify the 20\% of non-overlapping datapoints
-        perfectly.
+    \item The classifier is not well suited to certain properties of dataset
+        $D$.
+    \item Eighty percent of both classes overlap with each other. The best
+        possible strategy in this area of overlap is to guess the class with
+        50\% accuracy. An optimal classifier will then guess 40\% of the
+        datapoints correctly and also classify the 20\% of non-overlapping
+        datapoints perfectly.
 \end{itemize}
 Criterion \ref{itm:separable} ensures that the latter case does not occur,
 so that classifier performance is attributable solely to its efficacy on
@@ -182,7 +194,10 @@ This network's process is given in Algorithm \ref{alg:network_model}.
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[scale=0.4]{network_model.png}
-    \captionof{figure}{This feed-forward network model allows complete control over how many useful and noisy dimensions there are, the relative reliability of each source, and how complex the decision boundary between classes is.}
+    \captionof{figure}{This feed-forward network model allows complete control
+        over how many useful and noisy dimensions there are, the relative
+        reliability of each source, and how complex the decision boundary
+        between classes is.}
     \label{fig:network_model}
 \end{minipage}
 
@@ -257,7 +272,18 @@ the wave and inversely proportional to the margin $m$ between the two classes.
 \end{minipage}
 \end{minipage}
 
-In order to corrupt the sources, a Bernoulli experiment is performed for each source with a certain probability that the binomial indicator is flipped to 0 or 1 (whichever number it is currently not). A probability $p_1$ is assigned to the first source and a probability $p_2$ is assigned to the second source.  These probabilities range from 0, meaning no corruption, to 0.5, meaning complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and $p_2$ is 0.5. Then the data that stems from the first source accurately represents the value of y which is 0. The data that stems from the second source will accurately represent the value of y in 50 percent of the samples, but the other 50 percent of the samples it flips to represent 1. This means that all of the information is coming from the first source while the second source tells us nothing about the true value of y.
+In order to corrupt the sources, a Bernoulli experiment is performed for each
+source with a certain probability that the binomial indicator is flipped to 0
+or 1 (whichever number it is currently not). A probability $p_1$ is assigned to
+the first source and a probability $p_2$ is assigned to the second source.
+These probabilities range from 0, meaning no corruption, to 0.5, meaning
+complete corruption. For example, say the true value of y is 0, $p_1$ is 0, and
+$p_2$ is 0.5. Then the data that stems from the first source accurately
+represents the value of y which is 0. The data that stems from the second
+source will accurately represent the value of y in 50 percent of the samples,
+but the other 50 percent of the samples it flips to represent 1. This means
+that all of the information is coming from the first source while the second
+source tells us nothing about the true value of y.
 
 This model has several nice properties:
 \begin{itemize}
@@ -270,7 +296,10 @@ This model has several nice properties:
     \item Extra meaningless dimensions can easily be added to either source.
 \end{itemize}
 
-The first experiments in this paper use a similar model to the one above, except with another XOR as the second source instead of the sinewave. We refer to this model as ``Double XOR." The final experiment uses the exact model above.
+The first experiments in this paper use a similar model to the one above,
+except with another XOR as the second source instead of the sinewave. We refer
+to this model as ``Double XOR." The final experiment uses the exact model
+above.
 
 
 
@@ -284,15 +313,20 @@ The first experiments in this paper use a similar model to the one above, except
 
 \section*{Machine Learning Classifiers}
 
-To evaluate the potential gain from intelligent data integration, we decided to compare the classification accuracy of a kernel based integration technique with commonly used vector concatenation benchmark algorithms.
+To evaluate the potential gain from intelligent data integration, we decided to
+compare the classification accuracy of a kernel based integration technique
+with commonly used vector concatenation benchmark algorithms.
 
 \subsection*{Notation}
-In describing different classification techniques, the following notation will be used:
+In describing different classification techniques, the following notation will
+be used:
 \begin{itemize}
 \setlength\itemsep{0em}
-\item (x, y) pair denotes a feature vector x \mmin \rsup{m} and its corresponding target value $\in \{0, 1\}$ .
+\item (x, y) pair denotes a feature vector x \mmin \rsup{m} and its
+    corresponding target value $\in \{0, 1\}$ .
 \item \xud{j} denotes the $j$th feature in x.
-\item there are N training examples and $i$th training pair is represented by (\xsu{i}, \ysu{i} ).
+\item there are N training examples and $i$th training pair is represented by
+    (\xsu{i}, \ysu{i} ).
 \end{itemize}
 
 
@@ -300,49 +334,79 @@ In describing different classification techniques, the following notation will b
 
 \subsubsection*{Gaussian Naive Bayes}
 \textbf{Model:}
-Gaussian Naive Bayes assumes that conditioned on the value of y, every feature \xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In addition it also assumes that each $P(x_j|y) \sim \mathbf{N(\mu_{j,y}, \sigma_y)}$ . To make x, the model would compute its posterior probability $P(y|x)$ and pick the more likely case.
+Gaussian Naive Bayes assumes that conditioned on the value of y, every feature
+\xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In
+addition it also assumes that each $P(x_j|y) \sim \mathbf{N(\mu_{j,y},
+    \sigma_y)}$ . To make x, the model would compute its posterior probability
+$P(y|x)$ and pick the more likely case.
 
 \textbf{Properties:}
-The formulation is clean and simple. It is fast to train and is quite resistant to extra noise dimensions.
-However, the excessively strong assumption of independence means that we could only fit 2nd degree decision boundaries, so it is expected to perform poorly on our highly complex Double XOR dataset.
+The formulation is clean and simple. It is fast to train and is quite resistant
+to extra noise dimensions. However, the excessively strong assumption of
+independence means that we could only fit 2nd degree decision boundaries, so it
+is expected to perform poorly on our highly complex Double XOR dataset.
 
 \textbf{Implementation:}
-We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is required.
+We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is
+required.
 
 \subsubsection*{Random Forest}
 \textbf{Model:}
-Random Forest uses an ensemble of decision trees to make a prediction for an x. Each decision tree is based by a bootstrap sample of the training data and the splitting nodes are constrained to a random subset of all features. In this manner, the over-fit of decision tree could be controlled.
+Random Forest uses an ensemble of decision trees to make a prediction for an x.
+Each decision tree is based by a bootstrap sample of the training data and the
+splitting nodes are constrained to a random subset of all features. In this
+manner, the over-fit of decision tree could be controlled.
 
 \textbf{Properties:}
-Random Forest is known to be very resistant to extra noise dimensions since uninformative feature would never be used for a split in a decision tree.
+Random Forest is known to be very resistant to extra noise dimensions since
+uninformative feature would never be used for a split in a decision tree.
 
 \textbf{Implementation:}
-We used cross validation to select the optimal number of trees $\bar{t} \in \{10, 100\}$.
+We used cross validation to select the optimal number of trees $\bar{t} \in
+\{10, 100\}$.
 
 \subsubsection*{K-Nearest Neighbors}
 \textbf{Model:}
-KNN makes a prediction on an unknown data-point by the majority voting of the K-closest points i.e. $$f(x) = sign(\sum_{x^i \in \text{K closest points}} y^i) $$
+KNN makes a prediction on an unknown data-point by the majority voting of the
+K-closest points i.e. $$f(x) = sign(\sum_{x^i \in \text{K closest points}} y^i)
+$$
 
 \textbf{Properties:}
-KNN is able to fit extremely complex decision boundaries. However, it often suffers from the curse of high dimensionality i.e. when the training data only occupies a tiny fraction of the high dimensional feature space. Moreover, it could not discriminate against noise dimensions since they are incorporated as part of the Euclidean distance.
+KNN is able to fit extremely complex decision boundaries. However, it often
+suffers from the curse of high dimensionality i.e. when the training data only
+occupies a tiny fraction of the high dimensional feature space. Moreover, it
+could not discriminate against noise dimensions since they are incorporated as
+part of the Euclidean distance.
 
 \textbf{Implementation:}
-We used cross validation to select the best number of neighbors $\bar{k} \in \{1, 10\}$
+We used cross validation to select the best number of neighbors $\bar{k} \in
+\{1, 10\}$
 
 
 
 
 \subsubsection*{RBF Support Vector Machine}
 \textbf{Model:}
-Similar to KNN, Support Vector Machine makes recommendation by considering the weighted voting of a set of similar data points
-$$f(x) = sign(\sum_{i=1}^{N} y^i d^i K(x, x^i))\ \text{where K(x, $x^i$)} = exp(-\gamma|x - x^i|^2)$$
-where $d^i$ is learned from data by finding the largest margin separating hyperplane in the projected space.
+Similar to KNN, Support Vector Machine makes recommendation by considering the
+weighted voting of a set of similar data points
+$$
+f(x)
+= sign(\sum_{i=1}^{N} y^i d^i K(x, x^i))\ \text{where K(x, $x^i$)}
+= exp(-\gamma|x - x^i|^2)
+$$
+where $d^i$ is learned from data by finding the largest margin separating
+hyperplane in the projected space.
 
 \textbf{Properties:}
-SVM can fit complex decision boundaries. Moreover, it does not suffer from the curse high dimensionality to the extent that KNN does. These two characteristics make SVM the go-to algorithm for classification. However, just like KNN, it is unable to effectively discriminate against extra noise dimensions.
+SVM can fit complex decision boundaries. Moreover, it does not suffer from the
+curse high dimensionality to the extent that KNN does. These two
+characteristics make SVM the go-to algorithm for classification. However, just
+like KNN, it is unable to effectively discriminate against extra noise
+dimensions.
 
 \textbf{Implementation:}
-Cross-validation is performed to search for the best regularization parameter $\bar{C} \in \{0.1, 1, 10, 100\}$ and $\bar{\gamma} \in \{.01, .1, 1, 10\}$
+Cross-validation is performed to search for the best regularization parameter
+$\bar{C} \in \{0.1, 1, 10, 100\}$ and $\bar{\gamma} \in \{.01, .1, 1, 10\}$
 
 
 
@@ -359,7 +423,11 @@ optimization part in Algorithm \ref{alg:gmkl}. A full explanation of the GMKL
 algorithm can be found in \cite{gmkl}.
 
 \textbf{Model:}
-The final trained model is almost the same as those from SVM, expect that the final kernel function is actually learned from data. More specifically, the final kernel is a convex combination of a set of predefined kernel functions: $$K(x, x^i) = \sum_{q=1}^{Q} \theta_q * K_q(x, x^i) \text{where }\theta_q \text{is learned from data}.$$
+The final trained model is almost the same as those from SVM, expect that the
+final kernel function is actually learned from data. More specifically, the
+final kernel is a convex combination of a set of predefined kernel functions:
+$$K(x, x^i) = \sum_{q=1}^{Q} \theta_q * K_q(x, x^i) \text{where }\theta_q
+\text{is learned from data}.$$
 
 \textbf{Formulation as Optimization Problem}
 \begin{align*}
@@ -368,8 +436,12 @@ The final trained model is almost the same as those from SVM, expect that the fi
 \end{align*}
 
 
-Where C is the regularization parameter, $\beta$ is the elastic net parameter, L is the hinge loss function and $$f_{\theta, w, b}(x^i) = \sum_{q=1}^{Q} w_q \phi_q(x^i) \sqrt{\theta_q} + b $$
-Now if we define v by $v_q := \frac{w_q}{\sqrt{\theta_q}}$, then we have a convex optimization problem:
+Where C is the regularization parameter, $\beta$ is the elastic net parameter,
+L is the hinge loss function and $$f_{\theta, w, b}(x^i) = \sum_{q=1}^{Q} w_q
+\phi_q(x^i) \sqrt{\theta_q} + b $$
+
+Now if we define v by $v_q := \frac{w_q}{\sqrt{\theta_q}}$, then we have a
+convex optimization problem:
 
 \begin{align*}
 &\text{\minover{\theta, v, b}} & &C  \frac{1}{N} \sum_{i=1}^{N} L(f_{\theta, w, b}(x^i), y^i) + 1/2 |w|^2 \\
@@ -377,7 +449,8 @@ Now if we define v by $v_q := \frac{w_q}{\sqrt{\theta_q}}$, then we have a conve
 &\text{Where}  & &f_{\theta, v, b}(x^i) = \sum_{q=1}^{Q} v_q \phi_q(x^i)  + b
 \end{align*}
 
-Observe that the elastic net constraint ensures sparsity and grouping effect for the set of kernels chosen for the final model.
+Observe that the elastic net constraint ensures sparsity and grouping effect
+for the set of kernels chosen for the final model.
 
 \textbf{Optimization Algorithm}
 
@@ -405,7 +478,9 @@ Observe that the elastic net constraint ensures sparsity and grouping effect for
 \end{algorithm}
 
 \textbf{Implementation}
-For each `independent' data source, we constructed 10 RBF kernels with the width $\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$. Then we trained our model with the regularization parameter $C$ fixed to 100.
+For each `independent' data source, we constructed 10 RBF kernels with the
+width $\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$. Then we trained our
+model with the regularization parameter $C$ fixed to 100.
 
 \begin{minipage}{\textwidth}
     \centering
@@ -415,7 +490,10 @@ For each `independent' data source, we constructed 10 RBF kernels with the width
 \end{minipage}
 
 \textbf{Concatenated GMKL}
-To isolate the effect of data integration, we also applied GMKL to concatenated data for comparison. More specifically, we constructed only 10 RBF kernels with $\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$ for the concatenated dataset and then trained GMKL algorithm with C fixed at 100.\\
+To isolate the effect of data integration, we also applied GMKL to concatenated
+data for comparison. More specifically, we constructed only 10 RBF kernels with
+$\gamma \in \{2^{-3}, 2^{-2}, 2^{-1} ..., 2^{6}\}$ for the concatenated dataset
+and then trained GMKL algorithm with C fixed at 100.\\
 
 
 
@@ -464,12 +542,27 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 \begin{minipage}{\textwidth}
 \centering
 \includegraphics[scale=0.4]{experimentpic1.png}
-\captionof{figure}{An illustration of how resistant GMKL is to the affect of an increasingly complex XOR decision boundary compared to the standard classifiers.}
+\captionof{figure}{An illustration of how resistant GMKL is to the affect of an
+    increasingly complex XOR decision boundary compared to the standard
+    classifiers.}
 \label{fig:exp_1}
 \end{minipage}
 
 
-From Figure \ref{fig:exp_1} we can see that as the number of XOR dimensions increases, the classification accuracy of all of the classifiers decreases. This makes sense as the dimensionality of the data is increased without a corresponding increase in the number of data points, making the classifiers suffer from the curse of dimensionality. As the XOR dimension increases, the decision boundary becomes more complex causing classification to become more difficult. However, while all classifiers have decreasing accuracy, we can see that GMKL performs much better than the other classifiers with nearly a 35 percent better classification accuracy compared to the classical SVM at five dimensions. In fact, there is a very intriguing pattern on display here as the the GMKL at $2n$ dimensions seems to be performing about as well as the classical SVM at $n$ dimensions. This seems to indicate that doing classification on the data sources as separate entities is highly desirable for complicated classification problems.
+From Figure \ref{fig:exp_1} we can see that as the number of XOR dimensions
+increases, the classification accuracy of all of the classifiers decreases.
+This makes sense as the dimensionality of the data is increased without a
+corresponding increase in the number of data points, making the classifiers
+suffer from the curse of dimensionality. As the XOR dimension increases, the
+decision boundary becomes more complex causing classification to become more
+difficult. However, while all classifiers have decreasing accuracy, we can see
+that GMKL performs much better than the other classifiers with nearly a 35
+percent better classification accuracy compared to the classical SVM at five
+dimensions. In fact, there is a very intriguing pattern on display here as the
+the GMKL at $2n$ dimensions seems to be performing about as well as the
+classical SVM at $n$ dimensions. This seems to indicate that doing
+classification on the data sources as separate entities is highly desirable for
+complicated classification problems.
 
 
 
@@ -483,7 +576,11 @@ From Figure \ref{fig:exp_1} we can see that as the number of XOR dimensions incr
 
 \subsection*{Experiment 2: Corrupted XOR Sources}
 
-Another variable that we decided to vary is the relative importance of the disparate sources. The purpose of this experiment is to evaluate how the various classifiers perform when one source is more important than the other. We want to see which classifiers are able to identify the important sources/features.
+Another variable that we decided to vary is the relative importance of the
+disparate sources. The purpose of this experiment is to evaluate how the
+various classifiers perform when one source is more important than the other.
+We want to see which classifiers are able to identify the important
+sources/features.
 
 \subsubsection*{Experiment 2 Parameters}
 \begin{center}
@@ -498,20 +595,28 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 
 
 
-In order to test how the classifiers perform with different level of corruption on the Double XOR data, we varied the probability of corruption for each XOR source in increments of 0.1 from 0 to 0.5. We performed this experiment three times, holding the dimension of each source static at three, five, and seven. The results of this experiment for GMKL and Concatenate + GMKL performed on five dimensional XOR are displayed in the figures below. See the appendix for the results from all classifiers tested.
+In order to test how the classifiers perform with different level of corruption
+on the Double XOR data, we varied the probability of corruption for each XOR
+source in increments of 0.1 from 0 to 0.5. We performed this experiment three
+times, holding the dimension of each source static at three, five, and seven.
+The results of this experiment for GMKL and Concatenate + GMKL performed on
+five dimensional XOR are displayed in the figures below. See the appendix for
+the results from all classifiers tested.
 
 
 \begin{minipage}{\textwidth}
     \begin{minipage}{.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{dxor_heat_gmkl.png}
-        \captionof{figure}{An illustration of the ability of GMKL to ignore useless data sources.}
+        \captionof{figure}{An illustration of the ability of GMKL to ignore
+            useless data sources.}
         \label{fig:dxor_heat_gmkl}
     \end{minipage}
     \begin{minipage}{.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{dxor_heat_conc.png}
-        \captionof{figure}{An illustration that demonstrates Concatenate + GMKL is vulnerable to unimportant sources.}
+        \captionof{figure}{An illustration that demonstrates Concatenate + GMKL
+            is vulnerable to unimportant sources.}
         \label{fig:dxor_heat_conc}
     \end{minipage}
 \end{minipage}
@@ -519,15 +624,31 @@ In order to test how the classifiers perform with different level of corruption 
 
 
 
-We see that the results of Experiment 2 are consistent with the results of Experiment 1 in that GMKL consistently outperforms concatenated GMKL which consistently outperforms the standard classifiers. We also see that GMKL is the least affected by one of the two sources becoming corrupted. This is evidence that GMKL effectively identifies which sources are useful and relies primarily on those sources.
+We see that the results of Experiment 2 are consistent with the results of
+Experiment 1 in that GMKL consistently outperforms concatenated GMKL which
+consistently outperforms the standard classifiers. We also see that GMKL is the
+least affected by one of the two sources becoming corrupted. This is evidence
+that GMKL effectively identifies which sources are useful and relies primarily
+on those sources.
 
 
 
 \subsection*{Experiment 3: Noise Dimensions}
 
-Another variable to explore is the number of noisy dimensions. This experiment explores how each classifier is able to handle additional dimensions that do not provide useful information regarding the class each datapoint belongs to. Ideally, the classifiers would be able to identify them as noise dimensions and ignore these dimensions in their predictive model.
+Another variable to explore is the number of noisy dimensions. This experiment
+explores how each classifier is able to handle additional dimensions that do
+not provide useful information regarding the class each datapoint belongs to.
+Ideally, the classifiers would be able to identify them as noise dimensions and
+ignore these dimensions in their predictive model.
 
-For this experiment, we added the same number of noise dimensions to each XOR source. We performed this experiment three times, when there were three, five, and seven XOR dimensions. We varied the proportion of dimensions that were noise dimensions. The proportion varied from no noise dimensions, to a quarter, third, half, and then finally two thirds noise dimensions. The purpose of measuring the proportion of noise variables as opposed to the number of noise variables is so that the three experiments over different XOR dimensions can be accurately compared.
+For this experiment, we added the same number of noise dimensions to each XOR
+source. We performed this experiment three times, when there were three, five,
+and seven XOR dimensions. We varied the proportion of dimensions that were
+noise dimensions. The proportion varied from no noise dimensions, to a quarter,
+third, half, and then finally two thirds noise dimensions. The purpose of
+measuring the proportion of noise variables as opposed to the number of noise
+variables is so that the three experiments over different XOR dimensions can be
+accurately compared.
 
 
 \subsubsection*{Experiment 3 Parameters}
@@ -547,7 +668,9 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 
 
 
-The results from the three dimensional Double XOR experiment are represented in Figure \ref{fig:noise_dim_line}. The results from the five dimensional and seven dimensional XOR can be found in the appendix.
+The results from the three dimensional Double XOR experiment are represented in
+Figure \ref{fig:noise_dim_line}. The results from the five dimensional and
+seven dimensional XOR can be found in the appendix.
 
 \begin{minipage}{\textwidth}
     \centering
@@ -556,13 +679,27 @@ The results from the three dimensional Double XOR experiment are represented in 
     \label{fig:noise_dim_line}
 \end{minipage}
 
-The purple line in the plot above shows how noise resistant GMKL is while the accuracy of Concatenated GMKL falls when only a single noise dimension is added. When there are the same number of noise dimensions as there are useful dimensions, the accuracy of GMKL is still greater than 95 percent. This tells us that GMKL effectively ignores noise dimensions. It is worthy to note the Random Forest classifier is considered noise resistant and is even less affected by noise than GMKL. However, GMKL is initially so much more accurate than Random Forest, that as far as we tested, the accuracy of GMKL remains superior to the Random Forest classifier.
+The purple line in the plot above shows how noise resistant GMKL is while the
+accuracy of Concatenated GMKL falls when only a single noise dimension is
+added. When there are the same number of noise dimensions as there are useful
+dimensions, the accuracy of GMKL is still greater than 95 percent. This tells
+us that GMKL effectively ignores noise dimensions. It is worthy to note the
+Random Forest classifier is considered noise resistant and is even less
+affected by noise than GMKL. However, GMKL is initially so much more accurate
+than Random Forest, that as far as we tested, the accuracy of GMKL remains
+superior to the Random Forest classifier.
 
 
 
 \subsection*{Experiment 4: Corrupted Sine and XOR Sources}
 
-This experiment follows the same structure as Experiment 2 in terms of varying the corruption probabilities to each source. The difference in that instead of using two sources with the XOR structure, one XOR source was used and one Sine sources was used. We also varied the corruption probabilities in different increments. The corruption probability on each source ranged from 0 to 0.45 in increments of 0.15. We executed this experiment on three dimensional XOR and Sine data with a period of two. The results are displayed below.
+This experiment follows the same structure as Experiment 2 in terms of varying
+the corruption probabilities to each source. The difference in that instead of
+using two sources with the XOR structure, one XOR source was used and one Sine
+sources was used. We also varied the corruption probabilities in different
+increments. The corruption probability on each source ranged from 0 to 0.45 in
+increments of 0.15. We executed this experiment on three dimensional XOR and
+Sine data with a period of two. The results are displayed below.
 
 
 \subsection*{Experiment 4 Parameters}
@@ -580,19 +717,43 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 \begin{minipage}{\textwidth}
     \centering
     \includegraphics[width=\textwidth]{SineXORCorrupt.png}
-    \captionof{figure}{An illustration that shows GMKL is unable to classify accurately using a Sine Wave source.}
+    \captionof{figure}{An illustration that shows GMKL is unable to classify
+        accurately using a Sine Wave source.}
     \label{fig:sinexor_heatmaps}
 \end{minipage}
 
 
-Again we can see that GMKL outperforms Concatenated GMKL overall. From the heat maps above, we can observe that GMKL does not handle Sine data well. When the XOR source is heavily corrupted, the prediction accuracy of GMKL falls to barely better than a coin flip. On the opposite end of the heat map, we can note that GMKL performs very well when the Sine source is heavily corrupted as long as the XOR source remains intact. This means that GMKL is insensitive to unreliable data. GMKL is successfully able to identify the source that does not contribute to classification accuracy and ignore it.
+Again we can see that GMKL outperforms Concatenated GMKL overall. From the heat
+maps above, we can observe that GMKL does not handle Sine data well. When the
+XOR source is heavily corrupted, the prediction accuracy of GMKL falls to
+barely better than a coin flip. On the opposite end of the heat map, we can
+note that GMKL performs very well when the Sine source is heavily corrupted as
+long as the XOR source remains intact. This means that GMKL is insensitive to
+unreliable data. GMKL is successfully able to identify the source that does not
+contribute to classification accuracy and ignore it.
 
 \section*{Conclusion}
-From these experiments we have seen not only the usefulness of GMKL, but also the issues that traditional classifiers face in data integration. Highly complex decision boundaries, corrupted data sources, noisy dimensions, and variably useful data sources have all been shown to negatively effect the classification accuracy of traditional classifiers such as KNN, SVM and Random Forest. Not only does this illustrate the usefulness of GMKL as a tool for classification and data integration, but the way in which GMKL generates kernels separately indicates the importance of treating your data sources as separate entities and the damage you will do to your classification accuracy if you concatenate it all together without any thought. The drastic improvements seen be using an intelligent data integration technique over naive concatenation illustrates that data integration is extremely useful and is worth developing. 
+From these experiments we have seen not only the usefulness of GMKL, but also
+the issues that traditional classifiers face in data integration. Highly
+complex decision boundaries, corrupted data sources, noisy dimensions, and
+variably useful data sources have all been shown to negatively effect the
+classification accuracy of traditional classifiers such as KNN, SVM and Random
+Forest. Not only does this illustrate the usefulness of GMKL as a tool for
+classification and data integration, but the way in which GMKL generates
+kernels separately indicates the importance of treating your data sources as
+separate entities and the damage you will do to your classification accuracy if
+you concatenate it all together without any thought. The drastic improvements
+seen be using an intelligent data integration technique over naive
+concatenation illustrates that data integration is extremely useful and is
+worth developing.
 
 
 \section*{Future Work}
-Data integration, data simulation, and benchmarking of machine learning techniques are all fields in need of further investigation. In particular, the behavior of machine learning and data integration techniques as functions of properties of the data and its decision boundaries is very poorly understood. Some fruitful further questions for research include:
+Data integration, data simulation, and benchmarking of machine learning
+techniques are all fields in need of further investigation. In particular, the
+behavior of machine learning and data integration techniques as functions of
+properties of the data and its decision boundaries is very poorly understood.
+Some fruitful further questions for research include:
 
 \begin{itemize}
     \item \textbf{Shared Information Across Sources:} An important component of
