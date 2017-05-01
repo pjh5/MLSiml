@@ -332,11 +332,18 @@ described above.
 
 
 
-\section*{Machine Learning Classifiers}
+\section*{Classifiers}
 
-To evaluate the potential gain from intelligent data integration, we decided to
-compare the classification accuracy of a kernel based integration technique
-with commonly used vector concatenation benchmark algorithms.
+The data integration method GMKL was tested against standard machine learning
+classifiers Gaussian Naive Bayes, Random Forest, and an SVM using a RBF kernel.
+The machine learning classifiers were fed concatenated data, and so ignored
+separate sources. Additionally, standard GMKL was compared against GMKL that
+was fed concatenated data, to isolate the effects of using a separate kernel
+for each data source. A brief overview of every classifier and of GMKL follow.
+
+Where possible, Python's sklearn implementations were used. Classifiers with
+hyper parameters, such as the SVM, were trained using cross-validation over a
+suite of possible parameters, as is industry standard.
 
 \subsection*{Notation}
 In describing different classification techniques, the following notation will
@@ -351,52 +358,61 @@ be used:
 \end{itemize}
 
 
-\subsection*{Vector Concatenation Benchmarks}
+\subsection*{Classifiers Using Concatenated Data}
 
 \subsubsection*{Gaussian Naive Bayes}
 \textbf{Model:}
-Gaussian Naive Bayes assumes that conditioned on the value of y, every feature
-\xud{j} is generated independently i.e. $P(x|y) = \prod_{j=1}^{m} P(x_j|y)$. In
-addition it also assumes that each $P(x_j|y) \sim \mathbf{N(\mu_{j,y},
-    \sigma_y)}$ . To make $x$, the model would compute its posterior probability
-$P(y|x)$ and pick the more likely case.
+Gaussian Naive Bayes assumes that every feature (dimension) \xud{j} is
+generated independently conditional on the value of y i.e. $P(x|y) =
+\prod_{j=1}^{m} P(x_j|y)$. In addition it also assumes that each $P(x_j|y) \sim
+\mathbf{N(\mu_{j,y}, \sigma_y)}$ . To predict $\hat{y}$ from a given $x$, the
+model computes the posterior probability $P(y|x)$ and pick the more likely
+case. This is not a very powerful model.
 
 \textbf{Properties:}
-The formulation is clean and simple. It is fast to train and is quite resistant
-to extra noise dimensions. However, the excessively strong assumption of
-independence means that we could only fit 2nd degree decision boundaries, so it
-is expected to perform poorly on our highly complex Double XOR dataset.
+The formulation is clean and simple. Naive Bayes is very fast to train and is
+somewhat resistant to extra noise dimensions. However, the assumption of
+independence between dimensions is very strong, and means that only 2nd degree
+decision boundaries can be fit. It is expected to perform very poorly on the
+complex, very non-linear Double XOR dataset.
 
 \textbf{Implementation:}
-We used sklearn's Gaussian Naive Bayes classifier. No hyper-parameter tuning is
-required.
+Gaussian Naive Bayes does not have any hyper parameters and did not need any
+parameter tuning.
 
 \subsubsection*{Random Forest}
 \textbf{Model:}
-Random Forest uses an ensemble of decision trees to make a prediction for $x$.
-Each decision tree is based by a bootstrap sample of the training data and the
-splitting nodes are constrained to a random subset of all features. In this
-manner, the over-fit of decision tree could be controlled.
+Random Forest uses an ensemble of deep decision trees.  Each decision tree is
+based by a bootstrap sample of the training data, and the splitting nodes are
+constrained to a random subset of all features. In this manner, overfitting of
+individual decision tree is controlled by ensembling.
 
 \textbf{Properties:}
-Random Forest is known to be very resistant to extra noise dimensions since
-uninformative feature would never be used for a split in a decision tree.
+Random Forest is known to be very resistant to extra noise dimensions, since
+uninformative features are simply never used to split decision tree. Random
+Forests make no assumptions about the input data, and are unaffected by scaling
+or large differences in scale between features.
 
 \textbf{Implementation:}
 We used cross validation to select the optimal number of trees $\bar{t} \in
-\{10, 100\}$.
+\{10, 100\}$. Other parameters were the defaults in the Python sklearn
+implementation: the gini index was used as the measure quality of the tree, up
+to $\sqrt{num\_features}$ features were used for each tree, and trees are split
+until all nodes are pure or have $\leq 2$ points.
 
-\subsubsection*{K-Nearest Neighbors}
+
+\subsubsection*{K-Nearest Neighbors (KNN)}
 \textbf{Model:}
-KNN makes a prediction on an unknown data-point by the majority voting of the
-K-closest points i.e. $$f(x) = sign(\sum_{x^i \in \text{K closest points}} y^i)
-$$
+KNN labels a given point $x$ as the majority vote label of its K-closest points
+(in the training data) i.e. $$f(x) = sign(\sum_{x^i \in \text{K closest
+        points}} y^i) $$
 
 \textbf{Properties:}
 KNN is able to fit extremely complex decision boundaries. However, it often
-suffers from the curse of high dimensionality. Moreover, it
-could not discriminate against noise dimensions since they are incorporated as
-part of the Euclidean distance.
+suffers from the curse of high dimensionality; the distance between points is
+distorted in high dimensions. Importantly, KNN is very affected by meaningless
+noisy features, as these features factor into the Euclidian distance between
+points just as much as the useful features.
 
 \textbf{Implementation:}
 We used cross validation to select the best number of neighbors $\bar{k} \in
@@ -405,28 +421,35 @@ We used cross validation to select the best number of neighbors $\bar{k} \in
 
 
 
-\subsubsection*{RBF Support Vector Machine}
+\subsubsection*{Support Vector Machine (SVM) with a Radial-Basis-Function (RBF)
+    Kernel}
 \textbf{Model:}
-Similar to KNN, Support Vector Machine makes recommendation by considering the
-weighted voting of a set of similar data points
+SVMs find the largest-margin between two classes, using a kernel function to
+first project the data into a higher-dimensional space. Similar to KNN, SVMs
+label data points considering the weighted voting of a set of similar data
+points
 $$
 f(x)
 = sign(\sum_{i=1}^{N} y^i d^i K(x, x^i))\ \text{where K(x, $x^i$)}
 = exp(-\gamma|x - x^i|^2)
 $$
-where $d^i$ is learned from data by finding the largest margin separating
+where $d^i$ is learned from data by finding the largest-margin separating
 hyperplane in the projected space.
 
 \textbf{Properties:}
-SVM can fit complex decision boundaries. Moreover, it does not suffer from the
-curse high dimensionality to the extent that KNN does. These two
-characteristics make SVM the go-to algorithm for classification. However, just
-like KNN, it is unable to effectively discriminate against extra noise
-dimensions.
+SVMs can fit very complex decision boundaries, and don't suffer from the curse
+high dimensionality as much as KNN does. The complexity of the decision
+boundary learned by the SVM can be controlled with two hyper parameters
+$\gamma$ and $C$ (kernel width and regularization strength respectively). These
+characteristics make SVM the go-to algorithm for many complex classification
+problems. However, just like KNN, it is unable to effectively discriminate
+against extra noise dimensions. SVMs also require lots of data points to learn
+complex decision boundaries.
 
 \textbf{Implementation:}
-Cross-validation is performed to search for the best regularization parameter
-$\bar{C} \in \{0.1, 1, 10, 100\}$ and $\bar{\gamma} \in \{.01, .1, 1, 10\}$
+Cross-validation was performed to search for the best regularization parameter
+$\bar{C} \in \{0.1, 1, 10, 100\}$ and kernel width $\bar{\gamma} \in \{.01, .1,
+1, 10\}$.
 
 
 
