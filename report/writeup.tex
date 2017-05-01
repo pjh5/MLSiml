@@ -525,7 +525,7 @@ set of parameters for this experiment can be seen in the table below. This netwo
 chosen as it has no corruption of data sources, thus ensuring criteria 1.
 Second, as the dimension of the XOR sources increase, the decision boundary becomes
 increasingly complicated. Once the data generation process is complete,
-classification was done by GMKL, Concatenate + GMKL, SVM, KNN, and Random
+classification was done by GMKL, Concatenated GMKL, SVM, KNN, and Random
 Forest.
 
 \subsubsection*{Experiment 1 Parameters}
@@ -599,7 +599,7 @@ In order to test how the classifiers perform with different level of corruption
 on the Double XOR data, we varied the probability of corruption for each XOR
 source in increments of 0.1 from 0 to 0.5. We performed this experiment three
 times, holding the dimension of each source static at three, five, and seven.
-The results of this experiment for GMKL and Concatenate + GMKL performed on
+The results of this experiment for GMKL and Concatenated GMKL performed on
 five dimensional XOR are displayed in the figures below. See the appendix for
 the results from all classifiers tested on five dimensional XOR.
 
@@ -616,7 +616,7 @@ the results from all classifiers tested on five dimensional XOR.
 \begin{minipage}{.48\textwidth}
     \centering
     \includegraphics[width=\textwidth]{dxor_heat_conc.png}
-    \captionof{figure}{An illustration that demonstrates Concatenate + GMKL is
+    \captionof{figure}{An illustration that demonstrates Concatenated GMKL is
         vulnerable to unimportant sources.}
     \label{fig:dxor_heat_conc}
 \end{minipage}
@@ -626,7 +626,7 @@ the results from all classifiers tested on five dimensional XOR.
 
 
 We see that the results of Experiment 2 are consistent with the results of
-Experiment 1 in that GMKL consistently outperforms concatenated GMKL. This indicates that the data integration part of GMKL is extremely useful as running GMKL on the concatenated data does not provide nearly as good classification accuracy as the GMKL that treats sources separately. We also see that GMKL is the
+Experiment 1 in that GMKL consistently outperforms Concatenated GMKL. This indicates that the data integration part of GMKL is extremely useful as running GMKL on the concatenated data does not provide nearly as good classification accuracy as the GMKL that treats sources separately. We also see that GMKL is the
 least affected by one of the two sources becoming corrupted. This is evidence
 that GMKL effectively identifies which sources are useful and relies primarily
 on those sources.
@@ -635,7 +635,7 @@ on those sources.
 
 \subsection*{Experiment 3: Noise Dimensions}
 
-Another variable to explore is the number of noisy dimensions. This experiment
+Another variable to explore is the number of noise dimensions. This experiment
 explores how each classifier is able to handle additional dimensions that do
 not provide useful information regarding the class each datapoint belongs to.
 Ideally, the classifiers would be able to identify them as noise dimensions and
@@ -643,7 +643,7 @@ ignore these dimensions in their predictive model.
 
 For this experiment, we added the same number of noise dimensions to each XOR
 source. We performed this experiment three times, when there were three, five,
-and seven XOR dimensions. We varied the proportion of dimensions that were
+and seven XOR dimensions per source. We varied the proportion of dimensions that were
 noise dimensions. The proportion varied from no noise dimensions, to a quarter,
 third, half, and then finally two thirds noise dimensions. The purpose of
 measuring the proportion of noise variables as opposed to the number of noise
@@ -670,7 +670,7 @@ $M_{i,useful}$ & $M_{i, noisy}$ & $N$ & T &  $p_1, p_2$ & $\sigma_i$ & C &  k  \
 
 The results from the three dimensional Double XOR experiment are represented in
 Figure \ref{fig:noise_dim_line}. The results from the five dimensional and
-seven dimensional XOR can be found in the appendix.
+seven dimensional Double XOR can be found in the appendix.
 
 \begin{minipage}{\textwidth}
     \centering
